@@ -14,6 +14,7 @@ export type ProductValues = {
   selling_price?: number;
   reorder_level?: number;
   is_active?: boolean;
+  avg_cost?: number;
 };
 
 export function ProductForm({
@@ -91,6 +92,20 @@ export function ProductForm({
             defaultValue={values.reorder_level ?? 3}
           />
         </Field>
+        {values.id && (
+          <Field
+            label="Cost per unit (BDT)"
+            hint="Normally from your purchases. Changing it is recorded as a correction."
+          >
+            <Input
+              name="avg_cost"
+              type="number"
+              min="0"
+              step="0.01"
+              defaultValue={values.avg_cost ?? 0}
+            />
+          </Field>
+        )}
       </div>
 
       {values.id && (

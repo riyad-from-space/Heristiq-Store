@@ -59,8 +59,27 @@ export async function updateProduct(_prev: string | null, fd: FormData) {
 
   if (error) return error.message;
 
+  // Unit cost is derived from purchases, so a manual change is recorded as a
+  // correction rather than written straight to the stock cache.
+  const rawCost = fd.get("avg_cost");
+  if (rawCost !== null && String(rawCost).trim() !== "") {
+    const cost = Number(rawCost);
+    if (!Number.isFinite(cost) || cost < 0) return "Cost must be zero or more.";
+
+    const { error: costError } = await supabase.rpc("revalue_product_cost", {
+      p_product_id: id,
+      p_new_cost: cost,
+      p_note: "Edited on the product page",
+    });
+
+    if (costError) return costError.message;
+  }
+
   revalidatePath("/products");
   revalidatePath(`/products/${id}`);
+  revalidatePath("/stock");
+  revalidatePath("/reports");
+  revalidatePath("/");
   redirect("/products");
 }
 

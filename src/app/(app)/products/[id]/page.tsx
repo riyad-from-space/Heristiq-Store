@@ -10,10 +10,11 @@ export default async function EditProductPage({ params }: PageProps<"/products/[
   const { id } = await params;
   const supabase = await createClient();
 
-  const [productRes, catsRes, supsRes] = await Promise.all([
+  const [productRes, catsRes, supsRes, stockRes] = await Promise.all([
     supabase.from("products").select("*").eq("id", id).maybeSingle(),
     supabase.from("categories").select("id, name").order("name"),
     supabase.from("suppliers").select("id, name").order("name"),
+    supabase.from("product_stock").select("avg_cost").eq("product_id", id).maybeSingle(),
   ]);
 
   if (!productRes.data) notFound();
@@ -26,13 +27,15 @@ export default async function EditProductPage({ params }: PageProps<"/products/[
           action={updateProduct}
           categories={catsRes.data ?? []}
           suppliers={supsRes.data ?? []}
-          values={productRes.data}
+          values={{ ...productRes.data, avg_cost: Number(stockRes.data?.avg_cost ?? 0) }}
           submitLabel="Save changes"
         />
       </Card>
       <p className="text-xs text-neutral-500">
-        Stock is not editable here — it is derived from purchases, sales and
-        adjustments. Use the Stock page to correct a count.
+        Quantity is not editable here — it is derived from purchases, sales and
+        adjustments. Use the Stock page to correct a count. Changing the unit
+        cost is recorded as a correction and applies everywhere from now on;
+        sales already recorded keep the cost they were sold at.
       </p>
     </>
   );
