@@ -17,6 +17,7 @@ export default async function DashboardPage() {
       .from("v_sale_profit")
       .select("sale_date, product_revenue, cogs, gross_profit, status")
       .gte("sale_date", monthStart)
+      .eq("posted", true)
       .not("status", "in", "(cancelled,returned)"),
   ]);
 

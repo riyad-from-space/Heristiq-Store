@@ -24,7 +24,10 @@ export default async function SalesPage() {
     .limit(100);
 
   const sales = (data ?? []) as SaleProfitRow[];
-  const live = sales.filter((s) => !["cancelled", "returned"].includes(s.status));
+  // Unposted sales have no cost snapshot yet, so they would read as pure profit.
+  const live = sales.filter(
+    (s) => s.posted && !["cancelled", "returned"].includes(s.status),
+  );
 
   const revenue = live.reduce((s, r) => s + Number(r.product_revenue), 0);
   const profit = live.reduce((s, r) => s + Number(r.gross_profit), 0);

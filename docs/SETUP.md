@@ -8,12 +8,16 @@
 
 ## 2. Create the schema
 
-Open the Supabase dashboard → **SQL Editor** → New query. Paste the entire
-contents of [`supabase/migrations/0001_init.sql`](../supabase/migrations/0001_init.sql)
-and run it.
+Open the Supabase dashboard → **SQL Editor** → New query. Run the files in
+[`supabase/migrations/`](../supabase/migrations/) **in filename order**, one at a
+time:
 
-It creates the tables, the costing triggers, the posting functions, the
-reporting views, and row-level security policies.
+1. [`0001_init.sql`](../supabase/migrations/0001_init.sql) — tables, costing
+   triggers, posting functions, reporting views, row-level security policies.
+2. [`0002_exclude_unposted_sales.sql`](../supabase/migrations/0002_exclude_unposted_sales.sql)
+   — keeps sales that were never posted out of revenue and profit.
+
+Order matters: later files amend what earlier ones create.
 
 ## 3. Create your login
 
