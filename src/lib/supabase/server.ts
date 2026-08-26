@@ -18,7 +18,8 @@ export async function createClient() {
               cookieStore.set(name, value, options),
             );
           } catch {
-            // Called from a Server Component — the middleware refreshes the session instead.
+            // Called from a Server Component, which cannot write cookies.
+            // SessionKeeper refreshes the token from the browser instead.
           }
         },
       },
