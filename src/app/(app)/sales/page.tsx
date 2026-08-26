@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { date, money } from "@/lib/format";
 import { Badge, Card, Empty, LinkButton, Stat, Table, Td } from "@/components/ui";
@@ -103,7 +104,17 @@ export default async function SalesPage() {
                     <Badge tone={STATUS_TONE[s.status]}>{s.status}</Badge>
                   </Td>
                   <Td>
-                    <VoidSaleButtons id={s.id} disabled={voided} />
+                    <span className="flex items-center gap-2 whitespace-nowrap">
+                      {!voided && (
+                        <Link
+                          href={`/sales/${s.id}`}
+                          className="text-xs text-neutral-500 hover:underline"
+                        >
+                          Edit
+                        </Link>
+                      )}
+                      <VoidSaleButtons id={s.id} disabled={voided} />
+                    </span>
                   </Td>
                 </tr>
               );

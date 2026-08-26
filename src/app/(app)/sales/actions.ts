@@ -69,6 +69,43 @@ export async function createSale(input: SaleInput): Promise<string | null> {
   redirect("/sales");
 }
 
+export async function updateSale(
+  id: string,
+  input: SaleInput,
+): Promise<string | null> {
+  const lines = input.lines.filter((l) => l.product_id && l.qty > 0);
+  if (lines.length === 0) return "Add at least one product line.";
+
+  const supabase = await createClient();
+
+  // One call: the function updates the header and reconciles each line against
+  // the ledger, so a part-applied edit cannot leave stock wrong.
+  const { error } = await supabase.rpc("update_sale", {
+    p_sale_id: id,
+    p_sale_date: input.sale_date,
+    p_channel: input.channel,
+    p_customer_name: input.customer_name,
+    p_customer_phone: input.customer_phone,
+    p_customer_address: input.customer_address,
+    p_discount: input.discount,
+    p_delivery_charge: input.delivery_charge,
+    p_delivery_cost: input.delivery_cost,
+    p_status: input.status,
+    p_note: input.note,
+    p_lines: lines,
+  });
+
+  if (error) return error.message;
+
+  revalidatePath("/sales");
+  revalidatePath(`/sales/${id}`);
+  revalidatePath("/products");
+  revalidatePath("/stock");
+  revalidatePath("/reports");
+  revalidatePath("/");
+  redirect("/sales");
+}
+
 export async function voidSale(formData: FormData) {
   const supabase = await createClient();
 

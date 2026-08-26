@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button, Field, Input, Select, Textarea } from "@/components/ui";
 import { money } from "@/lib/format";
 import { SALES_CHANNELS, type SalesChannel, type SaleStatus } from "@/lib/types";
-import { createSale, type SaleInput } from "../actions";
+import { createSale, updateSale, type SaleInput } from "../actions";
 
 export type SellableProduct = {
   id: string;
@@ -18,33 +18,60 @@ export type SellableProduct = {
 
 type Line = { key: number; product_id: string; qty: string; unit_price: string };
 
+/** Existing sale being edited. Absent when recording a new one. */
+export type SaleEditValues = {
+  id: string;
+  sale_date: string;
+  channel: SalesChannel;
+  status: SaleStatus;
+  customer_name: string | null;
+  customer_phone: string | null;
+  customer_address: string | null;
+  discount: number;
+  delivery_charge: number;
+  delivery_cost: number;
+  note: string | null;
+  lines: { product_id: string; qty: number; unit_price: number }[];
+};
+
 let nextKey = 1;
 const blankLine = (): Line => ({ key: nextKey++, product_id: "", qty: "1", unit_price: "" });
 
 export function SaleForm({
   products,
   today,
+  values,
 }: {
   products: SellableProduct[];
   today: string;
+  values?: SaleEditValues;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const [lines, setLines] = useState<Line[]>([blankLine()]);
+  const [lines, setLines] = useState<Line[]>(
+    values
+      ? values.lines.map((l) => ({
+          key: nextKey++,
+          product_id: l.product_id,
+          qty: String(l.qty),
+          unit_price: String(l.unit_price),
+        }))
+      : [blankLine()],
+  );
   const [header, setHeader] = useState({
-    sale_date: today,
-    channel: "facebook" as SalesChannel,
-    status: "confirmed" as SaleStatus,
-    customer_name: "",
-    customer_phone: "",
-    customer_address: "",
-    note: "",
+    sale_date: values?.sale_date ?? today,
+    channel: (values?.channel ?? "facebook") as SalesChannel,
+    status: (values?.status ?? "confirmed") as SaleStatus,
+    customer_name: values?.customer_name ?? "",
+    customer_phone: values?.customer_phone ?? "",
+    customer_address: values?.customer_address ?? "",
+    note: values?.note ?? "",
   });
   const [charges, setCharges] = useState({
-    discount: "0",
-    delivery_charge: "0",
-    delivery_cost: "0",
+    discount: String(values?.discount ?? 0),
+    delivery_charge: String(values?.delivery_charge ?? 0),
+    delivery_cost: String(values?.delivery_cost ?? 0),
   });
 
   const byId = useMemo(
@@ -123,7 +150,9 @@ export function SaleForm({
     };
 
     startTransition(async () => {
-      const result = await createSale(payload);
+      const result = values
+        ? await updateSale(values.id, payload)
+        : await createSale(payload);
       if (result) setError(result);
       else router.refresh();
     });
@@ -331,7 +360,7 @@ export function SaleForm({
       )}
 
       <Button type="button" onClick={submit} disabled={pending}>
-        {pending ? "Saving…" : "Record sale"}
+        {pending ? "Saving…" : values ? "Save changes" : "Record sale"}
       </Button>
     </div>
   );
