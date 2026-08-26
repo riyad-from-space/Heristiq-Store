@@ -1,0 +1,40 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+
+const LINKS = [
+  { href: "/", label: "Dashboard" },
+  { href: "/products", label: "Products" },
+  { href: "/sales", label: "Sales" },
+  { href: "/purchases", label: "Purchases" },
+  { href: "/stock", label: "Stock" },
+  { href: "/suppliers", label: "Suppliers" },
+  { href: "/reports", label: "Reports" },
+];
+
+export function Nav() {
+  const pathname = usePathname();
+
+  return (
+    <nav className="-mx-4 flex gap-1 overflow-x-auto px-4 md:mx-0 md:px-0">
+      {LINKS.map((link) => {
+        const active =
+          link.href === "/" ? pathname === "/" : pathname.startsWith(link.href);
+        return (
+          <Link
+            key={link.href}
+            href={link.href}
+            className={`whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium transition ${
+              active
+                ? "bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900"
+                : "text-neutral-600 hover:bg-neutral-200 dark:text-neutral-400 dark:hover:bg-neutral-800"
+            }`}
+          >
+            {link.label}
+          </Link>
+        );
+      })}
+    </nav>
+  );
+}
