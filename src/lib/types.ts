@@ -37,6 +37,36 @@ export const MOVEMENT_LABELS: Record<MovementType, string> = {
   adjustment: "Adjustment",
 };
 
+export type PreOrderStatus = "pending" | "confirmed" | "fulfilled" | "cancelled";
+export type PaymentStatus = "unpaid" | "partial" | "paid";
+
+export const PRE_ORDER_STATUSES: PreOrderStatus[] = [
+  "pending", "confirmed", "fulfilled", "cancelled",
+];
+
+export const PAYMENT_STATUSES: PaymentStatus[] = ["unpaid", "partial", "paid"];
+
+export type PreOrderRow = {
+  id: string;
+  customer_name: string;
+  customer_phone: string;
+  product_id: string | null;
+  product_name: string | null;
+  product_sku: string | null;
+  item_note: string | null;
+  qty: number;
+  total_amount: number;
+  amount_paid: number;
+  amount_due: number;
+  payment_status: PaymentStatus;
+  order_date: string;
+  expected_date: string | null;
+  status: PreOrderStatus;
+  note: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 export type ProductStockRow = {
   id: string;
   sku: string;
