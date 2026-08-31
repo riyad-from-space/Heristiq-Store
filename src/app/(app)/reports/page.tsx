@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { date, money, num } from "@/lib/format";
+import { date, daysAgoDhaka, money, num } from "@/lib/format";
 import { Card, Empty, Stat, Table, Td } from "@/components/ui";
 import type { ProductPerformanceRow, ProductStockRow } from "@/lib/types";
 
@@ -20,12 +20,16 @@ type SlowRow = ProductPerformanceRow & { tied_up_value: number };
 export default async function ReportsPage() {
   const supabase = await createClient();
 
+  // Filter by date, not by row count — .limit(30) returned the last 30 days that
+  // HAD sales, so a quiet fortnight silently pulled in older days.
+  const since = daysAgoDhaka(30);
+
   const [dailyRes, perfRes, slowRes, lowRes] = await Promise.all([
     supabase
       .from("v_daily_sales")
       .select("*")
-      .order("sale_date", { ascending: false })
-      .limit(30),
+      .gte("sale_date", since)
+      .order("sale_date", { ascending: false }),
     supabase
       .from("v_product_performance")
       .select("*")

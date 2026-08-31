@@ -21,6 +21,14 @@ export async function createPurchase(input: PurchaseInput): Promise<string | nul
     (l) => l.product_id && l.qty > 0 && l.unit_cost >= 0,
   );
   if (lines.length === 0) return "Add at least one product line.";
+
+  const seen = new Set<string>();
+  for (const l of lines) {
+    if (seen.has(l.product_id))
+      return "The same product appears on more than one line — combine them into one.";
+    seen.add(l.product_id);
+  }
+
   if (lines.reduce((s, l) => s + l.qty * l.unit_cost, 0) <= 0) {
     return "Total purchase value must be greater than zero.";
   }

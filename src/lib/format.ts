@@ -43,6 +43,13 @@ export function dateTime(value: string | null | undefined) {
   });
 }
 
+/** N days before today in Asia/Dhaka, as YYYY-MM-DD. */
+export function daysAgoDhaka(days: number) {
+  const [y, m, d] = todayDhaka().split("-").map(Number);
+  const t = Date.UTC(y, m - 1, d) - days * 86_400_000;
+  return new Date(t).toISOString().slice(0, 10);
+}
+
 /** Today in Asia/Dhaka as YYYY-MM-DD — the business day, not the server's. */
 export function todayDhaka() {
   return new Intl.DateTimeFormat("en-CA", {

@@ -14,6 +14,17 @@ function money(fd: FormData, key: string) {
   return Number.isFinite(n) && n >= 0 ? n : 0;
 }
 
+/**
+ * An emptied number input posts "", and Number("") is 0 — so `?? fallback` never
+ * fires and clearing the field silently saved 0. Treat blank as absent.
+ */
+function count(fd: FormData, key: string, fallback: number) {
+  const raw = String(fd.get(key) ?? "").trim();
+  if (raw === "") return fallback;
+  const n = Number(raw);
+  return Number.isFinite(n) ? Math.max(0, Math.trunc(n)) : fallback;
+}
+
 export async function createProduct(_prev: string | null, fd: FormData) {
   const supabase = await createClient();
 
@@ -27,7 +38,7 @@ export async function createProduct(_prev: string | null, fd: FormData) {
     category_id: text(fd, "category_id"),
     supplier_id: text(fd, "supplier_id"),
     selling_price: money(fd, "selling_price"),
-    reorder_level: Math.max(0, Math.trunc(Number(fd.get("reorder_level") ?? 3))),
+    reorder_level: count(fd, "reorder_level", 3),
   });
 
   if (error) {
@@ -52,7 +63,7 @@ export async function updateProduct(_prev: string | null, fd: FormData) {
       category_id: text(fd, "category_id"),
       supplier_id: text(fd, "supplier_id"),
       selling_price: money(fd, "selling_price"),
-      reorder_level: Math.max(0, Math.trunc(Number(fd.get("reorder_level") ?? 3))),
+      reorder_level: count(fd, "reorder_level", 3),
       is_active: fd.get("is_active") === "on",
     })
     .eq("id", id);

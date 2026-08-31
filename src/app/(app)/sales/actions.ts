@@ -21,9 +21,21 @@ export type SaleInput = {
   lines: SaleLine[];
 };
 
+/** One line per product — the DB enforces this too, but the error there is unreadable. */
+function firstDuplicate(lines: SaleLine[]): string | null {
+  const seen = new Set<string>();
+  for (const l of lines) {
+    if (seen.has(l.product_id)) return l.product_id;
+    seen.add(l.product_id);
+  }
+  return null;
+}
+
 export async function createSale(input: SaleInput): Promise<string | null> {
   const lines = input.lines.filter((l) => l.product_id && l.qty > 0);
   if (lines.length === 0) return "Add at least one product line.";
+  if (firstDuplicate(lines))
+    return "The same product appears on more than one line — combine them into one.";
 
   const supabase = await createClient();
 
@@ -75,6 +87,8 @@ export async function updateSale(
 ): Promise<string | null> {
   const lines = input.lines.filter((l) => l.product_id && l.qty > 0);
   if (lines.length === 0) return "Add at least one product line.";
+  if (firstDuplicate(lines))
+    return "The same product appears on more than one line — combine them into one.";
 
   const supabase = await createClient();
 
