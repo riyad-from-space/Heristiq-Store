@@ -22,12 +22,19 @@ export async function createPurchase(input: PurchaseInput): Promise<string | nul
   );
   if (lines.length === 0) return "Add at least one product line.";
 
-  const seen = new Set<string>();
-  for (const l of lines) {
-    if (seen.has(l.product_id))
-      return "The same product appears on more than one line — combine them into one.";
-    seen.add(l.product_id);
+  // A line with a product and a quantity but no cost used to post at zero,
+  // permanently pulling that product's weighted average down. Free stock is
+  // real, but it has to be stated rather than left blank.
+  const priced = input.lines.filter((l) => l.product_id && l.qty > 0);
+  const blank = priced.find((l) => !Number.isFinite(l.unit_cost) || l.unit_cost <= 0);
+  if (blank && priced.some((l) => l.unit_cost > 0)) {
+    return "One line has no unit cost. Enter what you paid, or 0 if it really was free.";
   }
+
+  // Duplicate products are allowed here on purpose — two cartons of one SKU at
+  // two prices is ordinary procurement, and post_purchase blends them correctly.
+  // (Sales are different: update_sale reconciles per product, so duplicates are
+  // rejected there and blocked by a unique constraint.)
 
   if (lines.reduce((s, l) => s + l.qty * l.unit_cost, 0) <= 0) {
     return "Total purchase value must be greater than zero.";

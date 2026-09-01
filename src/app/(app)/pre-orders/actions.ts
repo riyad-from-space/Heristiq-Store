@@ -95,22 +95,32 @@ export async function updatePreOrder(
 }
 
 /** Quick action from the list: settle the balance without opening the form. */
-export async function markPreOrderPaid(formData: FormData): Promise<void> {
+export async function markPreOrderPaid(formData: FormData): Promise<string | null> {
   const id = String(formData.get("id"));
   const supabase = await createClient();
 
-  const { data } = await supabase
+  const { data, error: readError } = await supabase
     .from("pre_orders")
     .select("total_amount")
     .eq("id", id)
     .maybeSingle();
 
-  if (!data) return;
+  if (readError) return readError.message;
+  if (!data) return "Pre-order not found.";
+  if (Number(data.total_amount) <= 0) {
+    return "Set a total amount before marking this paid.";
+  }
 
-  await supabase.from("pre_orders").update({ amount_paid: data.total_amount }).eq("id", id);
+  const { error } = await supabase
+    .from("pre_orders")
+    .update({ amount_paid: data.total_amount })
+    .eq("id", id);
+
+  if (error) return error.message;
 
   revalidatePath("/pre-orders");
   revalidatePath("/");
+  return null;
 }
 
 /** Record a part payment. Clamped to the total, which the DB also enforces. */
@@ -142,22 +152,39 @@ export async function recordPayment(
   return null;
 }
 
-export async function setPreOrderStatus(formData: FormData): Promise<void> {
+const STATUSES = ["pending", "confirmed", "fulfilled", "cancelled"] as const;
+
+export async function setPreOrderStatus(formData: FormData): Promise<string | null> {
   const id = String(formData.get("id"));
-  const status = String(formData.get("status")) as PreOrderStatus;
+  const status = String(formData.get("status"));
+
+  // FormData on a Server Action is client-supplied; the enum would reject a bad
+  // value anyway, but with a raw Postgres message.
+  if (!STATUSES.includes(status as (typeof STATUSES)[number])) {
+    return `Unknown status "${status}".`;
+  }
 
   const supabase = await createClient();
-  await supabase.from("pre_orders").update({ status }).eq("id", id);
+  const { error } = await supabase
+    .from("pre_orders")
+    .update({ status: status as PreOrderStatus })
+    .eq("id", id);
+
+  if (error) return error.message;
 
   revalidatePath("/pre-orders");
   revalidatePath("/");
+  return null;
 }
 
-export async function deletePreOrder(formData: FormData): Promise<void> {
+export async function deletePreOrder(formData: FormData): Promise<string | null> {
   const id = String(formData.get("id"));
   const supabase = await createClient();
-  await supabase.from("pre_orders").delete().eq("id", id);
+  const { error } = await supabase.from("pre_orders").delete().eq("id", id);
+
+  if (error) return error.message;
 
   revalidatePath("/pre-orders");
   revalidatePath("/");
+  return null;
 }

@@ -18,12 +18,17 @@ export function PreOrderRowActions({ row }: { row: PreOrderRow }) {
   const [pending, startTransition] = useTransition();
   const [paying, setPaying] = useState(false);
   const [amount, setAmount] = useState(String(row.amount_paid));
+  const [error, setError] = useState<string | null>(null);
 
-  function run(fn: (fd: FormData) => Promise<void>, extra?: Record<string, string>) {
+  function run(
+    fn: (fd: FormData) => Promise<string | null>,
+    extra?: Record<string, string>,
+  ) {
     const fd = new FormData();
     fd.set("id", row.id);
     Object.entries(extra ?? {}).forEach(([k, v]) => fd.set(k, v));
-    startTransition(() => fn(fd));
+    // Surface the failure — swallowing it made a failed delete look like it worked.
+    startTransition(async () => setError(await fn(fd)));
   }
 
   if (paying) {
@@ -41,9 +46,12 @@ export function PreOrderRowActions({ row }: { row: PreOrderRow }) {
           disabled={pending}
           onClick={() =>
             startTransition(async () => {
-              await recordPayment(row.id, Number(amount) || 0);
-              setPaying(false);
-              router.refresh();
+              const err = await recordPayment(row.id, Number(amount) || 0);
+              setError(err);
+              if (!err) {
+                setPaying(false);
+                router.refresh();
+              }
             })
           }
         >
@@ -64,6 +72,11 @@ export function PreOrderRowActions({ row }: { row: PreOrderRow }) {
 
   return (
     <span className="flex items-center gap-2 whitespace-nowrap">
+      {error && (
+        <span className="text-xs text-red-600" title={error}>
+          Failed
+        </span>
+      )}
       {!settled && (
         <button
           onClick={() => {

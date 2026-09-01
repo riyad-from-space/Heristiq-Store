@@ -58,8 +58,11 @@ export function Stat({
   );
 }
 
+// text-base on phones: iOS Safari zooms the page whenever a focused control is
+// under 16px, and this app is used mostly on a phone. Back to text-sm from sm: up,
+// where the zoom rule does not apply.
 const baseField =
-  "w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-neutral-900 disabled:opacity-50 dark:border-neutral-700 dark:bg-neutral-950 dark:focus:border-neutral-300";
+  "w-full rounded-lg border border-neutral-300 bg-white px-3 py-2.5 text-base outline-none transition focus:border-neutral-900 disabled:opacity-50 sm:py-2 sm:text-sm dark:border-neutral-700 dark:bg-neutral-950 dark:focus:border-neutral-300";
 
 export function Field({
   label,

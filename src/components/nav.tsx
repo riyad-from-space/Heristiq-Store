@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -16,6 +17,13 @@ const LINKS = [
 
 export function Nav() {
   const pathname = usePathname();
+  const activeRef = useRef<HTMLAnchorElement>(null);
+
+  // Eight links overflow a phone, so the current page can sit off-screen with
+  // nothing to indicate it. Bring it into view on every navigation.
+  useEffect(() => {
+    activeRef.current?.scrollIntoView({ inline: "center", block: "nearest" });
+  }, [pathname]);
 
   return (
     <nav className="-mx-4 flex gap-1 overflow-x-auto px-4 md:mx-0 md:px-0">
@@ -25,6 +33,7 @@ export function Nav() {
         return (
           <Link
             key={link.href}
+            ref={active ? activeRef : undefined}
             href={link.href}
             className={`whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium transition ${
               active

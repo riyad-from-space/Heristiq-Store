@@ -53,16 +53,33 @@ export function PreOrderForm({
 
   const byId = useMemo(() => new Map(products.map((p) => [p.id, p])), [products]);
 
-  // Picking a product with a known price fills the total; the user can override.
+  // Picking a product with a known price fills the total, and the total keeps
+  // following the quantity until the user types their own figure — otherwise
+  // changing 1 to 3 silently left the single-unit price behind.
+  const [totalEdited, setTotalEdited] = useState(values != null);
+
+  function suggestTotal(productId: string, qty: number) {
+    const p = byId.get(productId);
+    return p && p.selling_price > 0 ? String(p.selling_price * qty) : "";
+  }
+
   function pickProduct(id: string) {
-    const p = byId.get(id);
-    const qty = Number(form.qty) || 1;
     setForm((f) => ({
       ...f,
       product_id: id,
+      total_amount: totalEdited
+        ? f.total_amount
+        : suggestTotal(id, Number(f.qty) || 1) || f.total_amount,
+    }));
+  }
+
+  function setQty(qty: string) {
+    setForm((f) => ({
+      ...f,
+      qty,
       total_amount:
-        p && p.selling_price > 0 && !f.total_amount
-          ? String(p.selling_price * qty)
+        !totalEdited && f.product_id
+          ? suggestTotal(f.product_id, Number(qty) || 1) || f.total_amount
           : f.total_amount,
     }));
   }
@@ -196,7 +213,7 @@ export function PreOrderForm({
           <Input
             type="number" min="1" step="1"
             value={form.qty}
-            onChange={(e) => set("qty", e.target.value)}
+            onChange={(e) => setQty(e.target.value)}
             onBlur={() => setTouched((t) => ({ ...t, qty: true }))}
           />
         </Field>
@@ -205,7 +222,10 @@ export function PreOrderForm({
           <Input
             type="number" min="0" step="1"
             value={form.total_amount}
-            onChange={(e) => set("total_amount", e.target.value)}
+            onChange={(e) => {
+              setTotalEdited(true);
+              set("total_amount", e.target.value);
+            }}
             placeholder="0"
           />
         </Field>
