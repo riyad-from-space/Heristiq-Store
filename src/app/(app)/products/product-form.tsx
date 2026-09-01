@@ -15,6 +15,8 @@ export type ProductValues = {
   reorder_level?: number;
   is_active?: boolean;
   avg_cost?: number;
+  /** False when the stock row could not be read — then cost must not be editable. */
+  avg_cost_known?: boolean;
 };
 
 export function ProductForm({
@@ -92,17 +94,27 @@ export function ProductForm({
             defaultValue={values.reorder_level ?? 3}
           />
         </Field>
-        {values.id && (
+        {values.id && values.avg_cost_known !== false && (
           <Field
             label="Cost per unit (BDT)"
             hint="Normally from your purchases. Changing it is recorded as a correction."
           >
+            {/* step must admit numeric(14,4) — "0.01" made every product whose
+                weighted average carried more than two decimals unsubmittable,
+                with no visible reason. */}
             <Input
               name="avg_cost"
               type="number"
               min="0"
-              step="0.01"
+              step="any"
               defaultValue={values.avg_cost ?? 0}
+            />
+            {/* Lets the server tell "left alone" apart from "deliberately set to
+                the same number", so an untouched save records no correction. */}
+            <input
+              type="hidden"
+              name="avg_cost_original"
+              value={String(values.avg_cost ?? 0)}
             />
           </Field>
         )}

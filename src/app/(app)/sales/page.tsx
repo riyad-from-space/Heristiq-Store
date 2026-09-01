@@ -21,7 +21,10 @@ export default async function SalesPage() {
   const { data, error } = await supabase
     .from("v_sale_profit")
     .select("*")
+    // sale_date alone is not a total order — many sales share a date, so the
+    // 100-row cut fell differently on each request and the totals moved.
     .order("sale_date", { ascending: false })
+    .order("id", { ascending: false })
     .limit(100);
 
   const sales = (data ?? []) as SaleProfitRow[];

@@ -1,6 +1,6 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { voidSale } from "./actions";
 
 export function VoidSaleButtons({
@@ -11,6 +11,7 @@ export function VoidSaleButtons({
   disabled: boolean;
 }) {
   const [pending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
 
   function run(status: "cancelled" | "returned") {
     const verb = status === "returned" ? "returned" : "cancelled";
@@ -19,13 +20,20 @@ export function VoidSaleButtons({
     const fd = new FormData();
     fd.set("id", id);
     fd.set("status", status);
-    startTransition(() => voidSale(fd));
+    // voidSale returns the message rather than throwing — there is no error
+    // boundary, so a throw here would blank the whole Sales page.
+    startTransition(async () => setError(await voidSale(fd)));
   }
 
   if (disabled) return <span className="text-xs text-neutral-400">—</span>;
 
   return (
-    <span className="flex gap-2 whitespace-nowrap">
+    <span className="flex items-center gap-2 whitespace-nowrap">
+      {error && (
+        <span className="text-xs text-red-600" title={error}>
+          Failed
+        </span>
+      )}
       <button
         onClick={() => run("returned")}
         disabled={pending}

@@ -35,7 +35,9 @@ export default async function ReportsPage() {
       .select("*")
       .order("units_30d", { ascending: false })
       .limit(10),
-    supabase.from("v_slow_moving").select("*").limit(15),
+    // Two reads: the full set for the KPI, a slice for the table. Summing the
+    // slice made the headline figure shrink to whatever happened to fit.
+    supabase.from("v_slow_moving").select("*"),
     supabase.from("v_low_stock").select("*"),
   ]);
 
@@ -48,6 +50,7 @@ export default async function ReportsPage() {
   const profit30 = daily.reduce((s, d) => s + Number(d.gross_profit), 0);
   const orders30 = daily.reduce((s, d) => s + Number(d.orders), 0);
   const tiedUp = slow.reduce((s, r) => s + Number(r.tied_up_value), 0);
+  const slowShown = slow.slice(0, 15);
 
   return (
     <>
@@ -139,12 +142,21 @@ export default async function ReportsPage() {
           )}
         </Card>
 
-        <Card title={`Slow moving (${slow.length})`}>
+        <Card
+          title={`Slow moving (${slow.length})`}
+          action={
+            slow.length > slowShown.length ? (
+              <span className="text-xs text-neutral-500">
+                showing {slowShown.length}
+              </span>
+            ) : null
+          }
+        >
           {slow.length === 0 ? (
             <Empty>Everything in stock has sold in the last 30 days.</Empty>
           ) : (
             <Table head={["Product", "On hand", "Value stuck", "Last sold"]}>
-              {slow.map((p) => (
+              {slowShown.map((p) => (
                 <tr key={p.id}>
                   <Td className="font-medium">{p.name}</Td>
                   <Td className="tabular-nums">{p.on_hand}</Td>

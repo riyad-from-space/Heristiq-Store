@@ -55,11 +55,17 @@ export async function updateProduct(_prev: string | null, fd: FormData) {
   const supabase = await createClient();
   const id = String(fd.get("id"));
 
+  // Same guard as createProduct — HTML `required` accepts a single space, which
+  // trims to null and would surface a raw not-null constraint message.
+  const sku = text(fd, "sku");
+  const name = text(fd, "name");
+  if (!sku || !name) return "SKU and name are required.";
+
   const { error } = await supabase
     .from("products")
     .update({
-      sku: text(fd, "sku"),
-      name: text(fd, "name"),
+      sku,
+      name,
       category_id: text(fd, "category_id"),
       supplier_id: text(fd, "supplier_id"),
       selling_price: money(fd, "selling_price"),
@@ -72,18 +78,32 @@ export async function updateProduct(_prev: string | null, fd: FormData) {
 
   // Unit cost is derived from purchases, so a manual change is recorded as a
   // correction rather than written straight to the stock cache.
+  //
+  // Only act when the value actually MOVED. Comparing against the value the form
+  // was rendered with distinguishes "left alone" from "deliberately set to the
+  // same number", so an ordinary rename no longer files a cost correction — and
+  // a stale or failed read cannot silently revalue the product to zero.
   const rawCost = fd.get("avg_cost");
-  if (rawCost !== null && String(rawCost).trim() !== "") {
+  const rawOriginal = fd.get("avg_cost_original");
+
+  if (rawCost !== null && String(rawCost).trim() !== "" && rawOriginal !== null) {
     const cost = Number(rawCost);
+    const original = Number(rawOriginal);
+
     if (!Number.isFinite(cost) || cost < 0) return "Cost must be zero or more.";
 
-    const { error: costError } = await supabase.rpc("revalue_product_cost", {
-      p_product_id: id,
-      p_new_cost: cost,
-      p_note: "Edited on the product page",
-    });
+    // numeric(14,4) in the database, so compare at that precision.
+    const changed = Math.abs(cost - original) >= 0.00005;
 
-    if (costError) return costError.message;
+    if (changed) {
+      const { error: costError } = await supabase.rpc("revalue_product_cost", {
+        p_product_id: id,
+        p_new_cost: cost,
+        p_note: "Edited on the product page",
+      });
+
+      if (costError) return costError.message;
+    }
   }
 
   revalidatePath("/products");

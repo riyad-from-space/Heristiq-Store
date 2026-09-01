@@ -16,7 +16,16 @@ const bdtPrecise = new Intl.NumberFormat("en-BD", {
 export function money(value: number | string | null | undefined, precise = false) {
   const n = Number(value ?? 0);
   if (!Number.isFinite(n)) return "—";
-  return precise ? bdtPrecise.format(n) : bdt.format(n);
+  if (precise) return bdtPrecise.format(n);
+
+  // Whole-taka display rounds a real sub-taka amount to nothing, and a small
+  // loss came out as the nonsense "-৳0". Below one taka, show the paisa; at
+  // exactly zero, never carry a sign.
+  if (n === 0) return bdt.format(0);
+  if (Math.abs(n) < 1) return bdtPrecise.format(n);
+
+  const rounded = bdt.format(n);
+  return rounded === bdt.format(-0) && n < 0 ? bdtPrecise.format(n) : rounded;
 }
 
 export function num(value: number | string | null | undefined, digits = 0) {

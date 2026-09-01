@@ -120,17 +120,29 @@ export async function updateSale(
   redirect("/sales");
 }
 
-export async function voidSale(formData: FormData) {
+export async function voidSale(formData: FormData): Promise<string | null> {
   const supabase = await createClient();
+
+  // A Server Action is a public endpoint and its FormData is client-supplied, so
+  // the status is checked here as well as in the function. Anything but these two
+  // would return stock while leaving the sale booked as revenue.
+  const status = String(formData.get("status") ?? "cancelled");
+  if (status !== "cancelled" && status !== "returned") {
+    return "A sale can only be cancelled or returned.";
+  }
 
   const { error } = await supabase.rpc("void_sale", {
     p_sale_id: String(formData.get("id")),
-    p_status: String(formData.get("status") ?? "cancelled"),
+    p_status: status,
   });
 
-  if (error) throw new Error(error.message);
+  // Returned, not thrown: there is no error boundary, so throwing blanks the page.
+  if (error) return error.message;
 
   revalidatePath("/sales");
   revalidatePath("/products");
+  revalidatePath("/stock");
+  revalidatePath("/reports");
   revalidatePath("/");
+  return null;
 }

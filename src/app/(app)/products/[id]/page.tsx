@@ -17,7 +17,13 @@ export default async function EditProductPage({ params }: PageProps<"/products/[
     supabase.from("product_stock").select("avg_cost").eq("product_id", id).maybeSingle(),
   ]);
 
+  // Distinguish "no such product" from "the read failed" — returning 404 for a
+  // record that exists hides an outage, and falling back to 0 for a cost that
+  // could not be read would let a save revalue the product down to nothing.
+  if (productRes.error) throw new Error(`Could not load product: ${productRes.error.message}`);
   if (!productRes.data) notFound();
+
+  const costKnown = !stockRes.error && stockRes.data != null;
 
   return (
     <>
@@ -27,7 +33,11 @@ export default async function EditProductPage({ params }: PageProps<"/products/[
           action={updateProduct}
           categories={catsRes.data ?? []}
           suppliers={supsRes.data ?? []}
-          values={{ ...productRes.data, avg_cost: Number(stockRes.data?.avg_cost ?? 0) }}
+          values={{
+            ...productRes.data,
+            avg_cost: costKnown ? Number(stockRes.data!.avg_cost) : undefined,
+            avg_cost_known: costKnown,
+          }}
           submitLabel="Save changes"
         />
       </Card>
