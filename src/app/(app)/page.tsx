@@ -9,6 +9,9 @@ export default async function DashboardPage() {
   const supabase = await createClient();
   const today = todayDhaka();
   const monthStart = `${today.slice(0, 7)}-01`;
+  // Bound both ends: without an upper bound a future-dated sale counts toward
+  // this month every month until that date actually arrives.
+  const monthEnd = `${today.slice(0, 7)}-31`;
 
   const [stockRes, lowRes, salesRes] = await Promise.all([
     supabase.from("v_product_stock").select("stock_value, on_hand, is_active"),
@@ -17,6 +20,7 @@ export default async function DashboardPage() {
       .from("v_sale_profit")
       .select("sale_date, product_revenue, cogs, gross_profit, status")
       .gte("sale_date", monthStart)
+      .lte("sale_date", monthEnd)
       .eq("posted", true)
       .not("status", "in", "(cancelled,returned)"),
   ]);
@@ -28,9 +32,12 @@ export default async function DashboardPage() {
   const low = (lowRes.data ?? []) as ProductStockRow[];
   const sales = (salesRes.data ?? []) as SaleProfitRow[];
 
-  const stockValue = stock.reduce((s, r) => s + Number(r.stock_value), 0);
-  const activeProducts = stock.filter((r) => r.is_active).length;
-  const outOfStock = stock.filter((r) => r.is_active && r.on_hand <= 0).length;
+  // Count and value the same set — the hint says "active products", so the
+  // headline figure must not quietly include retired ones.
+  const activeStock = stock.filter((r) => r.is_active);
+  const stockValue = activeStock.reduce((s, r) => s + Number(r.stock_value), 0);
+  const activeProducts = activeStock.length;
+  const outOfStock = activeStock.filter((r) => r.on_hand <= 0).length;
 
   const todaySales = sales.filter((s) => s.sale_date === today);
   const sum = (rows: SaleProfitRow[], key: keyof SaleProfitRow) =>

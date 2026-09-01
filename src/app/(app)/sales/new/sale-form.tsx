@@ -49,7 +49,9 @@ export function SaleForm({
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const [lines, setLines] = useState<Line[]>(
+  // Lazy initializer — the eager form ran nextKey++ / blankLine() on every
+  // render, bumping the module-scope counter for a value React discards.
+  const [lines, setLines] = useState<Line[]>(() =>
     values
       ? values.lines.map((l) => ({
           key: nextKey++,
