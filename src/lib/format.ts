@@ -52,6 +52,18 @@ export function dateTime(value: string | null | undefined) {
   });
 }
 
+/**
+ * The first day of the month after the given YYYY-MM-DD, as YYYY-MM-DD.
+ * Used as an exclusive upper bound so month windows do not need a day count —
+ * building "-31" by hand is not a valid date in a 30-day month.
+ */
+export function firstOfNextMonth(day: string) {
+  const [y, m] = day.split("-").map(Number);
+  return m === 12
+    ? `${y + 1}-01-01`
+    : `${y}-${String(m + 1).padStart(2, "0")}-01`;
+}
+
 /** N days before today in Asia/Dhaka, as YYYY-MM-DD. */
 export function daysAgoDhaka(days: number) {
   const [y, m, d] = todayDhaka().split("-").map(Number);

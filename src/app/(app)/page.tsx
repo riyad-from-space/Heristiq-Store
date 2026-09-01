@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { money, num, todayDhaka } from "@/lib/format";
+import { firstOfNextMonth, money, num, todayDhaka } from "@/lib/format";
 import { Card, Empty, LinkButton, Stat, Table, Td } from "@/components/ui";
 import type { ProductStockRow, SaleProfitRow } from "@/lib/types";
 
@@ -10,8 +10,10 @@ export default async function DashboardPage() {
   const today = todayDhaka();
   const monthStart = `${today.slice(0, 7)}-01`;
   // Bound both ends: without an upper bound a future-dated sale counts toward
-  // this month every month until that date actually arrives.
-  const monthEnd = `${today.slice(0, 7)}-31`;
+  // this month every month until that date actually arrives. Use the first of
+  // next month with an exclusive upper bound — a literal "-31" is not a real
+  // date in a 30-day month and Postgres rejects it outright.
+  const nextMonthStart = firstOfNextMonth(today);
 
   const [stockRes, lowRes, salesRes] = await Promise.all([
     supabase.from("v_product_stock").select("stock_value, on_hand, is_active"),
@@ -20,7 +22,7 @@ export default async function DashboardPage() {
       .from("v_sale_profit")
       .select("sale_date, product_revenue, cogs, gross_profit, status")
       .gte("sale_date", monthStart)
-      .lte("sale_date", monthEnd)
+      .lt("sale_date", nextMonthStart)
       .eq("posted", true)
       .not("status", "in", "(cancelled,returned)"),
   ]);
