@@ -188,3 +188,38 @@ export async function deletePreOrder(formData: FormData): Promise<string | null>
   revalidatePath("/");
   return null;
 }
+
+/**
+ * Delivery: the pre-order becomes a real sale, once.
+ *
+ * Everything up to this point was a promise — no stock, no revenue, no profit.
+ * This is the moment goods move, so this is where the sale and the ledger entry
+ * are written. The database guards against delivering twice, so a double click
+ * cannot double-count.
+ */
+export async function deliverPreOrder(
+  id: string,
+  deliveryCharge = 0,
+  deliveryCost = 0,
+): Promise<{ error: string } | { saleId: string }> {
+  if (deliveryCharge < 0 || deliveryCost < 0) {
+    return { error: "Delivery amounts cannot be negative." };
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("deliver_pre_order", {
+    p_pre_order_id: id,
+    p_delivery_charge: deliveryCharge,
+    p_delivery_cost: deliveryCost,
+  });
+
+  if (error) return { error: error.message };
+
+  revalidatePath("/pre-orders");
+  revalidatePath("/sales");
+  revalidatePath("/products");
+  revalidatePath("/stock");
+  revalidatePath("/reports");
+  revalidatePath("/");
+  return { saleId: String(data) };
+}

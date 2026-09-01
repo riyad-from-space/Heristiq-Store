@@ -13,6 +13,7 @@ const PAYMENT_TONE: Record<PaymentStatus, "neutral" | "good" | "warn" | "bad"> =
   paid: "good",
   partial: "warn",
   unpaid: "bad",
+  "no price yet": "neutral",
 };
 
 const STATUS_TONE: Record<PreOrderStatus, "neutral" | "good" | "warn" | "bad"> = {
@@ -80,7 +81,7 @@ export default async function PreOrdersPage({
           label="Still owed"
           value={money(outstanding)}
           tone={outstanding > 0 ? "warn" : "neutral"}
-          hint="To collect on delivery"
+          hint="Not counted as revenue until delivered"
         />
       </div>
 
@@ -162,9 +163,11 @@ export default async function PreOrdersPage({
       </Card>
 
       <p className="text-xs text-neutral-500">
-        A pre-order does not move stock — it is a promise, not a shipment. When you
-        deliver one, record it on the Sales page; that is what takes the item out of
-        inventory.
+        Nothing here counts towards your stock, revenue or profit. A pre-order is a
+        promise, not a shipment. Press <strong>Deliver</strong> when the customer
+        actually gets the item — that records the sale for you, takes it out of
+        stock, and marks the pre-order fulfilled. You do not need to enter it again
+        on the Sales page.
       </p>
     </>
   );

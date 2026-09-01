@@ -7,6 +7,7 @@ import { money } from "@/lib/format";
 import { Button, Input } from "@/components/ui";
 import {
   deletePreOrder,
+  deliverPreOrder,
   markPreOrderPaid,
   recordPayment,
   setPreOrderStatus,
@@ -69,6 +70,29 @@ export function PreOrderRowActions({ row }: { row: PreOrderRow }) {
 
   const settled = row.payment_status === "paid";
   const closed = row.status === "fulfilled" || row.status === "cancelled";
+  const delivered = row.converted_sale_id != null;
+
+  // Delivery is the one action that moves stock and books revenue, so it says
+  // exactly what will happen before it happens.
+  function deliver() {
+    const ok = confirm(
+      `Deliver ${row.qty} x ${row.product_name ?? row.item_note ?? "item"} to ` +
+        `${row.customer_name}?\n\n` +
+        `This records a sale of ${money(row.total_amount)}, takes ${row.qty} out of ` +
+        `stock, and marks the pre-order fulfilled.\n\n` +
+        `Until now this pre-order has not affected any of your totals.`,
+    );
+    if (!ok) return;
+
+    startTransition(async () => {
+      const result = await deliverPreOrder(row.id);
+      if ("error" in result) setError(result.error);
+      else {
+        setError(null);
+        router.push("/sales");
+      }
+    });
+  }
 
   return (
     <span className="flex items-center gap-2 whitespace-nowrap">
@@ -99,13 +123,31 @@ export function PreOrderRowActions({ row }: { row: PreOrderRow }) {
           Part pay
         </button>
       )}
-      {!closed && (
+      {delivered ? (
+        <Link
+          href="/sales"
+          className="text-xs text-emerald-700 hover:underline dark:text-emerald-400"
+        >
+          View sale
+        </Link>
+      ) : (
+        row.status !== "cancelled" && (
+          <button
+            onClick={deliver}
+            disabled={pending}
+            className="text-xs font-medium text-emerald-700 hover:underline disabled:opacity-50 dark:text-emerald-400"
+          >
+            {pending ? "…" : "Deliver"}
+          </button>
+        )
+      )}
+      {!closed && !delivered && (
         <button
-          onClick={() => run(setPreOrderStatus, { status: "fulfilled" })}
+          onClick={() => run(setPreOrderStatus, { status: "confirmed" })}
           disabled={pending}
           className="text-xs text-neutral-500 hover:underline disabled:opacity-50"
         >
-          Fulfil
+          Confirm
         </button>
       )}
       <Link

@@ -23,8 +23,13 @@
 revoke execute on all functions in schema public from anon;
 revoke execute on all functions in schema public from public;
 
--- Stop future functions from being granted to anon in the first place.
+-- Stop FUTURE functions being callable in the first place. Both halves matter:
+-- Supabase adds the anon grant, and Postgres itself grants EXECUTE to PUBLIC on
+-- every new function. Revoking only the first leaves the second, so a function
+-- added in a later migration would silently be reachable again — which is
+-- exactly what happened to deliver_pre_order in 0012.
 alter default privileges in schema public revoke execute on functions from anon;
+alter default privileges in schema public revoke execute on functions from public;
 
 -- The app calls these as a signed-in user.
 grant execute on function post_purchase(uuid)                              to authenticated;
