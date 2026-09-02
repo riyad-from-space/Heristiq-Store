@@ -72,6 +72,8 @@ export default async function ProductsPage() {
               "Product",
               "SKU",
               "On hand",
+              "Reserved",
+              "Available",
               "Avg cost",
               "Price",
               "Margin",
@@ -90,14 +92,25 @@ export default async function ProductsPage() {
                   )}
                 </Td>
                 <Td className="text-neutral-500">{p.sku}</Td>
+                <Td className="tabular-nums text-neutral-500">{p.on_hand}</Td>
                 <Td
                   className={`tabular-nums ${
-                    p.is_active && p.on_hand <= p.reorder_level
-                      ? "font-semibold text-amber-600 dark:text-amber-400"
+                    p.reserved > 0 ? "text-neutral-700 dark:text-neutral-300" : "text-neutral-400"
+                  }`}
+                  title={p.reserved > 0 ? "Claimed by open pre-orders" : undefined}
+                >
+                  {p.reserved > 0 ? p.reserved : "—"}
+                </Td>
+                {/* Available, not on hand, is what drives the low-stock warning —
+                    pre-ordered items are still on the shelf but already promised. */}
+                <Td
+                  className={`tabular-nums font-medium ${
+                    p.is_active && p.available <= p.reorder_level
+                      ? "text-amber-600 dark:text-amber-400"
                       : ""
                   }`}
                 >
-                  {p.on_hand}
+                  {p.available}
                 </Td>
                 <Td className="tabular-nums text-neutral-500">
                   {money(p.avg_cost, true)}

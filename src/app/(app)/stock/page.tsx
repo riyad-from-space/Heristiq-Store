@@ -35,7 +35,7 @@ export default async function StockPage() {
       .limit(150),
     supabase
       .from("v_product_stock")
-      .select("id, name, sku, on_hand")
+      .select("id, name, sku, on_hand, reserved, available")
       .eq("is_active", true)
       .order("name"),
   ]);
@@ -50,7 +50,9 @@ export default async function StockPage() {
         <p className="mb-4 text-sm text-neutral-500">
           Use this when the shelf count does not match the system — a miscount, a
           damaged piece, or a gift. Every adjustment is recorded permanently
-          rather than overwriting the number.
+          rather than overwriting the number. Adjust against what is physically
+          on the shelf, not what is free to sell: pre-ordered items are still
+          there, just already promised.
         </p>
         <AdjustForm products={productsRes.data ?? []} />
       </Card>

@@ -4,83 +4,38 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { money } from "@/lib/format";
-import { Button, Input } from "@/components/ui";
-import {
-  deletePreOrder,
-  deliverPreOrder,
-  markPreOrderPaid,
-  recordPayment,
-  setPreOrderStatus,
-} from "./actions";
+import { deletePreOrder, deliverPreOrder } from "./actions";
 import type { PreOrderRow } from "@/lib/types";
 
+/**
+ * Three actions only: Edit, Deliver, Delete.
+ *
+ * Status and payment changes belong in the form, where the whole order is in
+ * view. A row full of one-click state changes invites a mistap, and Deliver is
+ * the one that moves stock and books revenue.
+ */
 export function PreOrderRowActions({ row }: { row: PreOrderRow }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const [paying, setPaying] = useState(false);
-  const [amount, setAmount] = useState(String(row.amount_paid));
   const [error, setError] = useState<string | null>(null);
 
-  function run(
-    fn: (fd: FormData) => Promise<string | null>,
-    extra?: Record<string, string>,
-  ) {
-    const fd = new FormData();
-    fd.set("id", row.id);
-    Object.entries(extra ?? {}).forEach(([k, v]) => fd.set(k, v));
-    // Surface the failure — swallowing it made a failed delete look like it worked.
-    startTransition(async () => setError(await fn(fd)));
-  }
-
-  if (paying) {
-    return (
-      <span className="flex items-center gap-1.5 whitespace-nowrap">
-        <Input
-          type="number" min="0" step="1"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-          className="!w-24 !py-1 !text-xs"
-          autoFocus
-        />
-        <Button
-          className="!px-2 !py-1 !text-xs"
-          disabled={pending}
-          onClick={() =>
-            startTransition(async () => {
-              const err = await recordPayment(row.id, Number(amount) || 0);
-              setError(err);
-              if (!err) {
-                setPaying(false);
-                router.refresh();
-              }
-            })
-          }
-        >
-          Save
-        </Button>
-        <button
-          onClick={() => setPaying(false)}
-          className="text-xs text-neutral-500 hover:underline"
-        >
-          Cancel
-        </button>
-      </span>
-    );
-  }
-
-  const settled = row.payment_status === "paid";
-  const closed = row.status === "fulfilled" || row.status === "cancelled";
   const delivered = row.converted_sale_id != null;
+  const cancelled = row.status === "cancelled";
 
-  // Delivery is the one action that moves stock and books revenue, so it says
-  // exactly what will happen before it happens.
   function deliver() {
+    if (row.unlinked_items > 0) {
+      setError(
+        `${row.unlinked_items} item(s) are not linked to a catalogue product. Add them to Products first, then edit this pre-order.`,
+      );
+      return;
+    }
+
     const ok = confirm(
-      `Deliver ${row.qty} x ${row.product_name ?? row.item_note ?? "item"} to ` +
-        `${row.customer_name}?\n\n` +
-        `This records a sale of ${money(row.total_amount)}, takes ${row.qty} out of ` +
+      `Deliver this order to ${row.customer_name}?\n\n` +
+        `${row.summary ?? `${row.total_qty} item(s)`}\n\n` +
+        `This records a sale of ${money(row.total_amount)}, takes the items out of ` +
         `stock, and marks the pre-order fulfilled.\n\n` +
-        `Until now this pre-order has not affected any of your totals.`,
+        `Until now it has not affected any of your totals.`,
     );
     if (!ok) return;
 
@@ -94,35 +49,33 @@ export function PreOrderRowActions({ row }: { row: PreOrderRow }) {
     });
   }
 
+  function remove() {
+    const ok = confirm(
+      `Delete the pre-order for ${row.customer_name}?\n\n` +
+        `${row.summary ?? ""}\n\nThis cannot be undone.`,
+    );
+    if (!ok) return;
+
+    const fd = new FormData();
+    fd.set("id", row.id);
+    startTransition(async () => setError(await deletePreOrder(fd)));
+  }
+
   return (
-    <span className="flex items-center gap-2 whitespace-nowrap">
+    <span className="flex items-center gap-3 whitespace-nowrap">
       {error && (
         <span className="text-xs text-red-600" title={error}>
           Failed
         </span>
       )}
-      {!settled && (
-        <button
-          onClick={() => {
-            if (confirm(`Mark the full ${money(row.total_amount)} as paid?`)) {
-              run(markPreOrderPaid);
-            }
-          }}
-          disabled={pending}
-          className="text-xs text-emerald-700 hover:underline disabled:opacity-50 dark:text-emerald-400"
-        >
-          Mark paid
-        </button>
-      )}
-      {!settled && (
-        <button
-          onClick={() => setPaying(true)}
-          disabled={pending}
-          className="text-xs text-neutral-500 hover:underline disabled:opacity-50"
-        >
-          Part pay
-        </button>
-      )}
+
+      <Link
+        href={`/pre-orders/${row.id}`}
+        className="text-xs text-neutral-600 hover:underline dark:text-neutral-400"
+      >
+        Edit
+      </Link>
+
       {delivered ? (
         <Link
           href="/sales"
@@ -131,7 +84,7 @@ export function PreOrderRowActions({ row }: { row: PreOrderRow }) {
           View sale
         </Link>
       ) : (
-        row.status !== "cancelled" && (
+        !cancelled && (
           <button
             onClick={deliver}
             disabled={pending}
@@ -141,27 +94,9 @@ export function PreOrderRowActions({ row }: { row: PreOrderRow }) {
           </button>
         )
       )}
-      {!closed && !delivered && (
-        <button
-          onClick={() => run(setPreOrderStatus, { status: "confirmed" })}
-          disabled={pending}
-          className="text-xs text-neutral-500 hover:underline disabled:opacity-50"
-        >
-          Confirm
-        </button>
-      )}
-      <Link
-        href={`/pre-orders/${row.id}`}
-        className="text-xs text-neutral-500 hover:underline"
-      >
-        Edit
-      </Link>
+
       <button
-        onClick={() => {
-          if (confirm(`Delete the pre-order for ${row.customer_name}? This cannot be undone.`)) {
-            run(deletePreOrder);
-          }
-        }}
+        onClick={remove}
         disabled={pending}
         className="text-xs text-red-600 hover:underline disabled:opacity-50"
       >

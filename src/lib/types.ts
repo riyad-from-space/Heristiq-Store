@@ -50,22 +50,35 @@ export type PreOrderRow = {
   id: string;
   customer_name: string;
   customer_phone: string;
-  product_id: string | null;
-  product_name: string | null;
-  product_sku: string | null;
-  item_note: string | null;
-  qty: number;
+  customer_address: string | null;
   total_amount: number;
   amount_paid: number;
   amount_due: number;
   payment_status: PaymentStatus;
-  converted_sale_id: string | null;
   order_date: string;
   expected_date: string | null;
   status: PreOrderStatus;
   note: string | null;
   created_at: string;
   updated_at: string;
+  converted_sale_id: string | null;
+  item_count: number;
+  total_qty: number;
+  summary: string | null;
+  unlinked_items: number;
+};
+
+export type PreOrderItemRow = {
+  id: string;
+  pre_order_id: string;
+  product_id: string | null;
+  product_name: string | null;
+  product_sku: string | null;
+  item_note: string | null;
+  qty: number;
+  unit_price: number;
+  line_total: number;
+  on_hand: number;
 };
 
 export type ProductStockRow = {
@@ -83,6 +96,10 @@ export type ProductStockRow = {
   unit_margin: number;
   margin_pct: number | null;
   last_movement_at: string | null;
+  /** Claimed by open pre-orders. on_hand is untouched by a pre-order. */
+  reserved: number;
+  /** on_hand minus reserved — what is still free to promise. */
+  available: number;
 };
 
 export type SaleProfitRow = {

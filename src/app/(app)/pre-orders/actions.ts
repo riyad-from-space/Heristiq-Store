@@ -5,47 +5,57 @@ import { createClient } from "@/lib/supabase/server";
 import { normalisePhone } from "@/lib/phone";
 import type { PreOrderStatus } from "@/lib/types";
 
-export type PreOrderInput = {
-  customer_name: string;
-  customer_phone: string;
+export type PreOrderLine = {
   product_id: string | null;
   item_note: string | null;
   qty: number;
-  total_amount: number;
+  unit_price: number;
+};
+
+export type PreOrderPayload = {
+  customer_name: string;
+  customer_phone: string;
+  customer_address: string | null;
   amount_paid: number;
   order_date: string;
   expected_date: string | null;
   status: PreOrderStatus;
   note: string | null;
+  lines: PreOrderLine[];
 };
 
-/** Shared by create and update so the two can never drift apart. */
-function validate(input: PreOrderInput): { error: string } | { value: PreOrderInput } {
+/** Every path that writes a pre-order goes through here, so rules cannot drift. */
+function validate(input: PreOrderPayload): { error: string } | { value: PreOrderPayload } {
   const name = input.customer_name.trim();
   if (!name) return { error: "Customer name is required." };
 
   const phone = normalisePhone(input.customer_phone ?? "");
   if (!phone) {
-    return {
-      error: "Enter a valid mobile number — 11 digits starting 01, e.g. 01712345678.",
-    };
+    return { error: "Enter a valid mobile number — 11 digits starting 01, e.g. 01712345678." };
   }
 
-  if (!input.product_id && !(input.item_note ?? "").trim()) {
-    return { error: "Choose a product, or describe the item if it is not in the catalogue." };
+  const lines = input.lines.filter((l) => l.product_id || (l.item_note ?? "").trim());
+  if (lines.length === 0) {
+    return { error: "Add at least one item." };
   }
 
-  if (!Number.isFinite(input.qty) || input.qty < 1) {
-    return { error: "Quantity must be at least 1." };
+  for (const l of lines) {
+    if (!Number.isFinite(l.qty) || l.qty < 1) {
+      return { error: "Every item needs a quantity of at least 1." };
+    }
+    if (!Number.isFinite(l.unit_price) || l.unit_price < 0) {
+      return { error: "Item prices cannot be negative." };
+    }
   }
-  if (!Number.isFinite(input.total_amount) || input.total_amount < 0) {
-    return { error: "Total amount cannot be negative." };
-  }
+
+  const total = lines.reduce((s, l) => s + l.qty * l.unit_price, 0);
   if (!Number.isFinite(input.amount_paid) || input.amount_paid < 0) {
-    return { error: "Amount paid cannot be negative." };
+    return { error: "Advance paid cannot be negative." };
   }
-  if (input.amount_paid > input.total_amount) {
-    return { error: "Amount paid is more than the total. Raise the total, or lower what was paid." };
+  if (input.amount_paid > total) {
+    return {
+      error: "The advance is more than the order total. Raise a price, or lower what was paid.",
+    };
   }
   if (input.expected_date && input.expected_date < input.order_date) {
     return { error: "Expected delivery cannot be before the order date." };
@@ -56,123 +66,46 @@ function validate(input: PreOrderInput): { error: string } | { value: PreOrderIn
       ...input,
       customer_name: name,
       customer_phone: phone,
-      item_note: (input.item_note ?? "").trim() || null,
+      customer_address: (input.customer_address ?? "").trim() || null,
       note: (input.note ?? "").trim() || null,
-      qty: Math.trunc(input.qty),
-      expected_date: input.expected_date || null,
+      lines: lines.map((l) => ({
+        product_id: l.product_id || null,
+        item_note: l.product_id ? null : (l.item_note ?? "").trim() || null,
+        qty: Math.trunc(l.qty),
+        unit_price: l.unit_price,
+      })),
     },
   };
 }
 
-export async function createPreOrder(input: PreOrderInput): Promise<string | null> {
-  const checked = validate(input);
-  if ("error" in checked) return checked.error;
-
-  const supabase = await createClient();
-  const { error } = await supabase.from("pre_orders").insert(checked.value);
-  if (error) return error.message;
-
-  revalidatePath("/pre-orders");
-  revalidatePath("/");
-  return null;
-}
-
-export async function updatePreOrder(
-  id: string,
-  input: PreOrderInput,
+/** Create when id is null, otherwise replace. One RPC, so it cannot half-apply. */
+export async function savePreOrder(
+  id: string | null,
+  input: PreOrderPayload,
 ): Promise<string | null> {
   const checked = validate(input);
   if ("error" in checked) return checked.error;
+  const v = checked.value;
 
   const supabase = await createClient();
-  const { error } = await supabase.from("pre_orders").update(checked.value).eq("id", id);
-  if (error) return error.message;
-
-  revalidatePath("/pre-orders");
-  revalidatePath(`/pre-orders/${id}`);
-  revalidatePath("/");
-  return null;
-}
-
-/** Quick action from the list: settle the balance without opening the form. */
-export async function markPreOrderPaid(formData: FormData): Promise<string | null> {
-  const id = String(formData.get("id"));
-  const supabase = await createClient();
-
-  const { data, error: readError } = await supabase
-    .from("pre_orders")
-    .select("total_amount")
-    .eq("id", id)
-    .maybeSingle();
-
-  if (readError) return readError.message;
-  if (!data) return "Pre-order not found.";
-  if (Number(data.total_amount) <= 0) {
-    return "Set a total amount before marking this paid.";
-  }
-
-  const { error } = await supabase
-    .from("pre_orders")
-    .update({ amount_paid: data.total_amount })
-    .eq("id", id);
+  const { error } = await supabase.rpc("save_pre_order", {
+    p_id: id,
+    p_customer_name: v.customer_name,
+    p_customer_phone: v.customer_phone,
+    p_customer_address: v.customer_address,
+    p_amount_paid: v.amount_paid,
+    p_order_date: v.order_date,
+    p_expected_date: v.expected_date,
+    p_status: v.status,
+    p_note: v.note,
+    p_lines: v.lines,
+  });
 
   if (error) return error.message;
 
   revalidatePath("/pre-orders");
-  revalidatePath("/");
-  return null;
-}
-
-/** Record a part payment. Clamped to the total, which the DB also enforces. */
-export async function recordPayment(
-  id: string,
-  amount: number,
-): Promise<string | null> {
-  if (!Number.isFinite(amount) || amount < 0) return "Amount cannot be negative.";
-
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from("pre_orders")
-    .select("total_amount")
-    .eq("id", id)
-    .maybeSingle();
-
-  if (!data) return "Pre-order not found.";
-
-  const capped = Math.min(amount, Number(data.total_amount));
-  const { error } = await supabase
-    .from("pre_orders")
-    .update({ amount_paid: capped })
-    .eq("id", id);
-
-  if (error) return error.message;
-
-  revalidatePath("/pre-orders");
-  revalidatePath(`/pre-orders/${id}`);
-  return null;
-}
-
-const STATUSES = ["pending", "confirmed", "fulfilled", "cancelled"] as const;
-
-export async function setPreOrderStatus(formData: FormData): Promise<string | null> {
-  const id = String(formData.get("id"));
-  const status = String(formData.get("status"));
-
-  // FormData on a Server Action is client-supplied; the enum would reject a bad
-  // value anyway, but with a raw Postgres message.
-  if (!STATUSES.includes(status as (typeof STATUSES)[number])) {
-    return `Unknown status "${status}".`;
-  }
-
-  const supabase = await createClient();
-  const { error } = await supabase
-    .from("pre_orders")
-    .update({ status: status as PreOrderStatus })
-    .eq("id", id);
-
-  if (error) return error.message;
-
-  revalidatePath("/pre-orders");
+  revalidatePath("/products");
+  revalidatePath("/stock");
   revalidatePath("/");
   return null;
 }
@@ -185,6 +118,8 @@ export async function deletePreOrder(formData: FormData): Promise<string | null>
   if (error) return error.message;
 
   revalidatePath("/pre-orders");
+  revalidatePath("/products");
+  revalidatePath("/stock");
   revalidatePath("/");
   return null;
 }
@@ -192,10 +127,9 @@ export async function deletePreOrder(formData: FormData): Promise<string | null>
 /**
  * Delivery: the pre-order becomes a real sale, once.
  *
- * Everything up to this point was a promise — no stock, no revenue, no profit.
- * This is the moment goods move, so this is where the sale and the ledger entry
- * are written. The database guards against delivering twice, so a double click
- * cannot double-count.
+ * Everything before this was a promise — the goods were reserved but never left
+ * the shelf, and no revenue existed. This is the moment goods move, so this is
+ * where the sale and the ledger entry are written.
  */
 export async function deliverPreOrder(
   id: string,

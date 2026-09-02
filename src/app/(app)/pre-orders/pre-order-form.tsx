@@ -6,40 +6,81 @@ import { Button, Field, Input, Select, Textarea } from "@/components/ui";
 import { money } from "@/lib/format";
 import { isValidPhone } from "@/lib/phone";
 import { PRE_ORDER_STATUSES, type PreOrderStatus } from "@/lib/types";
-import { createPreOrder, updatePreOrder, type PreOrderInput } from "./actions";
+import { savePreOrder, type PreOrderPayload } from "./actions";
 
 export type CatalogueProduct = {
   id: string;
   name: string;
   sku: string;
   selling_price: number;
+  available: number;
 };
 
-export type PreOrderValues = PreOrderInput & { id: string };
+type Line = {
+  key: number;
+  product_id: string;
+  item_note: string;
+  qty: string;
+  unit_price: string;
+};
+
+let nextKey = 1;
+const blankLine = (): Line => ({
+  key: nextKey++,
+  product_id: "",
+  item_note: "",
+  qty: "1",
+  unit_price: "",
+});
+
+export type PreOrderValues = {
+  id: string;
+  customer_name: string;
+  customer_phone: string;
+  customer_address: string | null;
+  amount_paid: number;
+  order_date: string;
+  expected_date: string | null;
+  status: PreOrderStatus;
+  note: string | null;
+  lines: {
+    product_id: string | null;
+    item_note: string | null;
+    qty: number;
+    unit_price: number;
+  }[];
+};
 
 export function PreOrderForm({
   products,
   today,
   values,
-  onDone,
 }: {
   products: CatalogueProduct[];
   today: string;
   values?: PreOrderValues;
-  onDone?: () => void;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [touched, setTouched] = useState<Record<string, boolean>>({});
 
+  const [lines, setLines] = useState<Line[]>(() =>
+    values && values.lines.length > 0
+      ? values.lines.map((l) => ({
+          key: nextKey++,
+          product_id: l.product_id ?? "",
+          item_note: l.item_note ?? "",
+          qty: String(l.qty),
+          unit_price: String(l.unit_price),
+        }))
+      : [blankLine()],
+  );
+
   const [form, setForm] = useState({
     customer_name: values?.customer_name ?? "",
     customer_phone: values?.customer_phone ?? "",
-    product_id: values?.product_id ?? "",
-    item_note: values?.item_note ?? "",
-    qty: String(values?.qty ?? 1),
-    total_amount: String(values?.total_amount ?? ""),
+    customer_address: values?.customer_address ?? "",
     amount_paid: String(values?.amount_paid ?? 0),
     order_date: values?.order_date ?? today,
     expected_date: values?.expected_date ?? "",
@@ -53,43 +94,41 @@ export function PreOrderForm({
 
   const byId = useMemo(() => new Map(products.map((p) => [p.id, p])), [products]);
 
-  // Picking a product with a known price fills the total, and the total keeps
-  // following the quantity until the user types their own figure — otherwise
-  // changing 1 to 3 silently left the single-unit price behind.
-  const [totalEdited, setTotalEdited] = useState(values != null);
-
-  function suggestTotal(productId: string, qty: number) {
-    const p = byId.get(productId);
-    return p && p.selling_price > 0 ? String(p.selling_price * qty) : "";
+  function update(key: number, patch: Partial<Line>) {
+    setLines((ls) =>
+      ls.map((l) => {
+        if (l.key !== key) return l;
+        const next = { ...l, ...patch };
+        // Choosing a product fills its list price, unless one was typed already.
+        if (patch.product_id !== undefined && patch.product_id) {
+          const p = byId.get(patch.product_id);
+          if (p && p.selling_price > 0 && !l.unit_price) {
+            next.unit_price = String(p.selling_price);
+          }
+          next.item_note = "";
+        }
+        return next;
+      }),
+    );
   }
 
-  function pickProduct(id: string) {
-    setForm((f) => ({
-      ...f,
-      product_id: id,
-      total_amount: totalEdited
-        ? f.total_amount
-        : suggestTotal(id, Number(f.qty) || 1) || f.total_amount,
-    }));
-  }
+  const totals = useMemo(() => {
+    let total = 0;
+    for (const l of lines) {
+      total += (Number(l.qty) || 0) * (Number(l.unit_price) || 0);
+    }
+    const paid = Number(form.amount_paid) || 0;
+    return {
+      total,
+      paid,
+      due: Math.max(0, total - paid),
+      payment:
+        total === 0 ? "no price yet" : paid >= total ? "paid" : paid > 0 ? "partial" : "unpaid",
+    };
+  }, [lines, form.amount_paid]);
 
-  function setQty(qty: string) {
-    setForm((f) => ({
-      ...f,
-      qty,
-      total_amount:
-        !totalEdited && f.product_id
-          ? suggestTotal(f.product_id, Number(qty) || 1) || f.total_amount
-          : f.total_amount,
-    }));
-  }
+  const filled = lines.filter((l) => l.product_id || l.item_note.trim());
 
-  const total = Number(form.total_amount) || 0;
-  const paid = Number(form.amount_paid) || 0;
-  const due = Math.max(0, total - paid);
-  const payment = total === 0 ? "unpaid" : paid >= total ? "paid" : paid > 0 ? "partial" : "unpaid";
-
-  // Inline, per-field, shown only once the user has left the field.
   const fieldErrors: Record<string, string | null> = {
     customer_name: !form.customer_name.trim() ? "Required." : null,
     customer_phone: !form.customer_phone.trim()
@@ -97,11 +136,11 @@ export function PreOrderForm({
       : !isValidPhone(form.customer_phone)
         ? "11 digits starting 01, e.g. 01712345678."
         : null,
-    item: !form.product_id && !form.item_note.trim()
-      ? "Pick a product, or describe the item."
-      : null,
-    qty: (Number(form.qty) || 0) < 1 ? "At least 1." : null,
-    amount_paid: paid > total ? `More than the total of ${money(total)}.` : null,
+    lines: filled.length === 0 ? "Add at least one item." : null,
+    amount_paid:
+      totals.paid > totals.total
+        ? `More than the order total of ${money(totals.total)}.`
+        : null,
     expected_date:
       form.expected_date && form.expected_date < form.order_date
         ? "Cannot be before the order date."
@@ -109,11 +148,12 @@ export function PreOrderForm({
   };
 
   const firstError = Object.values(fieldErrors).find(Boolean) ?? null;
+  const show = (k: string) => (touched[k] ? fieldErrors[k] : null);
 
   function submit() {
     setTouched({
-      customer_name: true, customer_phone: true, item: true,
-      qty: true, amount_paid: true, expected_date: true,
+      customer_name: true, customer_phone: true, lines: true,
+      amount_paid: true, expected_date: true,
     });
     if (firstError) {
       setError(firstError);
@@ -121,25 +161,25 @@ export function PreOrderForm({
     }
     setError(null);
 
-    const payload: PreOrderInput = {
+    const payload: PreOrderPayload = {
       customer_name: form.customer_name,
       customer_phone: form.customer_phone,
-      product_id: form.product_id || null,
-      item_note: form.item_note || null,
-      qty: Number(form.qty) || 1,
-      total_amount: total,
-      amount_paid: paid,
+      customer_address: form.customer_address.trim() || null,
+      amount_paid: totals.paid,
       order_date: form.order_date || today,
       expected_date: form.expected_date || null,
       status: form.status,
-      note: form.note || null,
+      note: form.note.trim() || null,
+      lines: filled.map((l) => ({
+        product_id: l.product_id || null,
+        item_note: l.product_id ? null : l.item_note.trim() || null,
+        qty: Number(l.qty) || 1,
+        unit_price: Number(l.unit_price) || 0,
+      })),
     };
 
     startTransition(async () => {
-      const result = values
-        ? await updatePreOrder(values.id, payload)
-        : await createPreOrder(payload);
-
+      const result = await savePreOrder(values?.id ?? null, payload);
       if (result) {
         setError(result);
         return;
@@ -147,23 +187,22 @@ export function PreOrderForm({
       if (values) {
         router.push("/pre-orders");
       } else {
+        setLines([blankLine()]);
         setForm((f) => ({
           ...f,
-          customer_name: "", customer_phone: "", product_id: "", item_note: "",
-          qty: "1", total_amount: "", amount_paid: "0", expected_date: "", note: "",
+          customer_name: "", customer_phone: "", customer_address: "",
+          amount_paid: "0", expected_date: "", note: "",
         }));
         setTouched({});
         router.refresh();
-        onDone?.();
       }
     });
   }
 
-  const show = (k: string) => (touched[k] ? fieldErrors[k] : null);
-
   return (
-    <div className="space-y-4">
-      <div className="grid gap-3 sm:grid-cols-2">
+    <div className="space-y-5">
+      {/* ---------------- customer ---------------- */}
+      <div className="grid gap-3 sm:grid-cols-3">
         <Field label="Customer name *" hint={show("customer_name") ?? undefined}>
           <Input
             value={form.customer_name}
@@ -173,8 +212,7 @@ export function PreOrderForm({
             aria-invalid={!!show("customer_name")}
           />
         </Field>
-
-        <Field label="Contact number *" hint={show("customer_phone") ?? "Mobile, e.g. 01712345678"}>
+        <Field label="Contact number *" hint={show("customer_phone") ?? "e.g. 01712345678"}>
           <Input
             value={form.customer_phone}
             onChange={(e) => set("customer_phone", e.target.value)}
@@ -184,75 +222,116 @@ export function PreOrderForm({
             aria-invalid={!!show("customer_phone")}
           />
         </Field>
-
-        <Field label="Product" hint={show("item") ?? "From the catalogue"}>
-          <Select
-            value={form.product_id}
-            onChange={(e) => pickProduct(e.target.value)}
-            onBlur={() => setTouched((t) => ({ ...t, item: true }))}
-          >
-            <option value="">— not in the catalogue —</option>
-            {products.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name} ({p.sku})
-              </option>
-            ))}
-          </Select>
-        </Field>
-
-        <Field label="Item description" hint="Only if it is not in the catalogue yet">
+        <Field label="Delivery address">
           <Input
-            value={form.item_note}
-            onChange={(e) => set("item_note", e.target.value)}
-            onBlur={() => setTouched((t) => ({ ...t, item: true }))}
-            placeholder="Gold anklet, custom size"
+            value={form.customer_address}
+            onChange={(e) => set("customer_address", e.target.value)}
+            placeholder="House, road, area, city"
           />
         </Field>
+      </div>
 
-        <Field label="Quantity *" hint={show("qty") ?? undefined}>
-          <Input
-            type="number" min="1" step="1"
-            value={form.qty}
-            onChange={(e) => setQty(e.target.value)}
-            onBlur={() => setTouched((t) => ({ ...t, qty: true }))}
-          />
-        </Field>
+      {/* ---------------- items ---------------- */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-medium text-neutral-600 dark:text-neutral-400">
+            Items
+          </span>
+          {show("lines") && (
+            <span className="text-xs text-red-600">{show("lines")}</span>
+          )}
+        </div>
 
-        <Field label="Total amount (BDT)">
-          <Input
-            type="number" min="0" step="1"
-            value={form.total_amount}
-            onChange={(e) => {
-              setTotalEdited(true);
-              set("total_amount", e.target.value);
-            }}
-            placeholder="0"
-          />
-        </Field>
+        {lines.map((line) => {
+          const p = line.product_id ? byId.get(line.product_id) : null;
+          const qty = Number(line.qty) || 0;
+          const short = p != null && qty > p.available;
 
-        <Field label="Amount paid (BDT)" hint={show("amount_paid") ?? "Advance taken so far"}>
+          return (
+            <div
+              key={line.key}
+              className="grid gap-2 rounded-lg border border-neutral-200 p-2 sm:grid-cols-[1fr_5rem_7rem_auto] sm:items-start dark:border-neutral-800"
+            >
+              <div className="space-y-1">
+                <Select
+                  value={line.product_id}
+                  onChange={(e) => update(line.key, { product_id: e.target.value })}
+                >
+                  <option value="">— not in the catalogue —</option>
+                  {products.map((op) => (
+                    <option key={op.id} value={op.id}>
+                      {op.name} ({op.sku}) · {op.available} free
+                    </option>
+                  ))}
+                </Select>
+                {!line.product_id && (
+                  <Input
+                    value={line.item_note}
+                    onChange={(e) => update(line.key, { item_note: e.target.value })}
+                    placeholder="Describe the item, e.g. gold anklet, custom size"
+                  />
+                )}
+                {short && (
+                  <p className="text-xs text-amber-600 dark:text-amber-400">
+                    Only {p!.available} free — you can still take the order, this is
+                    just a heads-up.
+                  </p>
+                )}
+              </div>
+
+              <Input
+                type="number" min="1" step="1" inputMode="numeric"
+                value={line.qty}
+                onChange={(e) => update(line.key, { qty: e.target.value })}
+                aria-label="Quantity"
+              />
+              <Input
+                type="number" min="0" step="1" inputMode="decimal"
+                value={line.unit_price}
+                onChange={(e) => update(line.key, { unit_price: e.target.value })}
+                placeholder="Price each"
+                aria-label="Unit price"
+              />
+
+              <button
+                onClick={() =>
+                  setLines((ls) => (ls.length === 1 ? [blankLine()] : ls.filter((l) => l.key !== line.key)))
+                }
+                className="justify-self-start px-2 py-2 text-xs text-neutral-500 hover:text-red-600 sm:justify-self-auto"
+                aria-label="Remove item"
+              >
+                Remove
+              </button>
+            </div>
+          );
+        })}
+
+        <Button tone="ghost" onClick={() => setLines((ls) => [...ls, blankLine()])}>
+          + Add another item
+        </Button>
+      </div>
+
+      {/* ---------------- money and dates ---------------- */}
+      <div className="grid gap-3 sm:grid-cols-4">
+        <Field label="Advance paid (BDT)" hint={show("amount_paid") ?? "For the whole order"}>
           <Input
-            type="number" min="0" step="1"
+            type="number" min="0" step="1" inputMode="decimal"
             value={form.amount_paid}
             onChange={(e) => set("amount_paid", e.target.value)}
             onBlur={() => setTouched((t) => ({ ...t, amount_paid: true }))}
             aria-invalid={!!show("amount_paid")}
           />
         </Field>
-
         <Field label="Order status">
           <Select
             value={form.status}
             onChange={(e) => set("status", e.target.value as PreOrderStatus)}
           >
-            {PRE_ORDER_STATUSES.map((s) => (
-              <option key={s} value={s} className="capitalize">
-                {s}
-              </option>
+            {PRE_ORDER_STATUSES.filter((s) => s !== "fulfilled").map((s) => (
+              <option key={s} value={s} className="capitalize">{s}</option>
             ))}
           </Select>
         </Field>
-
         <Field label="Order date">
           <Input
             type="date"
@@ -260,7 +339,6 @@ export function PreOrderForm({
             onChange={(e) => set("order_date", e.target.value)}
           />
         </Field>
-
         <Field label="Expected delivery" hint={show("expected_date") ?? undefined}>
           <Input
             type="date"
@@ -281,12 +359,24 @@ export function PreOrderForm({
         />
       </Field>
 
-      <div className="flex flex-wrap items-center gap-4 rounded-lg bg-neutral-50 px-3 py-2 text-sm dark:bg-neutral-800/50">
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-1 rounded-lg bg-neutral-50 px-3 py-2 text-sm dark:bg-neutral-800/50">
         <span className="text-neutral-500">
-          Due <strong className="tabular-nums text-neutral-900 dark:text-neutral-100">{money(due)}</strong>
+          Order total{" "}
+          <strong className="tabular-nums text-neutral-900 dark:text-neutral-100">
+            {money(totals.total)}
+          </strong>
         </span>
         <span className="text-neutral-500">
-          Payment <strong className="capitalize text-neutral-900 dark:text-neutral-100">{payment}</strong>
+          Paid <strong className="tabular-nums">{money(totals.paid)}</strong>
+        </span>
+        <span className="text-neutral-500">
+          Due{" "}
+          <strong className="tabular-nums text-amber-600 dark:text-amber-400">
+            {money(totals.due)}
+          </strong>
+        </span>
+        <span className="text-neutral-500">
+          Payment <strong className="capitalize">{totals.payment}</strong>
         </span>
       </div>
 

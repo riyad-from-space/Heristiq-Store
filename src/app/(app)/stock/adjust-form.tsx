@@ -7,7 +7,10 @@ import { adjustStock } from "./actions";
 export function AdjustForm({
   products,
 }: {
-  products: { id: string; name: string; sku: string; on_hand: number }[];
+  products: {
+    id: string; name: string; sku: string;
+    on_hand: number; reserved: number; available: number;
+  }[];
 }) {
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -27,7 +30,8 @@ export function AdjustForm({
           <option value="">— choose —</option>
           {products.map((p) => (
             <option key={p.id} value={p.id}>
-              {p.name} ({p.sku}) · {p.on_hand} in stock
+              {p.name} ({p.sku}) · {p.on_hand} on shelf
+              {p.reserved > 0 ? `, ${p.available} free` : ""}
             </option>
           ))}
         </Select>

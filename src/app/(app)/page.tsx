@@ -16,7 +16,7 @@ export default async function DashboardPage() {
   const nextMonthStart = firstOfNextMonth(today);
 
   const [stockRes, lowRes, salesRes] = await Promise.all([
-    supabase.from("v_product_stock").select("stock_value, on_hand, is_active"),
+    supabase.from("v_product_stock").select("stock_value, on_hand, available, is_active"),
     supabase.from("v_low_stock").select("*").limit(6),
     supabase
       .from("v_sale_profit")
@@ -29,7 +29,7 @@ export default async function DashboardPage() {
 
   const stock = (stockRes.data ?? []) as Pick<
     ProductStockRow,
-    "stock_value" | "on_hand" | "is_active"
+    "stock_value" | "on_hand" | "available" | "is_active"
   >[];
   const low = (lowRes.data ?? []) as ProductStockRow[];
   const sales = (salesRes.data ?? []) as SaleProfitRow[];
@@ -39,7 +39,8 @@ export default async function DashboardPage() {
   const activeStock = stock.filter((r) => r.is_active);
   const stockValue = activeStock.reduce((s, r) => s + Number(r.stock_value), 0);
   const activeProducts = activeStock.length;
-  const outOfStock = activeStock.filter((r) => r.on_hand <= 0).length;
+  // Out of stock means nothing left to promise, so it counts availability.
+  const outOfStock = activeStock.filter((r) => r.available <= 0).length;
 
   const todaySales = sales.filter((s) => s.sale_date === today);
   const sum = (rows: SaleProfitRow[], key: keyof SaleProfitRow) =>
