@@ -33,6 +33,11 @@ truth for inventory, cost and profit. This repo does not own stock.
 - **`available`, not `on_hand`.** A unit claimed by an open pre-order is still in
   the drawer, so the ERP leaves `on_hand` alone — but it is promised. The
   storefront sells `available` (`on_hand − reserved`) so nothing sells twice.
+- **The storefront owns orders.** `storefront_orders` and friends live in the
+  same Postgres but are this repo's tables ([`supabase/migrations/1001`](supabase/migrations/1001_storefront_orders.sql)).
+  An order is a customer's *request*; it becomes an ERP `sale` — and therefore a
+  stock movement, via `post_sale()` — only once it is delivered and the cash is
+  collected. Nothing in this repo writes `stock_movements`.
 
 ## Stack
 
@@ -51,6 +56,13 @@ Two deviations from the original brief, both deliberate:
   a Supabase Postgres, so using it means the storefront reads real prices and
   real stock immediately instead of shipping a mock and a second database that
   would have to be reconciled.
+- **The cart is in `localStorage`, not a database.** The brief listed carts
+  under persistence, but a server cart costs a round trip per quantity change
+  and needs a cookie and a reaper for abandoned rows — and buys nothing here:
+  there is no login, so it cannot follow anyone to another device. Orders, OTPs
+  and (in phase 5) manual-payment records are persisted properly; those are the
+  rows that matter. What makes it safe is that the cart decides nothing — see
+  **What the browser is not allowed to decide** below.
 - **No `next/image`.** Cloudinary already resizes, re-encodes and serves from a
   CDN edge. Stacking Next's optimiser in front means two resizes and two caches
   for one picture, and on Workers it needs a runtime binding. See
@@ -71,6 +83,65 @@ The consequences are load-bearing, so they are enforced rather than documented:
   exposes `avg_cost`, `stock_value`, `unit_margin` and `supplier`; none may
   reach a customer. Never replace that list with `select("*")`.
 
+## What the browser is not allowed to decide
+
+Checkout is the only part of this site where being wrong costs money, so the
+trust boundary is worth stating plainly. The cart lives in `localStorage`, and
+**every number in it is a display snapshot**. When an order is placed
+([`src/lib/orders/place.ts`](src/lib/orders/place.ts)) the server:
+
+1. takes only `productId` and `qty` from the payload — the schema has no field
+   for a price, a subtotal or a total, so there is none to tamper with;
+2. re-reads every product from the ERP and uses *those* prices, which is also
+   what catches a cart that sat in a phone for a week across a price change;
+3. re-checks free stock and turns a sold-out line into a pre-order rather than
+   overselling it;
+4. recomputes the delivery fee from the district;
+5. checks that the phone on the order is the phone that actually answered an
+   SMS — not merely that *some* number was verified in this browser;
+6. writes it in one transaction ([`place_storefront_order`](supabase/migrations/1001_storefront_orders.sql)),
+   where a CHECK constraint verifies the total adds up a second time.
+
+Two smaller ones that are easy to get wrong:
+
+- **Order URLs use a random token, not the reference.** References are
+  sequential (`HQ-01001`), so `/order/HQ-01002` would let anyone walk the
+  numbers and read every customer's name, phone and home address.
+- **OTP codes are stored as `HMAC-SHA256(code, secret)`.** A bare hash of six
+  digits is a rainbow table anyone can build in a second.
+
+### Phone verification, and why it earns its friction
+
+Return-to-origin — a courier carrying a ৳300 parcel across the country to a
+number that never answers — is the single biggest cost in Bangladeshi
+f-commerce, and most of it is orders placed with a phone nobody can reach.
+Making the number answer once, before the parcel moves, removes most of that.
+Three limits close three different holes: attempts per code (guessing), sends
+per hour (using this site as a free SMS bomber), and a resend cooldown
+(the same, faster, and double-taps costing two SMS).
+
+The gateway is behind an interface ([`src/lib/otp/sender.ts`](src/lib/otp/sender.ts))
+because which Bangladeshi bulk-SMS provider this business ends up on depends on
+trade-licence paperwork nobody has finished. WhatsApp Cloud API drops in as a
+third implementation with no change anywhere else.
+
+## Database
+
+The ERP applies `0001`–`0999` from its own repo. This repo owns `1001` up, so
+the two numberings cannot interleave and make the applied order depend on which
+repo ran last.
+
+```bash
+# Supabase → SQL editor, or:
+supabase db push        # from this directory, against the ERP's project
+```
+
+`supabase/migrations/1001_storefront_orders.sql` creates `storefront_orders`,
+`storefront_order_items`, `storefront_order_events`, `storefront_phone_otp` and
+the `place_storefront_order()` transaction. Until it is applied, the storefront
+reads the catalogue fine and **cannot record an order** — which is the correct
+failure, rather than a half-written one.
+
 ## Getting started
 
 ```bash
@@ -83,6 +154,14 @@ npm run dev                    # http://localhost:3000
 a mock catalogue seeded from the ERP's own seed files — the real seven SKUs,
 names and stock counts. Set the two `SUPABASE_*` variables to switch to live
 ERP prices and stock; nothing else changes.
+
+That now covers **the whole checkout**, not just browsing: with no credentials
+the OTP store falls back to memory and the code is printed to the server log and
+shown on screen, and a placed order is kept in the server's memory so the
+confirmation page renders. That page says so in an unmissable banner — a
+confirmation that looks real for an order nobody will ever pack is the one
+outcome this flow must not produce. `node scripts/checkout-e2e.mjs` walks all of
+it.
 
 Note that the mock ships **demo prices**. The business has not set retail prices
 yet, so the ERP has `selling_price = 0` for all seven, and the live site will
@@ -105,7 +184,8 @@ See [`.env.example`](.env.example). Every variable is optional in development;
 | `npm run lint` | ESLint |
 | `npm run preview` | Build + run the Cloudflare Worker locally |
 | `npm run deploy` | Build + deploy to Cloudflare |
-| `node scripts/shoot.mjs / --slices` | Screenshot a route at phone size and report horizontal overflow |
+| `node scripts/shoot.mjs /` | Screenshot a route at phone size and report horizontal overflow |
+| `node scripts/checkout-e2e.mjs` | Walk a real order through the site: add to cart → OTP → address → place → confirm |
 
 `scripts/shoot.mjs` drives the Chrome already on the machine — no browser
 download. Add `--desktop` for 1440px, `--full` for one tall image. It fails loud
@@ -121,9 +201,15 @@ src/components/site/     header, footer, newsletter
 src/components/home/     home page sections
 src/components/shop/     grid filters, sort, empty state
 src/components/product/  card, gallery + zoom, buy box, size guide, share
+src/components/cart/     cart store, cart page, add-to-cart, quick-add
+src/components/checkout/ form, address cascade, phone verification, summary
 src/lib/erp/             the ErpClient seam: types, mock, real, factory
-src/lib/                 format (৳ / Asia/Dhaka), phone, cloudinary, delivery, env
+src/lib/orders/          order types, checkout schema, server-side placement
+src/lib/otp/             sender + store seams, verification, signed cookie
+src/lib/                 format (৳ / Asia/Dhaka), phone, cloudinary, bd-geo,
+                         delivery, crypto, env
 src/config/              brand copy, nav, motifs, testimonials
+supabase/migrations/     storefront-owned tables (1001+)
 ```
 
 ## Build order
@@ -135,7 +221,10 @@ Each phase is runnable and committed on its own.
 - [x] **2 — `ErpClient` → Shop + PDP.** Grid with finish/motif filters and sort;
   gallery with zoom; stock state; size guide; delivery estimate; share.
   Filters are links, so a filtered grid is a shareable URL and works before JS.
-- [ ] **3 — Cart + checkout.** Division → District → Area cascade, COD, phone OTP.
+- [x] **3 — Cart + checkout.** One-screen checkout; Division → District →
+  Area/thana cascade (8 / 64 / ~500, the third level a suggestion not a
+  constraint); COD; phone OTP with rate limits; server-side re-pricing; order
+  confirmation on an unguessable URL.
 - [ ] **4 — Steadfast.** One-tap order push, delivery-status webhook, tracking page.
 - [ ] **5 — Manual bKash/Nagad,** COD deposit toggle, pre-order flow.
 - [ ] **6 — Admin-lite,** promo/threshold config, SEO and performance polish.

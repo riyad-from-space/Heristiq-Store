@@ -1,29 +1,28 @@
-import Link from "next/link";
-import { MessageCircle, ShieldCheck, Truck } from "lucide-react";
+import { ShieldCheck, Truck } from "lucide-react";
+import { AddToCart } from "@/components/cart/add-to-cart";
 import { WhatsAppIcon } from "@/components/ui/brand-icons";
 import { Button } from "@/components/ui/button";
 import { site } from "@/config/site";
+import { cartLineFor } from "@/lib/cart/line";
 import { dayRange, taka } from "@/lib/format";
 import { whatsappNumber } from "@/lib/phone";
-import { deliveryTerms } from "@/lib/delivery";
+import { deliveryTerms } from "@/lib/delivery.server";
 import type { Product } from "@/lib/erp/types";
 import { isBuyable, isPreOrder } from "@/lib/erp/types";
 
 /*
  * The buy box.
  *
- * Phase 2 has no cart, so the primary action is a pre-filled WhatsApp message —
- * which is not a placeholder, it is how this business already takes orders. It
- * works today, on the phone the customer is already holding.
- *
- * Phase 3 replaces this with add-to-cart and demotes WhatsApp to "ask about
- * this piece". Everything else in this component — the price, the stock state,
- * the delivery promise, the COD note — stays exactly as it is.
+ * Add to cart is the primary action now that phase 3 has a cart. WhatsApp stays
+ * as the secondary, and that is not a courtesy: this business already takes
+ * orders over WhatsApp, plenty of customers prefer asking a human before
+ * sending money to a website they met on Instagram, and removing it would lose
+ * those orders rather than convert them.
  *
  * Three states it has to get right:
- *   priced + available  → order it
- *   priced + sold out   → pre-order it, clearly labelled
- *   unpriced            → no order button at all, and say why
+ *   priced + available  → add to cart
+ *   priced + sold out   → add to cart as a pre-order, clearly labelled
+ *   unpriced            → no cart button at all, and say why
  */
 export function BuyBox({ product, url }: { product: Product; url: string }) {
   const terms = deliveryTerms();
@@ -32,11 +31,11 @@ export function BuyBox({ product, url }: { product: Product; url: string }) {
   const wa = whatsappNumber(site.contact.phone);
 
   const message = [
-    `Hi Heristiq, I'd like to order:`,
+    `Hi Heristiq, I have a question about:`,
     ``,
     `${product.name} (${product.sku})`,
     product.price !== null ? `Price: ${taka(product.price)}` : `Price: please confirm`,
-    preOrder ? `This one is sold out — happy to pre-order.` : ``,
+    preOrder ? `This one is sold out — is a pre-order possible?` : ``,
     ``,
     url,
   ]
@@ -68,20 +67,17 @@ export function BuyBox({ product, url }: { product: Product; url: string }) {
       )}
 
       <div className="flex flex-col gap-3">
+        {buyable && (
+          <AddToCart line={cartLineFor(product)} preOrder={preOrder} />
+        )}
         {waHref && (
-          <Button asChild size="lg" variant={preOrder ? "secondary" : "primary"}>
+          <Button asChild size="lg" variant="secondary">
             <a href={waHref} target="_blank" rel="noopener noreferrer">
               <WhatsAppIcon size={18} />
-              {preOrder ? "Pre-order on WhatsApp" : "Order on WhatsApp"}
+              {buyable ? "Ask on WhatsApp" : "Message us about this piece"}
             </a>
           </Button>
         )}
-        <Button asChild size="lg" variant="secondary">
-          <Link href="/contact">
-            <MessageCircle size={17} />
-            Ask about this piece
-          </Link>
-        </Button>
       </div>
 
       <dl className="border-line mt-8 space-y-4 border-t pt-6 text-sm">

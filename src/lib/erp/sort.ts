@@ -53,7 +53,8 @@ export function sortProducts(
   return sorted.map(toCard);
 }
 
-function toCard(p: Product): ProductCard {
+/** Drop the PDP-only prose. Exported so the clients share one shape. */
+export function toCard(p: Product): ProductCard {
   return {
     id: p.id,
     sku: p.sku,

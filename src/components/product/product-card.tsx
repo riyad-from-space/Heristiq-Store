@@ -1,19 +1,25 @@
 import Link from "next/link";
+import { QuickAdd } from "@/components/cart/quick-add";
 import { Price } from "@/components/ui/price";
 import { ProductImage } from "@/components/ui/product-image";
 import { StockBadge } from "@/components/ui/badge";
 import { finishes } from "@/config/site";
+import { cartLineFor } from "@/lib/cart/line";
+import { isBuyable } from "@/lib/erp/types";
 import type { ProductCard as ProductCardType } from "@/lib/erp/types";
 import { cn } from "@/lib/utils";
 
 /*
  * A card in the shop grid.
  *
- * The whole card is one link. Quick-add is deliberately NOT here: it needs a
- * cart, which arrives in phase 3, and a half-working add button on a grid is
- * worse than none. The hover behaviour is the second image sliding in, which is
- * the standard jewellery-site affordance and costs nothing on a phone (where
- * there is no hover and the first image simply stays).
+ * The card is a <div> with a stretched link over it rather than one big <a>,
+ * because quick-add is a button and a button inside a link is invalid markup
+ * that browsers resolve by guessing. The overlay pattern keeps one large tap
+ * target for "open the piece" while leaving room for a real control on top.
+ *
+ * The hover behaviour is the second image crossfading in, the standard
+ * jewellery-site affordance, which costs nothing on a phone where there is no
+ * hover and the first image simply stays.
  */
 export function ProductCardTile({
   product,
@@ -28,10 +34,7 @@ export function ProductCardTile({
   const finish = product.finish ? finishes[product.finish] : null;
 
   return (
-    <Link
-      href={`/shop/${product.slug}`}
-      className={cn("group block focus:outline-none", className)}
-    >
+    <div className={cn("group relative", className)}>
       <div className="relative">
         <ProductImage
           image={hero}
@@ -60,6 +63,14 @@ export function ProductCardTile({
         {/* The focus ring goes on the image, not the whole card, so keyboard
             focus lands somewhere visible without outlining the text too. */}
         <span className="pointer-events-none absolute inset-0 ring-gold transition group-focus-visible:ring-2 group-focus-visible:ring-offset-2" />
+
+        {isBuyable(product) && (
+          <QuickAdd
+            line={cartLineFor(product)}
+            preOrder={product.availability.state === "pre_order"}
+            className="absolute right-2 bottom-2"
+          />
+        )}
       </div>
 
       {/*
@@ -73,8 +84,15 @@ export function ProductCardTile({
        * shapes.
        */}
       <div className="pt-4">
-        <h3 className="font-display text-base leading-snug decoration-line-strong underline-offset-4 group-hover:underline">
-          {product.name}
+        <h3 className="font-display text-base leading-snug">
+          {/* The stretched link. Everything in the card except quick-add is
+              inside its hit area, and the accessible name is the piece. */}
+          <Link
+            href={`/shop/${product.slug}`}
+            className="decoration-line-strong underline-offset-4 before:absolute before:inset-0 before:z-10 focus:outline-none group-hover:underline"
+          >
+            {product.name}
+          </Link>
         </h3>
         <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
           <Price
@@ -94,6 +112,6 @@ export function ProductCardTile({
           )}
         </div>
       </div>
-    </Link>
+    </div>
   );
 }

@@ -1,10 +1,14 @@
 import "server-only";
+import type { ErpClient, StockLevel } from "@/lib/erp/client";
 import type {
+  CourierKey,
   CreatedOrder,
-  ErpClient,
   OrderDraft,
-  StockLevel,
-} from "@/lib/erp/client";
+  OrderStatus,
+  PaymentMethod,
+  PaymentState,
+  StoreOrder,
+} from "@/lib/orders/types";
 import { erpDb } from "@/lib/erp/supabase";
 import {
   MERCHANDISING,
@@ -12,7 +16,7 @@ import {
   type Merchandising,
 } from "@/lib/erp/merchandising";
 import { availabilityFrom } from "@/lib/erp/mock";
-import { sortProducts } from "@/lib/erp/sort";
+import { sortProducts, toCard } from "@/lib/erp/sort";
 import type { Product, ProductCard, ProductQuery } from "@/lib/erp/types";
 import { slugify } from "@/lib/utils";
 
@@ -90,6 +94,65 @@ function toProduct(row: CatalogueRow): Product {
   };
 }
 
+/*
+ * Postgres numeric arrives over PostgREST as a string, because a float cannot
+ * hold every numeric exactly. This business has no paisa, so the safe and
+ * honest conversion is to whole taka.
+ */
+function money(raw: number | string | null): number {
+  const n = Number(raw ?? 0);
+  return Number.isFinite(n) ? Math.round(n) : 0;
+}
+
+/*
+ * The order and its lines in one round trip, via the foreign key. Columns are
+ * listed for the same reason the catalogue's are: so a column added to these
+ * tables later cannot appear on a customer's page by accident. `risk_note` in
+ * particular is an internal judgement about a phone number and must never be
+ * selected here.
+ */
+const ORDER_COLUMNS = `
+  reference, public_token, status, created_at,
+  customer_name, customer_phone, phone_verified_at,
+  division, district, area, address_line, landmark,
+  courier_preference, payment_method, payment_state,
+  subtotal, delivery_fee, discount, total, amount_paid,
+  has_pre_order, customer_note,
+  storefront_order_items ( sku, name, qty, unit_price, is_pre_order )
+`;
+
+type OrderRow = {
+  reference: string;
+  public_token: string;
+  status: OrderStatus;
+  created_at: string;
+  customer_name: string;
+  customer_phone: string;
+  phone_verified_at: string | null;
+  division: string;
+  district: string;
+  area: string | null;
+  address_line: string;
+  landmark: string | null;
+  courier_preference: CourierKey | null;
+  payment_method: PaymentMethod;
+  payment_state: PaymentState;
+  subtotal: number | string;
+  delivery_fee: number | string;
+  discount: number | string;
+  total: number | string;
+  amount_paid: number | string;
+  has_pre_order: boolean;
+  customer_note: string | null;
+  storefront_order_items: {
+    sku: string;
+    name: string;
+    qty: number;
+    unit_price: number | string;
+    is_pre_order: boolean;
+  }[] | null;
+};
+
 async function fetchCatalogue(): Promise<Product[]> {
   const { data, error } = await erpDb()
     .from("v_product_stock")
@@ -143,6 +206,26 @@ export class SupabaseErpClient implements ErpClient {
     return data ? toProduct(data as CatalogueRow) : null;
   }
 
+  async getProductsByIds(productIds: string[]): Promise<ProductCard[]> {
+    if (productIds.length === 0) return [];
+
+    const { data, error } = await erpDb()
+      .from("v_product_stock")
+      .select(CATALOGUE_COLUMNS)
+      .in("id", productIds);
+
+    if (error) throw new Error(`ERP catalogue read failed: ${error.message}`);
+
+    /*
+     * No is_active filter, deliberately. A piece deactivated while it sat in
+     * someone's cart must come back so checkout can say "this is no longer
+     * available" — dropping it here would silently place the order without it.
+     * `toProduct` maps is_active into availability, which is where that
+     * decision belongs.
+     */
+    return (data as CatalogueRow[]).map((row) => toCard(toProduct(row)));
+  }
+
   async getStock(productIds: string[]): Promise<StockLevel[]> {
     if (productIds.length === 0) return [];
 
@@ -165,14 +248,101 @@ export class SupabaseErpClient implements ErpClient {
 
   async createOrder(draft: OrderDraft): Promise<CreatedOrder> {
     /*
-     * Phase 3. Orders need their own tables (storefront_orders, order_items,
-     * order_events) plus the RPC that converts a delivered order into an ERP
-     * sale via post_sale(). Writing a half-order now would leave rows nothing
-     * can reconcile, so this throws until that migration exists.
+     * One RPC, not three inserts. An order row with no items is unrecoverable
+     * — the customer has a confirmation and the owner has nothing to pack —
+     * and supabase-js cannot open a transaction, so the transaction lives in
+     * place_storefront_order(). See supabase/migrations/1001.
+     *
+     * snake_case keys because the payload is read by SQL, not by TypeScript.
      */
-    throw new Error(
-      `Cannot record order ${draft.reference}: createOrder lands in phase 3 ` +
-        "(checkout), with the storefront_orders migration. See README → Build order.",
-    );
+    const { data, error } = await erpDb()
+      .rpc("place_storefront_order", {
+        p: {
+          customer_name: draft.customerName,
+          customer_phone: draft.customerPhone,
+          phone_verified_at: draft.phoneVerifiedAt,
+          division: draft.address.division,
+          district: draft.address.district,
+          area: draft.address.area,
+          address_line: draft.address.addressLine,
+          landmark: draft.address.landmark,
+          courier_preference: draft.courierPreference,
+          payment_method: draft.paymentMethod,
+          payment_state: draft.paymentState,
+          subtotal: draft.subtotal,
+          delivery_fee: draft.deliveryFee,
+          discount: draft.discount,
+          total: draft.total,
+          amount_paid: draft.amountPaid,
+          has_pre_order: draft.lines.some((line) => line.isPreOrder),
+          customer_note: draft.customerNote,
+          lines: draft.lines.map((line) => ({
+            product_id: line.productId,
+            sku: line.sku,
+            name: line.name,
+            qty: line.qty,
+            unit_price: line.unitPrice,
+            is_pre_order: line.isPreOrder,
+          })),
+        },
+      })
+      .single();
+
+    if (error) throw new Error(`Order write failed: ${error.message}`);
+
+    const row = data as { id: string; reference: string; public_token: string };
+    return { id: row.id, reference: row.reference, token: row.public_token };
+  }
+
+  async getOrder(token: string): Promise<StoreOrder | null> {
+    /*
+     * Looked up by public_token, never by reference. References are sequential
+     * (HQ-01001, HQ-01002…), so a page keyed on one would let anyone walk the
+     * numbers and read every customer's name, phone and home address.
+     */
+    const { data, error } = await erpDb()
+      .from("storefront_orders")
+      .select(ORDER_COLUMNS)
+      .eq("public_token", token)
+      .maybeSingle();
+
+    if (error) throw new Error(`Order read failed: ${error.message}`);
+    if (!data) return null;
+
+    const row = data as OrderRow;
+
+    return {
+      reference: row.reference,
+      token: row.public_token,
+      status: row.status,
+      placedAt: row.created_at,
+      customerName: row.customer_name,
+      customerPhone: row.customer_phone,
+      phoneVerified: row.phone_verified_at !== null,
+      address: {
+        division: row.division,
+        district: row.district,
+        area: row.area,
+        addressLine: row.address_line,
+        landmark: row.landmark,
+      },
+      courierPreference: row.courier_preference,
+      paymentMethod: row.payment_method,
+      paymentState: row.payment_state,
+      lines: (row.storefront_order_items ?? []).map((item) => ({
+        sku: item.sku,
+        name: item.name,
+        qty: item.qty,
+        unitPrice: money(item.unit_price),
+        isPreOrder: item.is_pre_order,
+      })),
+      subtotal: money(row.subtotal),
+      deliveryFee: money(row.delivery_fee),
+      discount: money(row.discount),
+      total: money(row.total),
+      amountPaid: money(row.amount_paid),
+      hasPreOrder: row.has_pre_order,
+      customerNote: row.customer_note,
+    };
   }
 }

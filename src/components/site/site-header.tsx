@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Menu, Search, ShoppingBag, X } from "lucide-react";
+import { useCart } from "@/components/cart/cart-provider";
 import { Container } from "@/components/ui/layout";
 import { nav, site } from "@/config/site";
 import { cn } from "@/lib/utils";
@@ -16,10 +17,10 @@ import { cn } from "@/lib/utils";
  * scrolls, it is bone with a hairline. That keeps the hero photograph
  * full-bleed without losing the nav.
  *
- * The cart count is a placeholder until phase 3 wires the cart.
  */
 export function SiteHeader() {
   const pathname = usePathname();
+  const { count, ready } = useCart();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -103,10 +104,25 @@ export function SiteHeader() {
             </Link>
             <Link
               href="/cart"
-              aria-label="Cart"
-              className="-mr-2 grid size-11 place-items-center"
+              aria-label={count > 0 ? `Cart, ${count} items` : "Cart"}
+              className="relative -mr-2 grid size-11 place-items-center"
             >
               <ShoppingBag size={19} />
+              {/*
+               * `ready` gates this on localStorage having been read. Rendering
+               * the count during the first client render would not match the
+               * server's HTML, and React would blame the whole header.
+               */}
+              {ready && count > 0 && (
+                <span
+                  className={cn(
+                    "tnum absolute top-1.5 right-1 grid min-w-4 place-items-center rounded-full px-1 text-[0.625rem] leading-4 font-medium",
+                    inverted ? "bg-white text-sea" : "bg-ink text-bone",
+                  )}
+                >
+                  {count}
+                </span>
+              )}
             </Link>
           </div>
         </Container>

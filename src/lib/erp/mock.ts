@@ -1,10 +1,10 @@
 import { commerceEnv } from "@/lib/env";
+import type { ErpClient, StockLevel } from "@/lib/erp/client";
 import type {
   CreatedOrder,
-  ErpClient,
   OrderDraft,
-  StockLevel,
-} from "@/lib/erp/client";
+  StoreOrder,
+} from "@/lib/orders/types";
 import { MERCHANDISING } from "@/lib/erp/merchandising";
 import type {
   Availability,
@@ -12,7 +12,7 @@ import type {
   ProductCard,
   ProductQuery,
 } from "@/lib/erp/types";
-import { sortProducts } from "@/lib/erp/sort";
+import { sortProducts, toCard } from "@/lib/erp/sort";
 
 /*
  * The mock catalogue.
@@ -82,6 +82,15 @@ function toProduct(row: MockRow): Product {
   };
 }
 
+/*
+ * Orders placed against the mock, for the life of this server process.
+ *
+ * Module scope rather than instance scope because Next.js may build a new
+ * client per request in development; an instance field would lose the order
+ * between placing it and rendering the confirmation page one redirect later.
+ */
+const MOCK_ORDERS = new Map<string, StoreOrder>();
+
 export class MockErpClient implements ErpClient {
   readonly source = "mock" as const;
 
@@ -92,6 +101,12 @@ export class MockErpClient implements ErpClient {
   async getProduct(slug: string): Promise<Product | null> {
     const row = ROWS.find((r) => MERCHANDISING[r.sku]?.slug === slug);
     return row ? toProduct(row) : null;
+  }
+
+  async getProductsByIds(productIds: string[]): Promise<ProductCard[]> {
+    return ROWS.filter((r) => productIds.includes(r.id)).map((r) =>
+      toCard(toProduct(r)),
+    );
   }
 
   async getStock(productIds: string[]): Promise<StockLevel[]> {
@@ -105,14 +120,60 @@ export class MockErpClient implements ErpClient {
 
   async createOrder(draft: OrderDraft): Promise<CreatedOrder> {
     /*
-     * Nothing is persisted. The mock exists so the site can be browsed and
-     * designed without credentials; an order placed against it is not an order,
-     * and pretending otherwise would let a real one be silently dropped. The
-     * checkout route refuses to run against the mock for exactly this reason.
+     * Kept in module memory, not in a database.
+     *
+     * The mock exists so the site can be browsed, designed and checked out
+     * end to end with no credentials, and a confirmation page that cannot
+     * render is a checkout that cannot be reviewed. So the order is real
+     * enough to redirect to and gone on the next server restart.
+     *
+     * The honesty this needs is on the confirmation page, which shows an
+     * unmissable demo banner whenever the source is the mock. Silently
+     * accepting an order nobody will ever pack is the one outcome worth
+     * engineering against.
      */
+    const seq = MOCK_ORDERS.size + 1001;
+    const created: CreatedOrder = {
+      id: `mock-order-${seq}`,
+      reference: `HQ-${String(seq).padStart(5, "0")}`,
+      token: `mock${String(seq).padStart(6, "0")}`,
+    };
+
+    MOCK_ORDERS.set(created.token, {
+      reference: created.reference,
+      token: created.token,
+      status: "placed",
+      placedAt: new Date().toISOString(),
+      customerName: draft.customerName,
+      customerPhone: draft.customerPhone,
+      phoneVerified: draft.phoneVerifiedAt !== null,
+      address: draft.address,
+      courierPreference: draft.courierPreference,
+      paymentMethod: draft.paymentMethod,
+      paymentState: draft.paymentState,
+      lines: draft.lines.map((line) => ({
+        sku: line.sku,
+        name: line.name,
+        qty: line.qty,
+        unitPrice: line.unitPrice,
+        isPreOrder: line.isPreOrder,
+      })),
+      subtotal: draft.subtotal,
+      deliveryFee: draft.deliveryFee,
+      discount: draft.discount,
+      total: draft.total,
+      amountPaid: draft.amountPaid,
+      hasPreOrder: draft.lines.some((line) => line.isPreOrder),
+      customerNote: draft.customerNote,
+    });
+
     console.warn(
-      `[mock ErpClient] createOrder(${draft.reference}) was NOT persisted — no ERP credentials configured.`,
+      `[mock ErpClient] order ${created.reference} was NOT persisted — no ERP credentials configured.`,
     );
-    return { id: `mock-order-${draft.reference}`, reference: draft.reference };
+    return created;
+  }
+
+  async getOrder(token: string): Promise<StoreOrder | null> {
+    return MOCK_ORDERS.get(token) ?? null;
   }
 }

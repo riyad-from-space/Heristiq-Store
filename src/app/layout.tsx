@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Fraunces, Inter } from "next/font/google";
+import { CartProvider } from "@/components/cart/cart-provider";
 import { SiteHeader } from "@/components/site/site-header";
 import { SiteFooter } from "@/components/site/site-footer";
 import { site } from "@/config/site";
@@ -58,11 +59,17 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${fraunces.variable} ${inter.variable}`}>
       <body className="flex min-h-dvh flex-col">
-        <SiteHeader />
-        {/* pt-16/20 clears the fixed header. The home hero opts out of this by
-            pulling itself back up, so it can sit under a transparent header. */}
-        <main className="flex-1 pt-16 sm:pt-20">{children}</main>
-        <SiteFooter />
+        {/* The cart lives above the header, because the header renders its
+            count. It is a client boundary, but a thin one: `children` stays a
+            server tree and is passed through untouched. */}
+        <CartProvider>
+          <SiteHeader />
+          {/* pt-16/20 clears the fixed header. The home hero opts out of this
+              by pulling itself back up, so it can sit under a transparent
+              header. */}
+          <main className="flex-1 pt-16 sm:pt-20">{children}</main>
+          <SiteFooter />
+        </CartProvider>
       </body>
     </html>
   );
