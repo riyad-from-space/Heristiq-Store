@@ -62,28 +62,37 @@ export function ProductCardTile({
         <span className="pointer-events-none absolute inset-0 ring-gold transition group-focus-visible:ring-2 group-focus-visible:ring-offset-2" />
       </div>
 
-      <div className="flex items-start justify-between gap-4 pt-4">
-        <div className="min-w-0">
-          <h3 className="font-display text-base leading-snug decoration-line-strong underline-offset-4 group-hover:underline">
-            {product.name}
-          </h3>
+      {/*
+       * Name above, then price and finish on one line beneath it.
+       *
+       * The price was beside the name, which reads well at ৳250 but collapses
+       * on the two-column phone grid the moment the string is long — an
+       * unpriced piece renders "Price on request" and squeezed the title into
+       * a four-line column one word wide. Stacking is immune to the length of
+       * either, and every price on the site is currently one of those two
+       * shapes.
+       */}
+      <div className="pt-4">
+        <h3 className="font-display text-base leading-snug decoration-line-strong underline-offset-4 group-hover:underline">
+          {product.name}
+        </h3>
+        <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
+          <Price
+            amount={product.price}
+            compareAt={product.compareAtPrice}
+            size="sm"
+          />
           {finish && (
-            <p className="text-ink-muted mt-1 flex items-center gap-1.5 text-xs">
+            <span className="text-ink-muted flex items-center gap-1.5 text-xs">
               <span
                 aria-hidden
                 className="border-line-strong inline-block size-2.5 rounded-full border"
                 style={{ background: finish.swatch }}
               />
               {finish.label}
-            </p>
+            </span>
           )}
         </div>
-        <Price
-          amount={product.price}
-          compareAt={product.compareAtPrice}
-          size="sm"
-          className="shrink-0 pt-0.5"
-        />
       </div>
     </Link>
   );

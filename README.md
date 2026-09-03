@@ -119,9 +119,10 @@ src/app/                 routes
 src/components/ui/       primitives — button, layout, price, badge, image
 src/components/site/     header, footer, newsletter
 src/components/home/     home page sections
-src/components/product/  product card
+src/components/shop/     grid filters, sort, empty state
+src/components/product/  card, gallery + zoom, buy box, size guide, share
 src/lib/erp/             the ErpClient seam: types, mock, real, factory
-src/lib/                 format (৳ / Asia/Dhaka), phone, cloudinary, env
+src/lib/                 format (৳ / Asia/Dhaka), phone, cloudinary, delivery, env
 src/config/              brand copy, nav, motifs, testimonials
 ```
 
@@ -131,8 +132,9 @@ Each phase is runnable and committed on its own.
 
 - [x] **1 — Scaffold, design system, home.** Tokens, type scale, header/footer,
   hero, trust strip, featured rail, motif story, social proof, Instagram row.
-- [ ] **2 — `ErpClient` → Shop + PDP.** Grid with finish/motif filters and sort;
+- [x] **2 — `ErpClient` → Shop + PDP.** Grid with finish/motif filters and sort;
   gallery with zoom; stock state; size guide; delivery estimate; share.
+  Filters are links, so a filtered grid is a shareable URL and works before JS.
 - [ ] **3 — Cart + checkout.** Division → District → Area cascade, COD, phone OTP.
 - [ ] **4 — Steadfast.** One-tap order push, delivery-status webhook, tracking page.
 - [ ] **5 — Manual bKash/Nagad,** COD deposit toggle, pre-order flow.
