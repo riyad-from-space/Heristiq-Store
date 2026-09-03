@@ -1,0 +1,15 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "heristiq-store",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-09-03",
+  // nodejs_compat is required — Next.js server code uses Node built-ins.
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "observability": {
+    "enabled": true
+  }
+}
