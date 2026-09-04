@@ -3,6 +3,18 @@
   "name": "heristiq-store",
   "main": ".open-next/worker.js",
   "compatibility_date": "2026-09-03",
+
+  /*
+   * The storefront takes the whole domain except /admin*, which the ERP's own
+   * route claims. Cloudflare prefers the more specific pattern, so the order
+   * of these two declarations does not matter.
+   *
+   * Commented out for the same reason as the ERP's: a route needs the zone in
+   * this account. See apps/erp/wrangler.jsonc.
+   */
+  // "routes": [
+  //   { "pattern": "heristiq.com/*", "zone_name": "heristiq.com" }
+  // ],
   // nodejs_compat is required — Next.js server code uses Node built-ins.
   "compatibility_flags": ["nodejs_compat"],
   "assets": {

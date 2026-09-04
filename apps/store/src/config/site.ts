@@ -27,6 +27,19 @@ export const site = {
   },
 } as const;
 
+/**
+ * Where the ERP lives, from the storefront's point of view.
+ *
+ * Default `/admin`, because both apps are served from one domain: Cloudflare
+ * routes /admin* to the ERP Worker and everything else here, and the ERP is
+ * built with a matching basePath. Until that route exists, point
+ * NEXT_PUBLIC_ERP_URL at the ERP's workers.dev URL and the link still works.
+ *
+ * Read as a literal so the bundler can inline it — this is imported by client
+ * components, so it cannot go through lib/env, which is `server-only`.
+ */
+export const erpUrl = process.env.NEXT_PUBLIC_ERP_URL || "/admin";
+
 export const nav = [
   { href: "/shop", label: "Shop" },
   { href: "/shop?finish=gold", label: "Gold" },

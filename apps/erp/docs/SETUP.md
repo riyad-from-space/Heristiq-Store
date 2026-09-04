@@ -9,12 +9,12 @@
 ## 2. Create the schema
 
 Open the Supabase dashboard → **SQL Editor** → New query. Run the files in
-[`supabase/migrations/`](../supabase/migrations/) **in filename order**, one at a
+[`supabase/migrations/`](../../../supabase/migrations/) **in filename order**, one at a
 time:
 
-1. [`0001_init.sql`](../supabase/migrations/0001_init.sql) — tables, costing
+1. [`0001_init.sql`](../../../supabase/migrations/0001_init.sql) — tables, costing
    triggers, posting functions, reporting views, row-level security policies.
-2. [`0002_exclude_unposted_sales.sql`](../supabase/migrations/0002_exclude_unposted_sales.sql)
+2. [`0002_exclude_unposted_sales.sql`](../../../supabase/migrations/0002_exclude_unposted_sales.sql)
    — keeps sales that were never posted out of revenue and profit.
 
 Order matters: later files amend what earlier ones create.
@@ -44,10 +44,11 @@ data. Never put the `service_role` key in this file.
 
 ```bash
 npm install
-npm run dev
+npm run dev:erp    # from the repo root
 ```
 
-Open http://localhost:3000 and sign in.
+Open http://localhost:3001 and sign in. (The storefront owns 3000;
+two apps in one repo cannot share a port.)
 
 ---
 

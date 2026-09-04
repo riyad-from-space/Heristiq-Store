@@ -6,7 +6,7 @@ import {
 } from "@/components/ui/brand-icons";
 import { Container, Eyebrow } from "@/components/ui/layout";
 import { NewsletterForm } from "@/components/site/newsletter-form";
-import { footerNav, site } from "@/config/site";
+import { erpUrl, footerNav, site } from "@/config/site";
 import { displayPhone } from "@/lib/phone";
 
 export function SiteFooter() {
@@ -81,9 +81,27 @@ export function SiteFooter() {
               {displayPhone(site.contact.phone)}
             </span>
           </div>
-          <p className="text-xs text-bone/45">
-            © {new Date().getFullYear()} {site.name}. Prices in Bangladeshi Taka.
-          </p>
+          <div className="flex flex-col gap-2 sm:items-end">
+            <p className="text-xs text-bone/45">
+              © {new Date().getFullYear()} {site.name}. Prices in Bangladeshi
+              Taka.
+            </p>
+            {/*
+             * The owner's way in, from the site itself rather than a
+             * remembered workers.dev URL.
+             *
+             * Quiet on purpose — it is not for customers — but not hidden
+             * either: security here is the ERP's Supabase login, not the
+             * obscurity of the link, and a door nobody can find is a door the
+             * owner cannot find on a phone at a stall.
+             */}
+            <a
+              href={erpUrl}
+              className="text-bone/30 hover:text-bone/60 w-fit text-[0.6875rem] transition-colors"
+            >
+              Owner sign-in
+            </a>
+          </div>
         </div>
       </Container>
     </footer>

@@ -3,6 +3,24 @@
   "name": "heristiq-erp",
   "main": ".open-next/worker.js",
   "compatibility_date": "2026-08-26",
+
+  /*
+   * Serving the ERP at heristiq.com/admin, alongside the storefront.
+   *
+   * Two Workers, one domain: Cloudflare matches the MORE SPECIFIC route first,
+   * so /admin* lands here and everything else goes to heristiq-store. The
+   * matching basePath is in next.config.ts — both halves are required, and
+   * basePath is baked in at build time.
+   *
+   * Commented out because a route needs the zone to exist in this Cloudflare
+   * account, and `wrangler deploy` fails if it does not. Uncomment both this
+   * and the storefront's once heristiq.com is added as a zone. Until then this
+   * Worker deploys to its workers.dev URL, and the storefront's footer link
+   * follows NEXT_PUBLIC_ERP_URL.
+   */
+  // "routes": [
+  //   { "pattern": "heristiq.com/admin*", "zone_name": "heristiq.com" }
+  // ],
   // nodejs_compat is required — Next.js server code uses Node built-ins.
   "compatibility_flags": ["nodejs_compat"],
   "assets": {

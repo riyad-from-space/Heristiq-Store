@@ -11,7 +11,8 @@ Read [README.md](README.md) first for the layout. The short version:
 ## Working here
 
 - `npm install` at the ROOT. It is one npm workspace with one lockfile.
-- Commands are per app: `npm run dev` (store), `npm run dev:erp`.
+- Commands are per app: `npm run dev` (store, port 3000), `npm run dev:erp`
+  (ERP, port 3001 — they cannot share a port).
   `npm run build|typecheck|lint` run across both.
 - **The apps must not import each other** — an ESLint rule enforces it in both
   directions. The storefront holds the service-role key and is public; the ERP

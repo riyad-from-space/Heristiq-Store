@@ -22,7 +22,7 @@ Each app has its own README with the detail. Start there:
 npm install            # one lockfile, both apps
 
 npm run dev            # storefront  → http://localhost:3000
-npm run dev:erp        # ERP         → http://localhost:3000
+npm run dev:erp        # ERP         → http://localhost:3001/admin
 
 npm run build          # both apps
 npm run typecheck      # both apps
@@ -41,6 +41,35 @@ Copy the env template of whichever app you are running:
 cp apps/store/.env.example apps/store/.env.local
 cp apps/erp/.env.example   apps/erp/.env.local
 ```
+
+## One domain, two apps
+
+The ERP is reached **from the website** — `heristiq.com/admin` — rather than a
+remembered `workers.dev` URL. The storefront's footer carries a quiet "Owner
+sign-in" link to it.
+
+That works in two halves, and both are required:
+
+1. **`basePath: "/admin"`** in [`apps/erp/next.config.ts`](apps/erp/next.config.ts).
+   Next prefixes every `next/link`, `redirect()` and `router.push()`
+   automatically, so no ERP page or action changed. It is inlined at build
+   time, so switching it needs a rebuild.
+2. **A Cloudflare route** sending `heristiq.com/admin*` to the ERP Worker and
+   everything else to the storefront. Cloudflare matches the more specific
+   pattern first.
+
+The routes are written out but **commented** in both `wrangler.jsonc` files,
+because a route needs `heristiq.com` to exist as a zone in the Cloudflare
+account and `wrangler deploy` fails if it does not. Uncomment both once the
+zone is there. Until then each Worker deploys to its own `workers.dev` URL, and
+`NEXT_PUBLIC_ERP_URL` points the footer link at the ERP's.
+
+Locally the two apps are two servers, so the footer's `/admin` is a 404 on port
+3000 — set `NEXT_PUBLIC_ERP_URL=http://localhost:3001/admin` in
+`apps/store/.env.local` if you want the link to work while developing. The ERP
+itself serves at `http://localhost:3001/admin`. Security is the ERP's Supabase login, not the
+obscurity of the path — every ERP route redirects to `/admin/login` when signed
+out.
 
 ## The database
 
