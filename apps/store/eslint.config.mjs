@@ -38,6 +38,31 @@ const eslintConfig = defineConfig([
        * receive when someone finishes it. Dropping the names to satisfy the
        * linter would throw that away.
        */
+      /*
+       * The storefront must not import the ERP.
+       *
+       * When these were two repositories this was impossible; in one workspace
+       * it is merely unwise, so it is a rule. The storefront runs with the
+       * SUPABASE service-role key and is public; the ERP is an authenticated
+       * admin app. Pulling an ERP module in here would put admin code — and
+       * cost, margin and supplier data — one bundling mistake away from a
+       * customer's browser.
+       *
+       * Shared rules belong in packages/shared, which both may import.
+       */
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["**/apps/erp/*", "@heristiq/erp", "@heristiq/erp/*"],
+              message:
+                "The storefront must not import the ERP app. Put anything shared in packages/shared.",
+            },
+          ],
+        },
+      ],
+
       "@typescript-eslint/no-unused-vars": [
         "warn",
         {

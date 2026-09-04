@@ -3,6 +3,11 @@
 Inventory and sales for [Heristiq](https://heristiq.com) — a women's lifestyle
 and fashion brand in Bangladesh.
 
+One of two apps in this repo, alongside the [storefront](../store). Install and
+run from the repo root — see the [root README](../../README.md). The schema for
+both lives in [`supabase/migrations`](../../supabase/migrations); this app owns
+`0001`-`0015`.
+
 **Phase 1: inventory and profit calculation. No AI.**
 
 - Products, categories and suppliers
@@ -31,7 +36,8 @@ Next.js (App Router) · TypeScript · Tailwind · Supabase (Postgres, Auth, RLS)
 ## Layout
 
 ```
-supabase/migrations/   schema, costing triggers, posting functions, views, RLS
+../../supabase/migrations/  schema, costing triggers, posting functions, views,
+                       RLS — shared with the storefront, this app owns 0001-0015
 src/app/(app)/         authenticated pages
 src/lib/supabase/      server, browser and proxy clients
 docs/                  setup and roadmap

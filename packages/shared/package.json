@@ -1,0 +1,10 @@
+{
+  "name": "@heristiq/shared",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Rules the storefront and the ERP must agree on.",
+  "exports": {
+    "./phone": "./src/phone.ts",
+    "./format": "./src/format.ts"
+  }
+}

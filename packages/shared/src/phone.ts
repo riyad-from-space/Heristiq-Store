@@ -1,10 +1,13 @@
 /**
  * Bangladeshi mobile numbers: 11 digits starting 01, with an operator digit of
- * 3-9. Accepts +880 / 880 prefixes and any spacing or dashes the customer types.
+ * 3-9. Accepts +880 / 880 prefixes and any spacing or dashes anyone types.
  *
- * This is a verbatim copy of the ERP's rule (src/lib/phone.ts) and of the
- * database's normalise_bd_phone(). All three must agree: the storefront writes a
- * phone the ERP later searches on, and a number stored two ways never matches.
+ * This has to be ONE implementation, and the reason is concrete: the ERP
+ * searches on phone numbers the storefront wrote, the database enforces the
+ * same rule in `normalise_bd_phone()` (migration 0015), and a number stored two
+ * ways never matches. Both apps' src/lib/phone.ts now re-export this, so the
+ * two copies that used to exist — and were kept identical by hand and a comment
+ * asking nicely — cannot drift again.
  */
 export function normalisePhone(raw: string): string | null {
   const digits = (raw ?? "").replace(/[\s\-()]/g, "");

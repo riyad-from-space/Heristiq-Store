@@ -1,53 +1,18 @@
 {
-  "name": "heristiq-store",
-  "version": "0.1.0",
+  "name": "heristiq",
   "private": true,
+  "description": "Heristiq — the storefront and the ERP, one database, one repo.",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint",
-    "typecheck": "tsc --noEmit",
-    "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
-    "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
-    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"
-  },
-  "dependencies": {
-    "@radix-ui/react-accordion": "^1.2.20",
-    "@radix-ui/react-dialog": "^1.1.23",
-    "@radix-ui/react-label": "^2.1.15",
-    "@radix-ui/react-radio-group": "^1.4.7",
-    "@radix-ui/react-select": "^2.3.7",
-    "@radix-ui/react-slot": "^1.3.3",
-    "@radix-ui/react-tabs": "^1.1.21",
-    "@radix-ui/react-toast": "^1.2.23",
-    "@supabase/supabase-js": "^2.114.0",
-    "clsx": "^2.1.1",
-    "lucide-react": "^1.40.0",
-    "motion": "^13.2.0",
-    "next": "16.3.3",
-    "react": "19.2.8",
-    "react-dom": "19.2.8",
-    "tailwind-merge": "^3.6.0",
-    "zod": "^4.5.4"
-  },
-  "devDependencies": {
-    "@opennextjs/cloudflare": "^1.20.6",
-    "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "eslint": "^9",
-    "eslint-config-next": "16.3.3",
-    "playwright-core": "^1.62.1",
-    "tailwindcss": "^4",
-    "typescript": "^5",
-    "wrangler": "^4.128.0"
-  },
-  "allowScripts": {
-    "esbuild@0.25.4": true,
-    "esbuild@0.28.1": true,
-    "unrs-resolver@1.12.2": true,
-    "workerd@1.20260831.1": true
+    "dev": "npm run dev --workspace apps/store",
+    "dev:erp": "npm run dev --workspace apps/erp",
+    "build": "npm run build --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "deploy:store": "npm run deploy --workspace apps/store",
+    "deploy:erp": "npm run deploy --workspace apps/erp"
   }
 }

@@ -1,7 +1,7 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
-/node_modules
+node_modules
 /.pnp
 .pnp.*
 .yarn/*
@@ -13,12 +13,12 @@
 # testing
 /coverage
 
-# next.js
-/.next/
-/out/
+# next.js — per app, since each app builds into its own directory
+.next/
+out/
 
 # production
-/build
+build
 
 # misc
 .DS_Store
@@ -32,8 +32,8 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
-# ...and the template is the opt-in. It holds no secrets, and the README tells a
-# fresh clone to copy it — which only works if it is actually in the repo.
+# ...and the templates are the opt-in. They hold no secrets, and the READMEs
+# tell a fresh clone to copy them — which only works if they are in the repo.
 !.env.example
 
 # vercel
@@ -47,6 +47,7 @@ next-env.d.ts
 .dev.vars
 .open-next/
 .wrangler/
+cloudflare-env.d.ts
 
-# Layout audit output (scripts/shoot.mjs)
-/.shots/
+# Layout audit output (apps/store/scripts/shoot.mjs)
+.shots/
