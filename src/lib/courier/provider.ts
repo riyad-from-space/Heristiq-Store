@@ -23,6 +23,17 @@ export type ShipmentRequest = {
   recipientPhone: string;
   /** One line, as the rider will read it. */
   recipientAddress: string;
+  /*
+   * The same address, structured.
+   *
+   * Steadfast ignores these — it takes the written line and routes on it.
+   * Pathao does not accept an address at all: it takes a city id, a zone id
+   * and an area id from its own taxonomy, so it needs the parts to map from.
+   * See lib/courier/pathao-locations.ts.
+   */
+  division: string;
+  district: string;
+  area: string | null;
   /** Taka to collect at the door. 0 for a fully prepaid parcel. */
   codAmount: number;
   note: string | null;
@@ -41,6 +52,18 @@ export type CreatedShipment = {
   status: CourierStatus;
   /** The courier's own status string, kept verbatim for the owner. */
   rawStatus: string | null;
+  /**
+   * What the courier says it will charge us, when it says at creation time.
+   * Pathao returns this; Steadfast bills later. Distinct from the delivery fee
+   * the CUSTOMER paid — the difference is margin, and it is the ERP's business.
+   */
+  courierFee?: number | null;
+  /**
+   * Whatever the courier was actually told about the destination, for couriers
+   * that resolve one. Recorded on the shipment so a parcel that went to the
+   * wrong thana can be explained rather than guessed at.
+   */
+  location?: Record<string, unknown> | null;
 };
 
 /** How a shipment is identified when asking for an update. */

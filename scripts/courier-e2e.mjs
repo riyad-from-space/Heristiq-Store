@@ -1,7 +1,7 @@
 /*
  * Walks phase 4 end to end, on a phone viewport. Not part of the app.
  *
- *   ADMIN_TOKEN=test-admin-token STEADFAST_WEBHOOK_TOKEN=test-webhook-token npm run dev
+ *   ADMIN_TOKEN=test-admin-token PATHAO_WEBHOOK_SECRET=test-pathao-secret npm run dev
  *   node scripts/courier-e2e.mjs
  *
  * Place an order → push it to a courier → refuse a second push → reject an
@@ -18,7 +18,7 @@ const CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 const OUT = process.env.SHOOT_DIR;
 const BASE = "http://localhost:3000";
 const ADMIN = "test-admin-token";
-const HOOK = "test-webhook-token";
+const HOOK = "test-pathao-secret";
 /* A fresh number each run: the OTP resend cooldown is per phone, and it
    deliberately outlives one test. Ends in 0 so the demo risk check flags it. */
 const PHONE = `017${String(Math.floor(Math.random() * 10000000)).padStart(7, "0")}0`.slice(0, 11);
@@ -102,17 +102,45 @@ console.log(`— unauthenticated push: HTTP ${noAuth.status} (want 401)`);
 
 // ---- webhook
 console.log("— webhook");
+/* Pathao's contract: X-PATHAO-Signature in, 202 out with their integration
+   header. See src/app/api/webhooks/pathao/route.ts. */
 const hook = async (status, updated, token = HOOK) => {
-  const r = await fetch(`${BASE}/api/webhooks/steadfast`, {
+  const r = await fetch(`${BASE}/api/webhooks/pathao`, {
     method: "POST",
-    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ consignment_id: ship.consignmentId, invoice: reference, status, cod_amount: ship.codAmount, updated_at: updated }),
+    headers: { "X-PATHAO-Signature": token, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      event: "order.updated",
+      order_status: status,
+      consignment_id: ship.consignmentId,
+      merchant_order_id: reference,
+      delivery_fee: 60,
+      updated_at: updated,
+    }),
   });
-  return `${r.status}`;
+  const header = r.headers.get("x-pathao-merchant-webhook-integration-secret");
+  return `${r.status}${header ? " +hdr" : " NO-HDR"}`;
 };
-console.log(`   bad token:          HTTP ${await hook("in_transit", "t1", "wrong")} (want 401)`);
-console.log(`   out_for_delivery:   HTTP ${await hook("out_for_delivery", "t2")}`);
-console.log(`   replay of the same: HTTP ${await hook("out_for_delivery", "t2")}`);
+console.log(`   bad signature:      HTTP ${await hook("In_Transit", "t1", "wrong")} (want 401)`);
+console.log(`   Assigned_for_Delivery: HTTP ${await hook("Assigned_for_Delivery", "t2")} (want 202)`);
+console.log(`   replay of the same:    HTTP ${await hook("Assigned_for_Delivery", "t2")} (want 202)`);
+// Pathao's integration handshake, which must be accepted before any order event
+{
+  const r = await fetch(`${BASE}/api/webhooks/pathao`, {
+    method: "POST",
+    headers: { "X-PATHAO-Signature": HOOK, "Content-Type": "application/json" },
+    body: JSON.stringify({ event: "webhook_integration" }),
+  });
+  console.log(`   integration handshake: HTTP ${r.status} (want 202), header ${r.headers.get("x-pathao-merchant-webhook-integration-secret")}`);
+}
+// an event with no order_status, only the event name
+console.log(`   event-name only:       HTTP ${await (async () => {
+  const r = await fetch(`${BASE}/api/webhooks/pathao`, {
+    method: "POST",
+    headers: { "X-PATHAO-Signature": HOOK, "Content-Type": "application/json" },
+    body: JSON.stringify({ event: "order.delivered", consignment_id: ship.consignmentId, merchant_order_id: reference, updated_at: "t9" }),
+  });
+  return r.status;
+})()} (want 202)`);
 
 // ---- tracking now shows the courier status
 console.log("— /track after the webhook");
@@ -121,20 +149,26 @@ await page.fill("#track-phone", PHONE);
 await page.getByRole("button", { name: /^Track$/ }).click();
 await page.waitForTimeout(1500);
 const tracked = await page.locator("main").innerText();
-console.log(`   rail step shown: ${tracked.match(/Scheduled|Picked up|On its way|Out for delivery|Delivered/g)?.join(", ")}`);
-console.log(`   headline: ${tracked.match(/(Pickup scheduled|Picked up|On its way|Out for delivery|Delivered|On hold)/)?.[0]}`);
+/* The panel under the rail, not a regex over the page — the rail's own step
+   labels contain the same words and match first. */
+const statusPanel = async () =>
+  (await page.locator("main div.border-line.bg-paper").last().innerText()).split("\n")[0].trim();
+const currentStep = async () =>
+  (await page.locator("main ol li[aria-current=step] span").last().innerText()).trim();
+console.log(`   status panel: ${await statusPanel()}`);
+console.log(`   current step: ${await currentStep()}`);
+console.log(`   courier shown: ${/Pathao/.test(tracked) ? "Pathao" : "none"}`);
 console.log(`   tracking code shown: ${tracked.includes(ship.trackingCode)}`);
 await shot("track-mobile");
 
 // ---- stale webhook must not move it backwards
-console.log("— a stale 'pending' webhook arriving late");
-console.log(`   HTTP ${await hook("pending", "t3")}`);
+console.log("— a stale Pickup_Requested webhook arriving late");
+console.log(`   HTTP ${await hook("Pickup_Requested", "t3")}`);
 await page.goto(`${BASE}/track?ref=${reference}`, { waitUntil: "networkidle" });
 await page.fill("#track-phone", PHONE);
 await page.getByRole("button", { name: /^Track$/ }).click();
 await page.waitForTimeout(1500);
-const after = await page.locator("main").innerText();
-console.log(`   still forward: ${after.match(/(Pickup scheduled|Picked up|On its way|Out for delivery|Delivered)/)?.[0]}`);
+console.log(`   status panel still: ${await statusPanel()}`);
 
 // ---- confirmation page now carries the rail
 await page.goto(orderUrl, { waitUntil: "networkidle" });

@@ -212,10 +212,22 @@ export const steadfastEnv = {
   },
 };
 
-/** Pathao and RedX are stubs behind the CourierProvider interface. */
+/**
+ * Pathao Courier — the courier this business uses.
+ *
+ * Two hosts, and they are not interchangeable: the merchant API is
+ * api-hermes.pathao.com in production and courier-api-sandbox.pathao.com for
+ * testing, while the delivery-history endpoint lives on merchant.pathao.com
+ * (see lib/courier/pathao.ts). Set PATHAO_ENVIRONMENT=sandbox to develop
+ * against their sandbox with test credentials.
+ */
 export const pathaoEnv = {
   get baseUrl() {
-    return read("PATHAO_BASE_URL") ?? "https://api-hermes.pathao.com";
+    const configured = read("PATHAO_BASE_URL");
+    if (configured) return configured;
+    return read("PATHAO_ENVIRONMENT")?.toLowerCase() === "sandbox"
+      ? "https://courier-api-sandbox.pathao.com"
+      : "https://api-hermes.pathao.com";
   },
   get clientId() {
     return read("PATHAO_CLIENT_ID");
@@ -231,6 +243,38 @@ export const pathaoEnv = {
   },
   get storeId() {
     return read("PATHAO_STORE_ID");
+  },
+  /**
+   * Who the parcel is from. Pathao requires both on every order.
+   *
+   * Defaults to the brand name and the number on the site, because that is
+   * what a customer expects to see on a parcel and what they will call — but
+   * overridable, since the number that answers pickup calls is not always the
+   * number on the website.
+   */
+  get senderName() {
+    return read("PATHAO_SENDER_NAME") ?? "Heristiq";
+  },
+  get senderPhone() {
+    return read("PATHAO_SENDER_PHONE") ?? "01712345678";
+  },
+  /**
+   * Declared parcel weight in kg. Pathao prices on it and their minimum is
+   * 0.5kg; a waist chain in a pouch is nowhere near that, so the minimum is
+   * the honest declaration rather than a guess at grams.
+   */
+  get itemWeight() {
+    const raw = Number(read("PATHAO_ITEM_WEIGHT") ?? 0.5);
+    return Number.isFinite(raw) && raw > 0 ? raw : 0.5;
+  },
+  /**
+   * The secret Pathao sends back in the X-PATHAO-Signature header on every
+   * webhook. Whatever you typed into their merchant dashboard goes here.
+   * Without it the webhook route rejects everything, which is the right
+   * default for an endpoint that can mark an order delivered.
+   */
+  get webhookSecret() {
+    return read("PATHAO_WEBHOOK_SECRET");
   },
   get configured() {
     return Boolean(
@@ -256,10 +300,15 @@ export const redxEnv = {
 };
 
 export const courierEnv = {
-  /** Who gets the parcel when the customer expressed no preference. */
+  /**
+   * Who gets the parcel when the customer expressed no preference.
+   *
+   * Pathao, because that is the courier this business actually uses. Steadfast
+   * is implemented too and is one env var away.
+   */
   get defaultCourier() {
     const value = read("COURIER_DEFAULT")?.toLowerCase();
-    return value === "pathao" || value === "redx" ? value : "steadfast";
+    return value === "steadfast" || value === "redx" ? value : "pathao";
   },
   /** Home delivery unless told otherwise. 1 = the customer collects from a hub. */
   get deliveryType() {

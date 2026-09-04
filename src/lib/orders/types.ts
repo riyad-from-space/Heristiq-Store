@@ -11,9 +11,14 @@
  * total via 0.1 + 0.2 are worse than useless in an order confirmation.
  */
 
+/*
+ * Order matters: this is the order the checkout offers them in, and Pathao is
+ * the courier this business uses. Steadfast is implemented too and is one env
+ * var (COURIER_DEFAULT) away from being primary again.
+ */
 export const COURIERS = {
-  steadfast: "Steadfast",
   pathao: "Pathao",
+  steadfast: "Steadfast",
   redx: "RedX",
 } as const;
 

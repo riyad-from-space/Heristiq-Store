@@ -26,6 +26,14 @@ import type { CourierKey } from "@/lib/orders/types";
  *
  * It advances one step every time it is asked where the parcel is, which makes
  * the five-step rail on /track walkable by pressing Track repeatedly.
+ *
+ * What it deliberately does NOT stand in for is `normalise`. Translating a
+ * courier's status vocabulary is pure logic with no credentials in it, and a
+ * webhook carrying a real Pathao status must be understood whether or not this
+ * machine can reach Pathao — otherwise a perfectly good webhook is read as
+ * `unknown` and silently dropped, which is precisely the bug that found this
+ * comment. So normalise delegates to the real provider and only handles this
+ * one's own vocabulary itself.
  */
 const PROGRESSION: CourierStatus[] = [
   "pickup_scheduled",
@@ -41,17 +49,29 @@ const PROGRESSION: CourierStatus[] = [
 const progress = devStore("courier:demo-progress", () => new Map<string, number>());
 
 export class DemoCourierProvider implements CourierProvider {
+  readonly key: CourierKey;
   readonly label: string;
   readonly configured = true;
 
-  constructor(readonly key: CourierKey) {
-    this.label = `${key[0].toUpperCase()}${key.slice(1)} (demo)`;
+  /**
+   * @param real the provider it stands in for, used for `normalise` only —
+   *   never for a network call, which is the whole point of standing in.
+   */
+  constructor(real: CourierProvider) {
+    this.key = real.key;
+    this.label = `${real.label} (demo)`;
+    this.real = real;
   }
 
+  private readonly real: CourierProvider;
+
   normalise(raw: string): CourierStatus {
-    return (PROGRESSION as readonly string[]).includes(raw)
-      ? (raw as CourierStatus)
-      : "unknown";
+    /* Its own vocabulary first — track() below emits CourierStatus values
+       directly — then the real courier's, so a live webhook still parses. */
+    if ((PROGRESSION as readonly string[]).includes(raw)) {
+      return raw as CourierStatus;
+    }
+    return this.real.normalise(raw);
   }
 
   async createShipment(request: ShipmentRequest): Promise<CreatedShipment> {

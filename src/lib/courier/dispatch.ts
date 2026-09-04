@@ -141,6 +141,11 @@ export async function pushOrderToCourier(
       recipientPhone: order.customerPhone,
       /* One line, exactly as the rider will read it. */
       recipientAddress: formatAddress(order.address),
+      /* And the parts, for a courier that routes on its own taxonomy rather
+         than on the written line. See lib/courier/pathao-locations.ts. */
+      division: order.address.division,
+      district: order.address.district,
+      area: order.address.area,
       /* What is left to collect, not the order total — a pre-order advance or
          a COD deposit has already been paid and must not be collected twice. */
       codAmount: due,
@@ -159,6 +164,8 @@ export async function pushOrderToCourier(
       rawStatus: created.rawStatus,
       codAmount: due,
       deliveryType: courierEnv.deliveryType === "hub" ? 1 : 0,
+      courierFee: created.courierFee ?? null,
+      location: created.location ?? null,
     });
 
     /*

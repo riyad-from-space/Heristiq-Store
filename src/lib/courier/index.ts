@@ -41,7 +41,7 @@ export function courier(key?: CourierKey | null): CourierProvider {
    */
   const created =
     !real.configured && process.env.NODE_ENV !== "production"
-      ? new DemoCourierProvider(resolved)
+      ? new DemoCourierProvider(real)
       : real;
 
   cache.set(resolved, created);

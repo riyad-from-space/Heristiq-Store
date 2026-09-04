@@ -131,11 +131,11 @@ Three providers behind one interface ([`src/lib/courier/provider.ts`](src/lib/co
 because this business picks a courier by area and by who is answering the phone
 that week, and the storefront must not have an opinion:
 
-| Provider | State | Why |
+| Provider | State | Notes |
 |---|---|---|
-| **Steadfast** | Implemented fully | The courier actually in use. Two auth headers, no OAuth |
-| **Pathao** | Stub, with the OAuth token cache done | `create-order` needs a store id and a city/zone/area triple from *their* taxonomy, which means mapping it onto [`bd-geo.ts`](src/lib/bd-geo.ts) — real work with a real design decision, and no merchant account yet to test it against |
-| **RedX** | Stub | Same: needs an approved account first |
+| **Pathao** | Implemented fully — the default | The courier this business uses. OAuth, and an address that has to be resolved to city/zone/area ids |
+| **Steadfast** | Implemented fully | `COURIER_DEFAULT=steadfast` switches to it. Two auth headers, no OAuth, takes a written address |
+| **RedX** | Stub behind the interface | Needs an approved merchant account before any of it can be tested |
 
 The load-bearing part is the **normalised status**
 ([`src/lib/courier/status.ts`](src/lib/courier/status.ts)). Steadfast says
@@ -143,6 +143,43 @@ The load-bearing part is the **normalised status**
 a customer's screen. Providers map their own vocabulary onto one enum, and
 [the tracking rail](src/components/track/status-rail.tsx) genuinely cannot tell
 which courier carried the parcel.
+
+### Pathao does not accept an address
+
+It accepts a **city id, a zone id and an area id** from its own taxonomy. The
+checkout collects a division/district/area ([`bd-geo.ts`](src/lib/bd-geo.ts))
+because that is what a customer knows and what any courier can be mapped *from*
+— so something has to bridge them, and that bridge is the most delicate part of
+this integration:
+
+- **Districts were renamed** between 2018 and 2019 and couriers adopted the new
+  spellings at their own pace. We say Jashore, Bogura, Chattogram, Cumilla;
+  Pathao may still say Jessore, Bogra, Chittagong, Comilla. Normalising away
+  punctuation and case handles a surprising amount (`Cox's Bazar` →
+  `coxsbazar`); an alias table handles the rest.
+- **Pathao splits busy thanas into numbered zones.** Someone typing "Mirpur"
+  matches Mirpur 1, 10, 11, 12… Refusing an ambiguous match would refuse the
+  commonest destination in Dhaka, and it is *not* the safer choice: every one of
+  those zones is in Mirpur and the rider navigates by the written address
+  anyway. So when every candidate begins with what the customer wrote they are
+  treated as one locality and the least-qualified name wins.
+- **Genuine ambiguity still refuses.** A bare "Sadar" matching four different
+  districts' Sadar zones is a parcel on the wrong side of the country, so the
+  push fails with a message naming the area that did not resolve.
+
+Every resolution is cached in `storefront_courier_zones` with how it was
+arrived at, and a row marked `source='manual'` is never overwritten by
+matching — so a wrong zone is corrected **once**, by the owner, with one
+`UPDATE` and no deploy. What was actually sent for a given parcel is recorded
+on the shipment (`courier_location`), including whether the match was exact,
+an alias, or fuzzy: when a parcel goes to the wrong thana, that column says why.
+
+The matching is pure and has no imports, so it is tested against fixtures with
+no Pathao account:
+
+```bash
+node scripts/pathao-match-test.mjs     # 41 cases, the renamed districts included
+```
 
 Three things in here are less obvious than they look:
 
@@ -160,6 +197,14 @@ Three things in here are less obvious than they look:
   any point and are the events most worth seeing.
 - **Every callback is stored before it is acted on**, keyed uniquely, so a
   replay is a no-op and a payload we could not use is still on record.
+- **Pathao's webhook has a contract that is easy to fail silently.** They send
+  `X-PATHAO-Signature` carrying your secret verbatim, and they expect **HTTP
+  202** with the header `X-Pathao-Merchant-Webhook-Integration-Secret` set to a
+  constant *they* publish — not to your secret. They also fire a
+  `webhook_integration` event when you save the URL, which must be accepted
+  before any order event will follow. All of that is taken from
+  [Pathao's own WooCommerce plugin](https://github.com/pathao-eng/courier-woocommerce-plugin),
+  which is authoritative, rather than from a blog post.
 
 Statuses come from webhooks first and a poll second — `/track` asks the courier
 directly, but at most once a minute per shipment and never in a way that can
@@ -177,17 +222,22 @@ node scripts/ship.mjs HQ-01042            # or a phone shortcut
 The token has **no fallback in any environment** — everything the endpoint does
 is irreversible and hands a customer's address to a third party.
 
-Before the first real order, check the credentials actually work:
+### Setting Pathao up
 
 ```bash
-node scripts/courier-check.mjs            # calls get_balance; creates nothing
+node scripts/courier-check.mjs                  # or: … Cumilla Laksam
 ```
 
-That script exists for an honest reason: the two auth header names
-(`Api-Key` / `Secret-Key`) come from Steadfast's v1 documentation, not from a
-request this codebase has made against a live account. If they have changed it
-shows up there, with the exact URL and headers it tried, rather than as a failed
-push at 9pm.
+This is the setup step, not just a health check. It issues a token, **lists your
+stores** — the only way to discover `PATHAO_STORE_ID` — lists their cities, and
+then resolves a sample address through the same matcher the push uses, telling
+you whether the match was exact or fuzzy. It creates nothing.
+
+For Steadfast it calls `get_balance`, the only endpoint that proves the base
+URL, both auth headers and the credentials together without creating anything.
+That check exists for an honest reason: Steadfast's two header names
+(`Api-Key` / `Secret-Key`) come from their v1 documentation, not from a request
+this codebase has made against a live account.
 
 ### Anti-fraud
 
@@ -229,6 +279,9 @@ supabase db push        # from this directory, against the ERP's project
   `storefront_phone_risk`, and `apply_courier_status()`, which moves a
   shipment, the order's own status, the audit trail and the webhook log in one
   transaction.
+- **1003** — `storefront_courier_zones` (the district/area → courier-taxonomy
+  mapping, with human corrections that matching never overwrites) and
+  `storefront_shipments.courier_location`.
 
 Until they are applied the storefront reads the catalogue fine and **cannot
 record an order** — the correct failure, rather than a half-written one.
@@ -284,7 +337,8 @@ See [`.env.example`](.env.example). Every variable is optional in development;
 | `node scripts/shoot.mjs /` | Screenshot a route at phone size and report horizontal overflow |
 | `node scripts/checkout-e2e.mjs` | Walk a real order through the site: add to cart → OTP → address → place → confirm |
 | `node scripts/courier-e2e.mjs` | Walk phase 4: push → webhook → replay → stale status → tracking rail |
-| `node scripts/courier-check.mjs` | Prove Steadfast credentials work, without creating anything |
+| `node scripts/courier-check.mjs` | Set up and verify a courier: Pathao stores, cities, sample address; Steadfast balance |
+| `node scripts/pathao-match-test.mjs` | 41 fixture cases for the address matcher, no account needed |
 | `node scripts/ship.mjs HQ-01042` | Push one order to its courier (the one-tap push, from a terminal) |
 
 `scripts/shoot.mjs` drives the Chrome already on the machine — no browser
@@ -307,7 +361,7 @@ src/components/track/    normalised status rail, tracking form
 src/lib/erp/             the ErpClient seam: types, mock, real, factory
 src/lib/orders/          order types, checkout schema, server-side placement
 src/lib/otp/             sender + store seams, verification, signed cookie
-src/lib/courier/         provider seam, Steadfast, stubs, status model, dispatch
+src/lib/courier/         provider seam, Pathao, Steadfast, status model, dispatch
 src/lib/                 format (৳ / Asia/Dhaka), phone, cloudinary, bd-geo,
                          delivery, crypto, env
 src/config/              brand copy, nav, motifs, testimonials
@@ -327,10 +381,12 @@ Each phase is runnable and committed on its own.
   Area/thana cascade (8 / 64 / ~500, the third level a suggestion not a
   constraint); COD; phone OTP with rate limits; server-side re-pricing; order
   confirmation on an unguessable URL.
-- [x] **4 — Steadfast.** Full provider plus Pathao/RedX stubs behind one
-  interface; normalised status shared by every courier; one-tap push with a
-  double-send guard; delivery-status webhook that is authenticated, idempotent
-  and safe against out-of-order retries; advisory fraud check; tracking page.
+- [x] **4 — Couriers.** Pathao (the courier in use) and Steadfast both
+  implemented behind one interface, RedX stubbed; normalised status shared by
+  all of them; Pathao address → city/zone/area resolution with a correctable
+  mapping table; one-tap push with a double-send guard; delivery-status
+  webhooks that are authenticated, idempotent and safe against out-of-order
+  retries; advisory fraud check; tracking page.
 - [ ] **5 — Manual bKash/Nagad,** COD deposit toggle, pre-order flow.
 - [ ] **6 — Admin-lite,** promo/threshold config, SEO and performance polish.
 
@@ -349,9 +405,11 @@ Real content has to replace placeholders. Nothing below is a code change.
   warning at the top of it. **Do not publish invented reviews.**
 - [ ] **Confirm the contact number and social handles** in `src/config/site.ts`.
   They are placeholders.
-- [ ] **Set the Steadfast webhook** in their portal: callback URL
-  `https://heristiq.com/api/webhooks/steadfast`, with a bearer token matching
-  `STEADFAST_WEBHOOK_TOKEN`. Without it, statuses only update when someone opens
-  the tracking page.
-- [ ] **Run `node scripts/courier-check.mjs`** once the Steadfast keys are in,
-  before the first real parcel.
+- [ ] **Set the Pathao webhook** in their merchant dashboard: callback URL
+  `https://heristiq.com/api/webhooks/pathao`, secret matching
+  `PATHAO_WEBHOOK_SECRET`. Without it, statuses only update when someone opens
+  the tracking page. (Steadfast's equivalent, if you use it, is
+  `/api/webhooks/steadfast` with `STEADFAST_WEBHOOK_TOKEN`.)
+- [ ] **Run `node scripts/courier-check.mjs`** once the Pathao credentials are
+  in — it is how you get `PATHAO_STORE_ID` — and check that a couple of real
+  customer addresses resolve before the first parcel.

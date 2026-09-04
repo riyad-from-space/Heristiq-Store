@@ -33,6 +33,8 @@ export type Shipment = {
   /** The courier's own string. The only thing that explains an `unknown`. */
   rawStatus: string | null;
   codAmount: number;
+  /** What the courier bills us, once known. Never shown to a customer. */
+  courierFee: number | null;
   createdAt: string;
   updatedAt: string;
   lastSyncedAt: string | null;
@@ -49,6 +51,27 @@ export type NewShipment = {
   codAmount: number;
   /** 0 = home delivery, 1 = hub pickup. The courier's own encoding. */
   deliveryType: 0 | 1;
+  /** What the courier said it will bill us, when it says up front. */
+  courierFee?: number | null;
+  /** What the courier was told about the destination. See CreatedShipment. */
+  location?: Record<string, unknown> | null;
+};
+
+/**
+ * A cached district/area → courier-taxonomy mapping.
+ *
+ * `manual` means a human corrected it, and nothing overwrites that. See
+ * migration 1003 for why this is a table rather than a name match repeated on
+ * every push.
+ */
+export type ZoneMapping = {
+  cityId: number;
+  cityName: string | null;
+  zoneId: number;
+  zoneName: string | null;
+  areaId: number | null;
+  areaName: string | null;
+  source: "matched" | "manual";
 };
 
 export type StatusEvent = {
@@ -81,14 +104,35 @@ export interface ShipmentStore {
   create(shipment: NewShipment): Promise<Shipment>;
   apply(event: StatusEvent): Promise<ApplyResult>;
   saveRisk(profile: RiskProfile): Promise<void>;
+
+  /** A previously resolved zone for this district/area, if there is one. */
+  zoneFor(
+    courier: CourierKey,
+    district: string,
+    area: string | null,
+  ): Promise<ZoneMapping | null>;
+  /** Cache a resolution. Never overwrites a `manual` row. */
+  saveZone(
+    courier: CourierKey,
+    district: string,
+    area: string | null,
+    mapping: Omit<ZoneMapping, "source">,
+  ): Promise<void>;
+
   readonly source: "erp" | "memory";
+}
+
+/* The mapping table keys the "no area given" case as an empty string, because
+   a primary key column cannot be null. */
+function zoneKey(district: string, area: string | null) {
+  return { district: district.toLowerCase(), area: (area ?? "").toLowerCase().trim() };
 }
 
 /* One literal, not a concatenation: supabase-js reads the column list from the
    string's TYPE to type the result, and `+` widens it to plain `string`. */
 const SHIPMENT_COLUMNS = `
   id, order_id, courier, consignment_id, tracking_code, status, raw_status,
-  cod_amount, created_at, updated_at, last_synced_at, delivered_at
+  cod_amount, courier_fee, created_at, updated_at, last_synced_at, delivered_at
 `;
 
 type ShipmentRow = {
@@ -100,6 +144,7 @@ type ShipmentRow = {
   status: CourierStatus;
   raw_status: string | null;
   cod_amount: number | string;
+  courier_fee: number | string | null;
   created_at: string;
   updated_at: string;
   last_synced_at: string | null;
@@ -116,6 +161,8 @@ function toShipment(row: ShipmentRow): Shipment {
     status: row.status,
     rawStatus: row.raw_status,
     codAmount: Math.round(Number(row.cod_amount ?? 0)),
+    courierFee:
+      row.courier_fee === null ? null : Math.round(Number(row.courier_fee)),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     lastSyncedAt: row.last_synced_at,
@@ -151,6 +198,8 @@ class SupabaseShipmentStore implements ShipmentStore {
         raw_status: shipment.rawStatus,
         cod_amount: shipment.codAmount,
         delivery_type: shipment.deliveryType,
+        courier_fee: shipment.courierFee ?? null,
+        courier_location: shipment.location ?? null,
         last_synced_at: new Date().toISOString(),
       })
       .select(SHIPMENT_COLUMNS)
@@ -220,6 +269,71 @@ class SupabaseShipmentStore implements ShipmentStore {
     /* Advisory data. Failing to cache it must not fail the push it annotated. */
     if (error) console.warn("[courier] risk note not saved:", error.message);
   }
+
+  async zoneFor(courier: CourierKey, district: string, area: string | null) {
+    const key = zoneKey(district, area);
+    const { data, error } = await erpDb()
+      .from("storefront_courier_zones")
+      .select("city_id, city_name, zone_id, zone_name, area_id, area_name, source")
+      .eq("courier", courier)
+      .eq("district", key.district)
+      .eq("area", key.area)
+      .maybeSingle();
+
+    if (error) {
+      /* A missing mapping is not an error and neither is a failure to read
+         one — the caller falls back to resolving it from the courier's API. */
+      console.warn("[courier] zone cache read failed:", error.message);
+      return null;
+    }
+    if (!data) return null;
+
+    return {
+      cityId: data.city_id as number,
+      cityName: data.city_name as string | null,
+      zoneId: data.zone_id as number,
+      zoneName: data.zone_name as string | null,
+      areaId: data.area_id as number | null,
+      areaName: data.area_name as string | null,
+      source: data.source as "matched" | "manual",
+    };
+  }
+
+  async saveZone(
+    courier: CourierKey,
+    district: string,
+    area: string | null,
+    mapping: Omit<ZoneMapping, "source">,
+  ) {
+    const key = zoneKey(district, area);
+
+    /*
+     * A human-corrected row is never overwritten by a name match. That is the
+     * whole value of the table: someone fixes a zone once and it stays fixed,
+     * however confidently the matcher disagrees next week.
+     */
+    const existing = await this.zoneFor(courier, district, area);
+    if (existing?.source === "manual") return;
+
+    const { error } = await erpDb().from("storefront_courier_zones").upsert(
+      {
+        courier,
+        district: key.district,
+        area: key.area,
+        city_id: mapping.cityId,
+        city_name: mapping.cityName,
+        zone_id: mapping.zoneId,
+        zone_name: mapping.zoneName,
+        area_id: mapping.areaId,
+        area_name: mapping.areaName,
+        source: "matched",
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "courier,district,area" },
+    );
+
+    if (error) console.warn("[courier] zone cache write failed:", error.message);
+  }
 }
 
 /*
@@ -229,6 +343,7 @@ class SupabaseShipmentStore implements ShipmentStore {
  */
 const memory = devStore("shipments:rows", () => new Map<string, Shipment>());
 const memoryEvents = devStore("shipments:events", () => new Set<string>());
+const memoryZones = devStore("shipments:zones", () => new Map<string, ZoneMapping>());
 
 /** Mirrors courier_status_rank() in migration 1002. Keep the two in step. */
 const RANK: Record<CourierStatus, number> = {
@@ -267,6 +382,7 @@ class MemoryShipmentStore implements ShipmentStore {
       status: shipment.status,
       rawStatus: shipment.rawStatus,
       codAmount: shipment.codAmount,
+      courierFee: shipment.courierFee ?? null,
       createdAt: now,
       updatedAt: now,
       lastSyncedAt: now,
@@ -337,6 +453,24 @@ class MemoryShipmentStore implements ShipmentStore {
 
   async saveRisk(_profile: RiskProfile): Promise<void> {
     /* Nothing to cache into. The push logs the profile either way. */
+  }
+
+  async zoneFor(courier: CourierKey, district: string, area: string | null) {
+    const key = zoneKey(district, area);
+    return memoryZones.get(`${courier}:${key.district}:${key.area}`) ?? null;
+  }
+
+  async saveZone(
+    courier: CourierKey,
+    district: string,
+    area: string | null,
+    mapping: Omit<ZoneMapping, "source">,
+  ) {
+    const key = zoneKey(district, area);
+    memoryZones.set(`${courier}:${key.district}:${key.area}`, {
+      ...mapping,
+      source: "matched",
+    });
   }
 }
 
