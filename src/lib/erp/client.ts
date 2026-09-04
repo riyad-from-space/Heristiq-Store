@@ -63,6 +63,30 @@ export interface ErpClient {
   /** One order by its public token, for the confirmation page. */
   getOrder(token: string): Promise<StoreOrder | null>;
 
+  /**
+   * One order by its reference. OWNER-ONLY.
+   *
+   * The reference is sequential, so this must never be reachable from
+   * anything a customer can call — it is the courier push and phase 6's
+   * admin. Customers get getOrder(token) or findOrderForTracking, both of
+   * which need something they could only have if the order is theirs.
+   */
+  findOrderByReference(reference: string): Promise<StoreOrder | null>;
+
+  /**
+   * One order for the tracking page: the reference AND the phone it was
+   * placed with, both of which must match.
+   *
+   * Two identifiers rather than one because either alone is a disclosure.
+   * The reference is guessable by counting, and a phone number alone would
+   * let anyone who has yours read your home address. Together they are
+   * something only the person who placed the order has.
+   */
+  findOrderForTracking(
+    reference: string,
+    phone: string,
+  ): Promise<StoreOrder | null>;
+
   /** Which implementation answered — surfaced in the admin footer, not to customers. */
   readonly source: "erp" | "mock";
 }

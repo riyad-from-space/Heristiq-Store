@@ -112,7 +112,7 @@ function money(raw: number | string | null): number {
  * selected here.
  */
 const ORDER_COLUMNS = `
-  reference, public_token, status, created_at,
+  id, reference, public_token, status, created_at,
   customer_name, customer_phone, phone_verified_at,
   division, district, area, address_line, landmark,
   courier_preference, payment_method, payment_state,
@@ -122,6 +122,7 @@ const ORDER_COLUMNS = `
 `;
 
 type OrderRow = {
+  id: string;
   reference: string;
   public_token: string;
   status: OrderStatus;
@@ -300,18 +301,53 @@ export class SupabaseErpClient implements ErpClient {
      * (HQ-01001, HQ-01002…), so a page keyed on one would let anyone walk the
      * numbers and read every customer's name, phone and home address.
      */
-    const { data, error } = await erpDb()
-      .from("storefront_orders")
-      .select(ORDER_COLUMNS)
-      .eq("public_token", token)
-      .maybeSingle();
+    return this.readOrder({ public_token: token });
+  }
+
+  async findOrderByReference(reference: string): Promise<StoreOrder | null> {
+    /* Owner-only — see the interface. Nothing a customer can reach calls this. */
+    return this.readOrder({ reference: reference.trim() });
+  }
+
+  async findOrderForTracking(
+    reference: string,
+    phone: string,
+  ): Promise<StoreOrder | null> {
+    /*
+     * Both, in the same WHERE clause. Doing it as two steps — find by
+     * reference, then compare the phone in TypeScript — would answer a
+     * probe for a valid reference through its timing and through anything
+     * that logged the miss differently. One query, one answer.
+     */
+    return this.readOrder({
+      reference: reference.trim(),
+      customer_phone: phone,
+    });
+  }
+
+  /**
+   * The one place an order row becomes a StoreOrder.
+   *
+   * Filters are equality-only and applied as given, which is all three
+   * callers need. They are column names from this file, never from a request.
+   */
+  private async readOrder(
+    filters: Record<string, string>,
+  ): Promise<StoreOrder | null> {
+    let query = erpDb().from("storefront_orders").select(ORDER_COLUMNS);
+    for (const [column, value] of Object.entries(filters)) {
+      query = query.eq(column, value);
+    }
+
+    const { data, error } = await query.maybeSingle();
 
     if (error) throw new Error(`Order read failed: ${error.message}`);
     if (!data) return null;
 
-    const row = data as OrderRow;
+    const row = data as unknown as OrderRow;
 
     return {
+      id: row.id,
       reference: row.reference,
       token: row.public_token,
       status: row.status,

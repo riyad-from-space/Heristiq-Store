@@ -103,6 +103,12 @@ export type OrderLine = Omit<OrderDraftLine, "productId">;
 
 /** An order as the confirmation and tracking pages need it. */
 export type StoreOrder = {
+  /**
+   * The row id. Server-side only — it is the key shipments hang off, and it is
+   * never rendered. The customer-facing identifiers are `reference` (human,
+   * sequential) and `token` (unguessable, for URLs).
+   */
+  id: string;
   reference: string;
   token: string;
   status: OrderStatus;

@@ -1,6 +1,7 @@
 import "server-only";
 import { erpEnv } from "@/lib/env";
 import { erpDb } from "@/lib/erp/supabase";
+import { devStore } from "@/lib/dev-store";
 import type { OtpChannel } from "@/lib/otp/sender";
 
 /*
@@ -113,10 +114,12 @@ type MemoryRow = OtpRecord & {
 /**
  * Development only.
  *
- * Module-scoped so it survives Next's per-request module graph in dev; capped
- * so a long-running dev server cannot grow it without bound.
+ * On globalThis rather than in module scope, so the action that sends a code
+ * and the one that verifies it share a store even when they are bundled
+ * separately. Capped, so a long-running dev server cannot grow it without
+ * bound. See lib/dev-store.ts.
  */
-const rows: MemoryRow[] = [];
+const rows = devStore("otp:rows", () => [] as MemoryRow[]);
 const MEMORY_LIMIT = 200;
 
 class MemoryOtpStore implements OtpStore {

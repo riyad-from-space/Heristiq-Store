@@ -1,4 +1,5 @@
 import { commerceEnv } from "@/lib/env";
+import { devStore } from "@/lib/dev-store";
 import type { ErpClient, StockLevel } from "@/lib/erp/client";
 import type {
   CreatedOrder,
@@ -85,11 +86,12 @@ function toProduct(row: MockRow): Product {
 /*
  * Orders placed against the mock, for the life of this server process.
  *
- * Module scope rather than instance scope because Next.js may build a new
- * client per request in development; an instance field would lose the order
- * between placing it and rendering the confirmation page one redirect later.
+ * Kept on globalThis via devStore rather than in module scope: the checkout
+ * action, the confirmation page and the courier route can each be bundled into
+ * a different module graph, and a plain module-level Map gives each of them
+ * its own — so an order placed by the action is invisible to the route.
  */
-const MOCK_ORDERS = new Map<string, StoreOrder>();
+const MOCK_ORDERS = devStore("mock:orders", () => new Map<string, StoreOrder>());
 
 export class MockErpClient implements ErpClient {
   readonly source = "mock" as const;
@@ -140,6 +142,7 @@ export class MockErpClient implements ErpClient {
     };
 
     MOCK_ORDERS.set(created.token, {
+      id: created.id,
       reference: created.reference,
       token: created.token,
       status: "placed",
@@ -175,5 +178,24 @@ export class MockErpClient implements ErpClient {
 
   async getOrder(token: string): Promise<StoreOrder | null> {
     return MOCK_ORDERS.get(token) ?? null;
+  }
+
+  async findOrderByReference(reference: string): Promise<StoreOrder | null> {
+    const wanted = reference.trim().toUpperCase();
+    return (
+      [...MOCK_ORDERS.values()].find((order) => order.reference === wanted) ??
+      null
+    );
+  }
+
+  async findOrderForTracking(
+    reference: string,
+    phone: string,
+  ): Promise<StoreOrder | null> {
+    const order = await this.findOrderByReference(reference);
+    /* Both must match, as in the real client — otherwise the tracking page
+       behaves differently in development from production, which is the one
+       thing a mock must never do on a privacy boundary. */
+    return order && order.customerPhone === phone ? order : null;
   }
 }

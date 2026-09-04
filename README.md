@@ -125,6 +125,92 @@ because which Bangladeshi bulk-SMS provider this business ends up on depends on
 trade-licence paperwork nobody has finished. WhatsApp Cloud API drops in as a
 third implementation with no change anywhere else.
 
+## Couriers
+
+Three providers behind one interface ([`src/lib/courier/provider.ts`](src/lib/courier/provider.ts)),
+because this business picks a courier by area and by who is answering the phone
+that week, and the storefront must not have an opinion:
+
+| Provider | State | Why |
+|---|---|---|
+| **Steadfast** | Implemented fully | The courier actually in use. Two auth headers, no OAuth |
+| **Pathao** | Stub, with the OAuth token cache done | `create-order` needs a store id and a city/zone/area triple from *their* taxonomy, which means mapping it onto [`bd-geo.ts`](src/lib/bd-geo.ts) — real work with a real design decision, and no merchant account yet to test it against |
+| **RedX** | Stub | Same: needs an approved account first |
+
+The load-bearing part is the **normalised status**
+([`src/lib/courier/status.ts`](src/lib/courier/status.ts)). Steadfast says
+`delivered_approval_pending`, Pathao says `Pickup_Requested`; neither belongs on
+a customer's screen. Providers map their own vocabulary onto one enum, and
+[the tracking rail](src/components/track/status-rail.tsx) genuinely cannot tell
+which courier carried the parcel.
+
+Three things in here are less obvious than they look:
+
+- **A push is not idempotent and cannot be made so** — the courier assigns the
+  id, so there is nothing to deduplicate on. Two pushes means two riders at one
+  door and two delivery charges. So `pushOrderToCourier` checks for an existing
+  shipment before it talks to anyone, and a network failure mid-POST is reported
+  as `uncertain` with instructions to check the portal rather than a retry
+  button.
+- **Webhooks arrive out of order.** Couriers retry, and a redelivered
+  `in_transit` landing after `delivered` would tell a customer holding the
+  parcel that it is still on its way. `courier_status_rank()` in migration 1002
+  rejects backwards moves along the happy path — while always applying
+  `on_hold`, `returned`, `lost` and `cancelled`, which can genuinely happen at
+  any point and are the events most worth seeing.
+- **Every callback is stored before it is acted on**, keyed uniquely, so a
+  replay is a no-op and a payload we could not use is still on record.
+
+Statuses come from webhooks first and a poll second — `/track` asks the courier
+directly, but at most once a minute per shipment and never in a way that can
+fail the page.
+
+### One-tap push
+
+`POST /api/admin/orders/HQ-01042/ship` with `Authorization: Bearer $ADMIN_TOKEN`.
+Phase 6's admin screen is a button that calls this; today:
+
+```bash
+node scripts/ship.mjs HQ-01042            # or a phone shortcut
+```
+
+The token has **no fallback in any environment** — everything the endpoint does
+is irreversible and hands a customer's address to a third party.
+
+Before the first real order, check the credentials actually work:
+
+```bash
+node scripts/courier-check.mjs            # calls get_balance; creates nothing
+```
+
+That script exists for an honest reason: the two auth header names
+(`Api-Key` / `Secret-Key`) come from Steadfast's v1 documentation, not from a
+request this codebase has made against a live account. If they have changed it
+shows up there, with the exact URL and headers it tried, rather than as a failed
+push at 9pm.
+
+### Anti-fraud
+
+The recipient's courier history is fetched **before** a push and **never blocks
+it**. A customer with two cancelled parcels two years ago is not a fraudster,
+and a storefront that silently refuses their order never finds out why it lost
+them. Below `COURIER_RISK_SUCCESS_FLOOR` the push comes back with a note saying
+so, and the profile is cached per phone number.
+
+### Why tracking asks for two things
+
+`/track` needs the order reference **and** the phone it was placed with. The
+brief said "by phone or order id"; either alone is a disclosure — references are
+sequential, so they can be counted, and a phone number alone would let anyone
+who has yours read your home address. Together they are something only the
+person who ordered has, and it is still one screen and no login. A wrong pair
+and an unknown reference give the identical message, so the page cannot be used
+to confirm that an order exists.
+
+The frictionless path is unchanged: the confirmation page's own link carries an
+unguessable token, and that page turns into the tracking page once the parcel
+ships.
+
 ## Database
 
 The ERP applies `0001`–`0999` from its own repo. This repo owns `1001` up, so
@@ -136,11 +222,22 @@ repo ran last.
 supabase db push        # from this directory, against the ERP's project
 ```
 
-`supabase/migrations/1001_storefront_orders.sql` creates `storefront_orders`,
-`storefront_order_items`, `storefront_order_events`, `storefront_phone_otp` and
-the `place_storefront_order()` transaction. Until it is applied, the storefront
-reads the catalogue fine and **cannot record an order** — which is the correct
-failure, rather than a half-written one.
+- **1001** — `storefront_orders`, `storefront_order_items`,
+  `storefront_order_events`, `storefront_phone_otp`, and the
+  `place_storefront_order()` transaction.
+- **1002** — `storefront_shipments`, `storefront_courier_webhooks`,
+  `storefront_phone_risk`, and `apply_courier_status()`, which moves a
+  shipment, the order's own status, the audit trail and the webhook log in one
+  transaction.
+
+Until they are applied the storefront reads the catalogue fine and **cannot
+record an order** — the correct failure, rather than a half-written one.
+
+Both were verified by applying them to a throwaway Postgres on top of all
+fifteen ERP migrations, then exercising the RPCs, the CHECK constraints and
+every grant. Notably: `service_role` can place orders and apply courier
+statuses, `authenticated` (the owner in the ERP app) can read orders and
+shipments but not OTP hashes or fraud history, and `anon` can reach none of it.
 
 ## Getting started
 
@@ -186,6 +283,9 @@ See [`.env.example`](.env.example). Every variable is optional in development;
 | `npm run deploy` | Build + deploy to Cloudflare |
 | `node scripts/shoot.mjs /` | Screenshot a route at phone size and report horizontal overflow |
 | `node scripts/checkout-e2e.mjs` | Walk a real order through the site: add to cart → OTP → address → place → confirm |
+| `node scripts/courier-e2e.mjs` | Walk phase 4: push → webhook → replay → stale status → tracking rail |
+| `node scripts/courier-check.mjs` | Prove Steadfast credentials work, without creating anything |
+| `node scripts/ship.mjs HQ-01042` | Push one order to its courier (the one-tap push, from a terminal) |
 
 `scripts/shoot.mjs` drives the Chrome already on the machine — no browser
 download. Add `--desktop` for 1440px, `--full` for one tall image. It fails loud
@@ -203,9 +303,11 @@ src/components/shop/     grid filters, sort, empty state
 src/components/product/  card, gallery + zoom, buy box, size guide, share
 src/components/cart/     cart store, cart page, add-to-cart, quick-add
 src/components/checkout/ form, address cascade, phone verification, summary
+src/components/track/    normalised status rail, tracking form
 src/lib/erp/             the ErpClient seam: types, mock, real, factory
 src/lib/orders/          order types, checkout schema, server-side placement
 src/lib/otp/             sender + store seams, verification, signed cookie
+src/lib/courier/         provider seam, Steadfast, stubs, status model, dispatch
 src/lib/                 format (৳ / Asia/Dhaka), phone, cloudinary, bd-geo,
                          delivery, crypto, env
 src/config/              brand copy, nav, motifs, testimonials
@@ -225,7 +327,10 @@ Each phase is runnable and committed on its own.
   Area/thana cascade (8 / 64 / ~500, the third level a suggestion not a
   constraint); COD; phone OTP with rate limits; server-side re-pricing; order
   confirmation on an unguessable URL.
-- [ ] **4 — Steadfast.** One-tap order push, delivery-status webhook, tracking page.
+- [x] **4 — Steadfast.** Full provider plus Pathao/RedX stubs behind one
+  interface; normalised status shared by every courier; one-tap push with a
+  double-send guard; delivery-status webhook that is authenticated, idempotent
+  and safe against out-of-order retries; advisory fraud check; tracking page.
 - [ ] **5 — Manual bKash/Nagad,** COD deposit toggle, pre-order flow.
 - [ ] **6 — Admin-lite,** promo/threshold config, SEO and performance polish.
 
@@ -244,3 +349,9 @@ Real content has to replace placeholders. Nothing below is a code change.
   warning at the top of it. **Do not publish invented reviews.**
 - [ ] **Confirm the contact number and social handles** in `src/config/site.ts`.
   They are placeholders.
+- [ ] **Set the Steadfast webhook** in their portal: callback URL
+  `https://heristiq.com/api/webhooks/steadfast`, with a bearer token matching
+  `STEADFAST_WEBHOOK_TOKEN`. Without it, statuses only update when someone opens
+  the tracking page.
+- [ ] **Run `node scripts/courier-check.mjs`** once the Steadfast keys are in,
+  before the first real parcel.

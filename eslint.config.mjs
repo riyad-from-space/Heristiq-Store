@@ -28,6 +28,25 @@ const eslintConfig = defineConfig([
        * is stated once.
        */
       "@next/next/no-img-element": "off",
+
+      /*
+       * An underscore marks a parameter that is deliberately unused.
+       *
+       * The courier layer needs this: Pathao and RedX implement
+       * CourierProvider as stubs (see src/lib/courier/pathao.ts for why), and
+       * a stub that keeps its parameter names documents what the method will
+       * receive when someone finishes it. Dropping the names to satisfy the
+       * linter would throw that away.
+       */
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          caughtErrorsIgnorePattern: "^_",
+          destructuredArrayIgnorePattern: "^_",
+        },
+      ],
     },
   },
 ]);

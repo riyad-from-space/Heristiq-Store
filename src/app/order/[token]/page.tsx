@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Container, Eyebrow, SectionHeading } from "@/components/ui/layout";
 import { site } from "@/config/site";
 import { erp, erpIsLive } from "@/lib/erp";
+import { shipments } from "@/lib/courier/store";
+import { StatusRail } from "@/components/track/status-rail";
 import { formatAddress } from "@/lib/bd-geo";
 import { dateTimeDhaka, taka } from "@/lib/format";
 import { displayPhone, whatsappNumber } from "@/lib/phone";
@@ -37,6 +39,11 @@ export default async function OrderPage({
   const { token } = await params;
   const order = await erp().getOrder(token);
   if (!order) notFound();
+
+  /* Once the parcel is with a courier this page becomes the tracking page —
+     it is the link the customer already has, so it should keep answering the
+     question they will actually come back with. */
+  const shipment = await shipments().forOrder(order.id);
 
   const due = amountDue(order);
   const wa = whatsappNumber(site.contact.phone);
@@ -92,6 +99,21 @@ export default async function OrderPage({
             One piece is being restocked. We will confirm the date when we call,
             and nothing is charged until it ships.
           </p>
+        </div>
+      )}
+
+      {shipment && (
+        <div className="mt-10">
+          <Eyebrow>Delivery</Eyebrow>
+          <div className="mt-6">
+            <StatusRail status={shipment.status} />
+          </div>
+          {shipment.trackingCode && (
+            <p className="text-ink-muted mt-4 text-xs">
+              {COURIERS[shipment.courier]} tracking code{" "}
+              <span className="tnum text-ink">{shipment.trackingCode}</span>
+            </p>
+          )}
         </div>
       )}
 
@@ -186,7 +208,22 @@ export default async function OrderPage({
 
       {/* ------------------------------------------------------ next steps */}
       <div className="border-line mt-10 border-t pt-8">
-        <h2 className="font-display text-display-s">What happens now</h2>
+        <h2 className="font-display text-display-s">
+          {shipment ? "Following it" : "What happens now"}
+        </h2>
+        {shipment ? (
+          <p className="text-ink-muted mt-4 text-sm leading-relaxed">
+            This page updates itself as the courier reports in, so keep the
+            link. You can also{" "}
+            <Link
+              href={`/track?ref=${encodeURIComponent(order.reference)}`}
+              className="decoration-line-strong underline underline-offset-4 hover:decoration-gold"
+            >
+              track it with your order number
+            </Link>{" "}
+            and the phone you ordered with. {taka(due)} in cash at the door.
+          </p>
+        ) : (
         <ol className="mt-5 space-y-4 text-sm">
           <Step icon={<Phone size={16} />} title="We call to confirm">
             A quick call to{" "}
@@ -197,12 +234,21 @@ export default async function OrderPage({
             shipped.
           </Step>
           <Step icon={<Package size={16} />} title="It ships">
-            You get a tracking code by SMS once the courier collects it.
+            You get a tracking code by SMS once the courier collects it, and
+            this page starts showing where the parcel is. You can also{" "}
+            <Link
+              href={`/track?ref=${encodeURIComponent(order.reference)}`}
+              className="decoration-line-strong underline underline-offset-4 hover:decoration-gold"
+            >
+              track it by order number
+            </Link>
+            .
           </Step>
           <Step icon={<Check size={16} />} title="Pay the rider">
             {taka(due)} in cash at the door.
           </Step>
         </ol>
+        )}
       </div>
 
       <div className="mt-10 flex flex-col gap-3 sm:flex-row">

@@ -167,6 +167,134 @@ export const otpEnv = {
   },
 };
 
+/**
+ * Steadfast, the courier this business actually uses.
+ *
+ * Base URL is configurable because Steadfast serves the same API from two
+ * hostnames — portal.steadfast.com.bd and portal.packzy.com (Packzy is the
+ * platform behind it) — and which one their docs point at has changed.
+ */
+export const steadfastEnv = {
+  get baseUrl() {
+    return (
+      read("STEADFAST_BASE_URL") ?? "https://portal.steadfast.com.bd/api/v1"
+    );
+  },
+  get apiKey() {
+    return read("STEADFAST_API_KEY");
+  },
+  get secretKey() {
+    return read("STEADFAST_SECRET_KEY");
+  },
+  get configured() {
+    return Boolean(read("STEADFAST_API_KEY") && read("STEADFAST_SECRET_KEY"));
+  },
+  /**
+   * The token Steadfast sends back as `Authorization: Bearer …` on the
+   * delivery-status webhook. Whatever you typed into the portal goes here.
+   * Without it the webhook route rejects everything, which is the correct
+   * default for an endpoint that changes order state.
+   */
+  get webhookToken() {
+    return read("STEADFAST_WEBHOOK_TOKEN");
+  },
+  /**
+   * Path of the fraud/history check, relative to the base URL, with {phone}
+   * substituted.
+   *
+   * Configurable because it is the one Steadfast endpoint this codebase has
+   * not been able to confirm against their current documentation. The check is
+   * advisory — a wrong path logs and returns no data, and never blocks an
+   * order — so getting it wrong is cheap and fixing it needs no deploy.
+   */
+  get fraudCheckPath() {
+    return read("STEADFAST_FRAUD_CHECK_PATH") ?? "fraud_check/{phone}";
+  },
+};
+
+/** Pathao and RedX are stubs behind the CourierProvider interface. */
+export const pathaoEnv = {
+  get baseUrl() {
+    return read("PATHAO_BASE_URL") ?? "https://api-hermes.pathao.com";
+  },
+  get clientId() {
+    return read("PATHAO_CLIENT_ID");
+  },
+  get clientSecret() {
+    return read("PATHAO_CLIENT_SECRET");
+  },
+  get username() {
+    return read("PATHAO_USERNAME");
+  },
+  get password() {
+    return read("PATHAO_PASSWORD");
+  },
+  get storeId() {
+    return read("PATHAO_STORE_ID");
+  },
+  get configured() {
+    return Boolean(
+      read("PATHAO_CLIENT_ID") &&
+        read("PATHAO_CLIENT_SECRET") &&
+        read("PATHAO_USERNAME") &&
+        read("PATHAO_PASSWORD") &&
+        read("PATHAO_STORE_ID"),
+    );
+  },
+};
+
+export const redxEnv = {
+  get baseUrl() {
+    return read("REDX_BASE_URL") ?? "https://openapi.redx.com.bd/v1.0.0-beta";
+  },
+  get accessToken() {
+    return read("REDX_ACCESS_TOKEN");
+  },
+  get configured() {
+    return Boolean(read("REDX_ACCESS_TOKEN"));
+  },
+};
+
+export const courierEnv = {
+  /** Who gets the parcel when the customer expressed no preference. */
+  get defaultCourier() {
+    const value = read("COURIER_DEFAULT")?.toLowerCase();
+    return value === "pathao" || value === "redx" ? value : "steadfast";
+  },
+  /** Home delivery unless told otherwise. 1 = the customer collects from a hub. */
+  get deliveryType() {
+    return read("COURIER_DELIVERY_TYPE") === "1" ? "hub" : "home";
+  },
+  /**
+   * Flag an order for a call when the recipient's courier history is worse
+   * than this percentage. Advisory: it annotates, it never refuses.
+   */
+  get riskSuccessFloor() {
+    return int("COURIER_RISK_SUCCESS_FLOOR", 60);
+  },
+  /** Ignore the floor until the number has this much history to judge. */
+  get riskMinParcels() {
+    return int("COURIER_RISK_MIN_PARCELS", 3);
+  },
+};
+
+/**
+ * The owner's key for the endpoints that change an order — pushing it to a
+ * courier, in this phase. Phase 6's admin UI authenticates properly; until
+ * then this is a bearer token the owner keeps in a phone shortcut.
+ *
+ * No fallback, in any environment. An unauthenticated endpoint that hands a
+ * stranger's address to a courier is worse than one that does not work.
+ */
+export const adminEnv = {
+  get token() {
+    return read("ADMIN_TOKEN");
+  },
+  get configured() {
+    return Boolean(read("ADMIN_TOKEN"));
+  },
+};
+
 export const siteEnv = {
   get baseUrl() {
     return read("NEXT_PUBLIC_SITE_URL") ?? "https://heristiq.com";
