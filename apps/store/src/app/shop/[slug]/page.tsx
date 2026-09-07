@@ -5,16 +5,20 @@ import * as Accordion from "@radix-ui/react-accordion";
 import { ChevronDown } from "lucide-react";
 import { Gallery } from "@/components/product/gallery";
 import { BuyBox } from "@/components/product/buy-box";
+import { StickyBuyBar } from "@/components/product/sticky-buy-bar";
 import { ShareRow } from "@/components/product/share-row";
 import { SizeGuideContent } from "@/components/product/size-guide";
 import { ProductCardTile } from "@/components/product/product-card";
 import { Price } from "@/components/ui/price";
 import { Badge } from "@/components/ui/badge";
-import { Container, Eyebrow, SectionHeading } from "@/components/ui/layout";
+import { Container, Eyebrow, Section, SectionHeading } from "@/components/ui/layout";
 import { finishes, motifs, site } from "@/config/site";
 import { erp } from "@/lib/erp";
 import { availabilityLabel } from "@/lib/erp/types";
 import { ogImageUrl } from "@/lib/cloudinary";
+import { cartLineFor } from "@/lib/cart/line";
+import { productEnquiryHref } from "@/lib/whatsapp";
+import { isBuyable, isPreOrder } from "@/lib/erp/types";
 
 /*
  * Product detail.
@@ -147,6 +151,17 @@ export default async function ProductPage({ params }: PageProps<"/shop/[slug]">)
 
             <BuyBox product={product} url={url} />
 
+            {/* Phone only. Its sentinel is this position in the document, so
+                the bar appears exactly when the buy box scrolls off. */}
+            <StickyBuyBar
+              line={cartLineFor(product)}
+              preOrder={isPreOrder(product)}
+              buyable={isBuyable(product)}
+              name={product.name}
+              price={product.price}
+              whatsappHref={productEnquiryHref(product, url)}
+            />
+
             <Accordion.Root
               type="single"
               collapsible
@@ -185,7 +200,7 @@ export default async function ProductPage({ params }: PageProps<"/shop/[slug]">)
 
               <Panel value="returns" title="Delivery & returns">
                 <p className="leading-relaxed">
-                  We ship by Steadfast, Pathao or RedX with cash on delivery. If
+                  We ship by Pathao, Steadfast or RedX with cash on delivery. If
                   a piece arrives damaged or is not what you ordered, message us
                   within 3 days with a photo and we replace it — we cover the
                   courier both ways.
@@ -210,7 +225,7 @@ export default async function ProductPage({ params }: PageProps<"/shop/[slug]">)
       </Container>
 
       {related.length > 0 && (
-        <div className="bg-shell mt-8 py-16 sm:mt-16 sm:py-20">
+        <Section tone="shell" as="div" className="mt-8 sm:mt-16">
           <Container>
             <Eyebrow>You might also like</Eyebrow>
             <div className="mt-8 grid grid-cols-2 gap-x-4 gap-y-10 sm:mt-10 sm:grid-cols-3 sm:gap-x-6">
@@ -226,7 +241,7 @@ export default async function ProductPage({ params }: PageProps<"/shop/[slug]">)
               ))}
             </div>
           </Container>
-        </div>
+        </Section>
       )}
 
       {/*
@@ -237,6 +252,12 @@ export default async function ProductPage({ params }: PageProps<"/shop/[slug]">)
        * An unpriced product deliberately omits `offers` entirely rather than
        * claiming a price of 0.
        */}
+      {/* Clearance for the fixed phone buy bar. By the time the reader is
+          this far down the page the bar is always showing, so the space is
+          never wasted — and without it the bar covers the first rows of the
+          footer. */}
+      <div aria-hidden className="h-20 lg:hidden" />
+
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{

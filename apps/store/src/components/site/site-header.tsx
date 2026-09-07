@@ -5,8 +5,11 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Menu, Search, ShoppingBag, X } from "lucide-react";
 import { useCart } from "@/components/cart/cart-provider";
+import { WhatsAppIcon } from "@/components/ui/brand-icons";
+import { Button } from "@/components/ui/button";
 import { Container } from "@/components/ui/layout";
 import { nav, site } from "@/config/site";
+import { whatsappNumber } from "@/lib/phone";
 import { cn } from "@/lib/utils";
 
 /*
@@ -58,6 +61,7 @@ export function SiteHeader({ hasPromo = false }: { hasPromo?: boolean }) {
   }, [menuOpen]);
 
   const inverted = overHero && !scrolled && !menuOpen;
+  const wa = whatsappNumber(site.contact.phone);
 
   return (
     <>
@@ -118,10 +122,10 @@ export function SiteHeader({ hasPromo = false }: { hasPromo?: boolean }) {
             ))}
           </nav>
 
-          {/* The wordmark is optically centred on desktop and left-of-centre on
-              a phone, where the menu button owns the left edge. */}
-          {/* Shrinks with the header. The transform origin is the centre, so
-              the optical centring survives the scale. */}
+          {/* Optically centred on desktop and left-of-centre on a phone,
+              where the menu button owns the left edge. It shrinks with the
+              header; the transform origin is the centre, so the optical
+              centring survives the scale. */}
           <Link
             href="/"
             className={cn(
@@ -169,12 +173,26 @@ export function SiteHeader({ hasPromo = false }: { hasPromo?: boolean }) {
 
       {/* Mobile menu. A full-height panel rather than a dropdown: the nav is
           short, and a panel gives the links a 44px target without cramming. */}
+      {/*
+       * `invisible` when closed, not merely `opacity-0`.
+       *
+       * A transparent element is still in the tab order, so a keyboard user
+       * tabbing out of the header fell into six invisible menu links, a
+       * WhatsApp button and two more links — with no way to see where focus
+       * had gone. aria-hidden kept it out of the accessibility tree, which
+       * means a screen-reader user was tabbing to targets their own screen
+       * reader refused to describe.
+       *
+       * visibility:hidden removes it from the tab order. The cost is that the
+       * fade only plays on the way in — visibility flips discretely — and
+       * that is the right trade against unreachable focus.
+       */}
       <div
         className={cn(
-          "bg-bone fixed inset-0 z-40 transition-opacity duration-300 lg:hidden",
+          "bg-bone fixed inset-0 z-40 transition-opacity duration-calm lg:hidden",
           menuOpen
-            ? "pointer-events-auto opacity-100"
-            : "pointer-events-none opacity-0",
+            ? "pointer-events-auto visible opacity-100"
+            : "pointer-events-none invisible opacity-0",
         )}
         aria-hidden={!menuOpen}
       >
@@ -205,11 +223,35 @@ export function SiteHeader({ hasPromo = false }: { hasPromo?: boolean }) {
               Contact
             </Link>
           </nav>
-          <p className="text-ink-muted mt-auto text-sm">
-            Cash on delivery across Bangladesh.
-            <br />
-            {site.contact.hours}
-          </p>
+
+          {/*
+           * WhatsApp, as a real button at the bottom of the menu.
+           *
+           * It was reachable only from /contact, the PDP and the order
+           * receipt — which means the customer who opened the menu because
+           * they had a question had to guess that "Contact" was where the
+           * chat lived. This business already takes orders on WhatsApp; the
+           * fastest path to a human should not be two taps and an inference.
+           */}
+          <div className="mt-auto flex flex-col gap-4 pt-8">
+            {wa && (
+              <Button asChild size="lg" variant="secondary" onClick={closeMenu}>
+                <a
+                  href={`https://wa.me/${wa}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <WhatsAppIcon size={18} />
+                  Message us on WhatsApp
+                </a>
+              </Button>
+            )}
+            <p className="text-ink-muted text-copy-sm">
+              Cash on delivery across Bangladesh.
+              <br />
+              {site.contact.hours}
+            </p>
+          </div>
         </Container>
       </div>
     </>

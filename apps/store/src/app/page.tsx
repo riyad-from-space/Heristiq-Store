@@ -2,6 +2,7 @@ import { Hero } from "@/components/home/hero";
 import { TrustStrip } from "@/components/home/trust-strip";
 import { Featured } from "@/components/home/featured";
 import { MotifStory } from "@/components/home/motif-story";
+import { HowItWorks } from "@/components/home/how-it-works";
 import { SocialProof } from "@/components/home/social-proof";
 import { InstagramFeed } from "@/components/home/instagram-feed";
 import { erp } from "@/lib/erp";
@@ -32,6 +33,7 @@ export default async function HomePage() {
       <TrustStrip />
       <Featured products={showcase} />
       <MotifStory />
+      <HowItWorks />
       <SocialProof />
       <InstagramFeed />
 

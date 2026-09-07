@@ -2,10 +2,9 @@ import { ShieldCheck, Truck } from "lucide-react";
 import { AddToCart } from "@/components/cart/add-to-cart";
 import { WhatsAppIcon } from "@/components/ui/brand-icons";
 import { Button } from "@/components/ui/button";
-import { site } from "@/config/site";
 import { cartLineFor } from "@/lib/cart/line";
 import { dayRange, taka } from "@/lib/format";
-import { whatsappNumber } from "@/lib/phone";
+import { productEnquiryHref } from "@/lib/whatsapp";
 import { deliveryTerms } from "@/lib/delivery.server";
 import type { Product } from "@/lib/erp/types";
 import { isBuyable, isPreOrder } from "@/lib/erp/types";
@@ -28,23 +27,7 @@ export async function BuyBox({ product, url }: { product: Product; url: string }
   const terms = await deliveryTerms();
   const preOrder = isPreOrder(product);
   const buyable = isBuyable(product);
-  const wa = whatsappNumber(site.contact.phone);
-
-  const message = [
-    `Hi Heristiq, I have a question about:`,
-    ``,
-    `${product.name} (${product.sku})`,
-    product.price !== null ? `Price: ${taka(product.price)}` : `Price: please confirm`,
-    preOrder ? `This one is sold out — is a pre-order possible?` : ``,
-    ``,
-    url,
-  ]
-    .filter((line, i, all) => !(line === "" && all[i - 1] === ""))
-    .join("\n");
-
-  const waHref = wa
-    ? `https://wa.me/${wa}?text=${encodeURIComponent(message)}`
-    : null;
+  const waHref = productEnquiryHref(product, url);
 
   return (
     <div className="mt-8">

@@ -9,8 +9,14 @@ import { cn } from "@/lib/utils";
 /*
  * Quick-add on a shop-grid card.
  *
- * Always visible, not hover-revealed: 85% of traffic has no hover, and a
- * control that only appears on a mouse is a control most customers never see.
+ * Visibility is decided by the CARD (see product-card.tsx), and the rule there
+ * is worth restating because it used to live here: always visible on a touch
+ * screen, hover-revealed only where there is a real mouse. This comment
+ * previously said "always visible, not hover-revealed" on the grounds that 85%
+ * of traffic has no hover — which is still the reason, but the conclusion is
+ * now expressed as `pointer-coarse` / `pointer-fine` rather than as never
+ * hiding it. A phone still shows the button permanently; a desktop gets the
+ * cleaner card and reveals it under the cursor.
  *
  * It sits ABOVE the card's link overlay in the stacking order and stops the
  * click from propagating, so tapping it adds the piece instead of navigating.
