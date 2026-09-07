@@ -51,3 +51,8 @@ cloudflare-env.d.ts
 
 # Layout audit output (apps/store/scripts/shoot.mjs)
 .shots/
+
+# Resized image variants, rebuilt from the originals before every build by
+# apps/store/scripts/image-manifest.mjs. The ORIGINALS in public/products/ are
+# committed — they are the source of truth for the site's photography.
+apps/store/public/products/_r/

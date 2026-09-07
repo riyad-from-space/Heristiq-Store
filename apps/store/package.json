@@ -10,7 +10,10 @@
     "typecheck": "tsc --noEmit",
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
-    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"
+    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
+    "predev": "node scripts/image-manifest.mjs",
+    "prebuild": "node scripts/image-manifest.mjs",
+    "images": "node scripts/image-manifest.mjs"
   },
   "dependencies": {
     "@heristiq/shared": "*",
