@@ -407,15 +407,21 @@ Each phase is runnable and committed on its own.
 
 Real content has to replace placeholders. Nothing below is a code change.
 
+- [ ] **Apply the migrations.** `supabase/migrations/0001`…`1004`, in filename
+  order, against the live Supabase project. Until then the storefront browses
+  fine and cannot record an order — and the ERP is still open to any signed-in
+  account.
 - [ ] **Set retail prices** on the ERP Products page. Until then every piece
   reads "Price on request" and cannot be bought.
 - [ ] **Upload photography to Cloudinary** under the IDs in
   `src/lib/erp/merchandising.ts` (`wc-005/front`, `wc-005/worn`, …), plus
   `hero/home`, `story/celestial`, `story/nautical` and `social/1…6`.
-- [ ] **Replace the testimonials** in `src/config/testimonials.ts` with real
-  messages you have permission to quote — or empty the array, which renders the
-  section away. The file ships sample text so the section is designable; see the
-  warning at the top of it. **Do not publish invented reviews.**
+- [ ] **Testimonials are OFF.** `TESTIMONIALS_ARE_REAL` in
+  `src/config/testimonials.ts` is `false`, so the section renders nothing and
+  the sample quotes never reach a customer. Replace every entry with a real
+  message you have permission to quote and set the flag to `true`, or leave it
+  off — the home page reads fine without it. **Do not publish invented
+  reviews.**
 - [ ] **Confirm the contact number and social handles** in `src/config/site.ts`.
   They are placeholders.
 - [ ] **Set the Pathao webhook** in their merchant dashboard: callback URL

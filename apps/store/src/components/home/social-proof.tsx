@@ -1,5 +1,5 @@
 import { Container, Eyebrow, SectionHeading } from "@/components/ui/layout";
-import { testimonials } from "@/config/testimonials";
+import { TESTIMONIALS_ARE_REAL, testimonials } from "@/config/testimonials";
 
 /*
  * Customer messages.
@@ -9,7 +9,13 @@ import { testimonials } from "@/config/testimonials";
  * proof section with invented reviews is worse than no section.
  */
 export function SocialProof() {
-  if (testimonials.length === 0) return null;
+  /*
+   * Off unless someone has asserted the quotes are real. The array ships with
+   * samples so the section can be designed, and publishing those as genuine
+   * customer reviews would be a deception — so it takes a deliberate flag,
+   * not merely forgetting to empty an array.
+   */
+  if (!TESTIMONIALS_ARE_REAL || testimonials.length === 0) return null;
 
   return (
     <div className="bg-sea py-16 text-bone sm:py-24">
