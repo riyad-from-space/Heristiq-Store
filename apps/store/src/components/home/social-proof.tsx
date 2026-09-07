@@ -1,3 +1,4 @@
+import { Reveal, StaggerGrid, StaggerItem } from "@/components/motion/reveal";
 import { Container, Section, SectionHeader } from "@/components/ui/layout";
 import { TESTIMONIALS_ARE_REAL, testimonials } from "@/config/testimonials";
 
@@ -20,15 +21,18 @@ export function SocialProof() {
   return (
     <Section tone="sea" as="div">
       <Container>
-        <SectionHeader
-          onDark
-          eyebrow="From the DMs"
-          title="What people say after it arrives"
-        />
+        <Reveal>
+          <SectionHeader
+            onDark
+            eyebrow="From the DMs"
+            title="What people say after it arrives"
+          />
+        </Reveal>
 
-        <div className="mt-12 grid gap-10 sm:mt-16 sm:grid-cols-3 sm:gap-8">
+        <StaggerGrid className="mt-12 grid gap-10 sm:mt-16 sm:grid-cols-3 sm:gap-8">
           {testimonials.map((item) => (
-            <blockquote key={item.name} className="flex flex-col">
+            <StaggerItem key={item.name}>
+            <blockquote className="flex flex-col">
               <span aria-hidden className="font-display text-3xl text-gold">
                 &ldquo;
               </span>
@@ -39,8 +43,9 @@ export function SocialProof() {
                 {item.name} · {item.city}
               </footer>
             </blockquote>
+            </StaggerItem>
           ))}
-        </div>
+        </StaggerGrid>
       </Container>
     </Section>
   );

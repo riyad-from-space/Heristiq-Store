@@ -62,6 +62,31 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
 
   return (
     <html lang="en" className={`${fraunces.variable} ${inter.variable}`}>
+      <head>
+        {/*
+         * The no-JavaScript half of the scroll-reveal guardrail. (The
+         * reduced-motion half is a media query in globals.css.)
+         *
+         * `motion` serialises an element's `initial` state into the HTML as an
+         * inline style, so every revealing section ships at opacity 0 and
+         * becomes visible when its animation runs. With JavaScript off or
+         * blocked — a data-saver proxy, a corporate filter, a script error
+         * earlier on the page — that animation never runs and the sections
+         * stay invisible forever. The customer sees a header, a footer and
+         * nothing in between.
+         *
+         * A <noscript> stylesheet is the one guard that works, because it is
+         * evaluated by the same parser that would have skipped the script.
+         */}
+        <noscript>
+          <style
+            dangerouslySetInnerHTML={{
+              __html:
+                "[data-reveal]{opacity:1!important;transform:none!important}",
+            }}
+          />
+        </noscript>
+      </head>
       <body className="flex min-h-dvh flex-col">
         {/* The cart lives above the header, because the header renders its
             count. It is a client boundary, but a thin one: `children` stays a

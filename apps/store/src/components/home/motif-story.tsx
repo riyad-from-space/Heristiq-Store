@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Reveal, StaggerCell, StaggerGrid } from "@/components/motion/reveal";
 import { Container, Section, SectionHeader } from "@/components/ui/layout";
 import { ProductImage } from "@/components/ui/product-image";
 
@@ -31,15 +32,18 @@ export function MotifStory() {
   return (
     <Section tone="shell" as="div">
       <Container>
-        <SectionHeader
-          eyebrow="Where it comes from"
-          title="Two threads, sky and sea"
-          lede="Everything we make comes from one of two places. Nothing is gold, and nothing pretends to be — these are pieces to wear on a Tuesday, not to keep in a box for a wedding."
-        />
+        <Reveal>
+          <SectionHeader
+            eyebrow="Where it comes from"
+            title="Two threads, sky and sea"
+            lede="Everything we make comes from one of two places. Nothing is gold, and nothing pretends to be — these are pieces to wear on a Tuesday, not to keep in a box for a wedding."
+          />
+        </Reveal>
 
-        <div className="mt-12 grid gap-8 sm:mt-16 sm:grid-cols-2 sm:gap-6">
+        <StaggerGrid className="mt-12 grid gap-8 sm:mt-16 sm:grid-cols-2 sm:gap-6">
           {threads.map((thread) => (
-            <Link key={thread.label} href={thread.href} className="group block">
+            <StaggerCell key={thread.label}>
+            <Link href={thread.href} className="group block">
               <ProductImage
                 image={thread.image}
                 crop="square"
@@ -59,8 +63,9 @@ export function MotifStory() {
                 </p>
               </div>
             </Link>
+            </StaggerCell>
           ))}
-        </div>
+        </StaggerGrid>
       </Container>
     </Section>
   );

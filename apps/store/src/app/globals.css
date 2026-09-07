@@ -176,6 +176,24 @@
       animation-duration: 0.01ms !important;
       transition-duration: 0.01ms !important;
     }
+
+    /*
+     * The scroll-reveal guardrail.
+     *
+     * `motion` writes an element's `initial` state into the server-rendered
+     * HTML as an inline style, so a revealing block arrives at opacity 0.
+     * useReducedMotion() cannot help — it only knows the preference after
+     * hydration, and by then the reader has already been shown a blank
+     * section.
+     *
+     * This is CSS, so it applies at first paint, and !important beats the
+     * inline style motion wrote. Someone who asked for no motion sees the
+     * finished page immediately and never sees the hidden state at all.
+     */
+    [data-reveal] {
+      opacity: 1 !important;
+      transform: none !important;
+    }
   }
 }
 

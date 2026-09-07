@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { ProductCardTile } from "@/components/product/product-card";
+import { Reveal, StaggerCell, StaggerGrid } from "@/components/motion/reveal";
 import { Container, Section, SectionHeader } from "@/components/ui/layout";
 import type { ProductCard } from "@/lib/erp/types";
 
@@ -26,7 +27,7 @@ export function Featured({ products }: { products: ProductCard[] }) {
   return (
     <Section>
       <Container>
-        <div className="flex items-end justify-between gap-6">
+        <Reveal className="flex items-end justify-between gap-6">
           {/*
            * The heading counts the pieces it is actually showing. It read
            * "Four pieces people keep coming back for" as a hard-coded string,
@@ -48,7 +49,7 @@ export function Featured({ products }: { products: ProductCard[] }) {
           >
             See all <ArrowRight size={14} />
           </Link>
-        </div>
+        </Reveal>
       </Container>
 
       {/* The rail bleeds into the gutter on purpose — a card half-cut at the
@@ -58,20 +59,22 @@ export function Featured({ products }: { products: ProductCard[] }) {
             to the SNAPPORT edge, which ignores padding, so padding alone makes
             the browser scroll the gutter away and the first card sits flush to
             the screen edge. scroll-padding moves the snapport instead. */}
-        <div className="scrollbar-none flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 pb-2 scroll-pl-5 sm:hidden">
+        <Reveal className="scrollbar-none flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 pb-2 scroll-pl-5 sm:hidden">
           {products.map((product, index) => (
             <div key={product.id} className="w-[74vw] shrink-0 snap-start">
               <ProductCardTile product={product} priority={index === 0} />
             </div>
           ))}
-        </div>
+        </Reveal>
 
         <Container className="hidden sm:block">
-          <div className="grid grid-cols-2 gap-x-6 gap-y-12 lg:grid-cols-4">
+          <StaggerGrid className="grid grid-cols-2 gap-x-6 gap-y-12 lg:grid-cols-4">
             {products.map((product) => (
-              <ProductCardTile key={product.id} product={product} />
+              <StaggerCell key={product.id}>
+                <ProductCardTile product={product} />
+              </StaggerCell>
             ))}
-          </div>
+          </StaggerGrid>
         </Container>
       </div>
 

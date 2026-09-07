@@ -1,4 +1,5 @@
 import { Banknote, Truck, MapPin, RefreshCw } from "lucide-react";
+import { StaggerGrid, StaggerItem } from "@/components/motion/reveal";
 import { Container } from "@/components/ui/layout";
 
 /*
@@ -18,7 +19,7 @@ const points = [
   {
     icon: Truck,
     title: "2–4 day delivery",
-    body: "Inside Dhaka usually next day. Steadfast, Pathao or RedX.",
+    body: "Inside Dhaka usually next day. Pathao, Steadfast or RedX.",
   },
   {
     icon: MapPin,
@@ -34,15 +35,20 @@ const points = [
 
 export function TrustStrip() {
   return (
-    <div className="border-line border-b bg-paper">
-      <Container className="grid grid-cols-2 gap-x-6 gap-y-8 py-10 lg:grid-cols-4 sm:py-12">
-        {points.map(({ icon: Icon, title, body }) => (
-          <div key={title} className="flex flex-col gap-2">
-            <Icon size={20} className="text-gold" strokeWidth={1.5} />
-            <h3 className="text-sm font-medium">{title}</h3>
-            <p className="text-ink-muted text-copy-xs">{body}</p>
-          </div>
-        ))}
+    <div className="border-line bg-paper border-b">
+      <Container className="py-10 sm:py-12">
+        {/* The grid moved off <Container> and onto the stagger parent: the
+            animating element has to be the one that owns grid-cols, or the
+            cells are no longer its direct children. */}
+        <StaggerGrid className="grid grid-cols-2 gap-x-6 gap-y-8 lg:grid-cols-4">
+          {points.map(({ icon: Icon, title, body }) => (
+            <StaggerItem key={title} className="flex flex-col gap-2">
+              <Icon size={20} className="text-gold" strokeWidth={1.5} />
+              <h3 className="text-sm font-medium">{title}</h3>
+              <p className="text-ink-muted text-copy-xs">{body}</p>
+            </StaggerItem>
+          ))}
+        </StaggerGrid>
       </Container>
     </div>
   );
