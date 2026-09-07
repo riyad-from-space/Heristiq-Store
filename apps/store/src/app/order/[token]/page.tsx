@@ -62,7 +62,7 @@ export default async function OrderPage({
          * looks real for an order nobody will ever pack is the one outcome
          * this whole flow must not produce.
          */
-        <div className="border-warn/40 bg-warn/5 text-warn mb-8 border border-dashed px-4 py-3 text-sm leading-relaxed">
+        <div className="border-warn/40 bg-warn/5 text-warn mb-8 border border-dashed px-4 py-3 text-copy-sm">
           <strong className="font-medium">Demo mode.</strong> No ERP credentials
           are configured, so this order exists only in this server&apos;s memory
           and nobody has been notified. Set <code>SUPABASE_URL</code> and{" "}
@@ -95,7 +95,7 @@ export default async function OrderPage({
       {order.hasPreOrder && (
         <div className="border-sea/20 bg-sea/5 mt-6 border px-4 py-3">
           <p className="text-sm font-medium">This order includes a pre-order</p>
-          <p className="text-ink-muted mt-1 text-sm leading-relaxed">
+          <p className="text-ink-muted mt-1 text-copy-sm">
             One piece is being restocked. We will confirm the date when we call,
             and nothing is charged until it ships.
           </p>
@@ -178,7 +178,7 @@ export default async function OrderPage({
       <dl className="mt-10 grid gap-6 sm:grid-cols-2">
         <div>
           <dt className="text-eyebrow text-ink-faint uppercase">Delivering to</dt>
-          <dd className="mt-2 text-sm leading-relaxed">
+          <dd className="mt-2 text-copy-sm">
             {order.customerName}
             <br />
             {formatAddress(order.address)}
@@ -190,7 +190,7 @@ export default async function OrderPage({
         </div>
         <div>
           <dt className="text-eyebrow text-ink-faint uppercase">Payment</dt>
-          <dd className="mt-2 text-sm leading-relaxed">
+          <dd className="mt-2 text-copy-sm">
             {PAYMENT_METHODS[order.paymentMethod]}
             <br />
             <span className="text-ink-muted">
@@ -212,7 +212,7 @@ export default async function OrderPage({
           {shipment ? "Following it" : "What happens now"}
         </h2>
         {shipment ? (
-          <p className="text-ink-muted mt-4 text-sm leading-relaxed">
+          <p className="text-ink-muted mt-4 text-copy-sm">
             This page updates itself as the courier reports in, so keep the
             link. You can also{" "}
             <Link
@@ -265,7 +265,7 @@ export default async function OrderPage({
         </Button>
       </div>
 
-      <p className="text-ink-faint mt-8 flex items-start gap-2 text-xs leading-relaxed">
+      <p className="text-ink-faint mt-8 flex items-start gap-2 text-copy-xs">
         <MessageCircle size={14} className="mt-0.5 shrink-0" />
         Keep this page — the link is the only way back to it. Order{" "}
         {order.reference} is also all we need to find you.

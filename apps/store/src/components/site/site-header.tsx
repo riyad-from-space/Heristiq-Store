@@ -61,16 +61,41 @@ export function SiteHeader({ hasPromo = false }: { hasPromo?: boolean }) {
 
   return (
     <>
+      {/*
+       * The transition list is spelled out property by property, and that is
+       * the fix for a real bug: this was `transition-[colors,top]`, which
+       * compiles to `transition-property: colors, top`. There is no CSS
+       * property called `colors` — Tailwind's `transition-colors` is a
+       * shorthand for a list of four — so the whole declaration was invalid
+       * and the browser dropped it. Neither the colour NOR the offset
+       * animated; the header simply snapped between its two states.
+       */}
       <header
         className={cn(
-          "fixed inset-x-0 z-50 transition-[colors,top] duration-300",
+          "fixed inset-x-0 z-50 ease-out-soft",
+          "transition-[background-color,border-color,color,top,box-shadow] duration-calm",
           offset,
           inverted
-            ? "text-white"
-            : "border-line bg-bone/95 border-b text-ink backdrop-blur-md",
+            ? "border-b border-transparent text-white"
+            : "border-line bg-bone/90 border-b text-ink backdrop-blur-md",
+          /* A whisper of lift once it is floating over content, so the
+             hairline is not the only thing separating it from the page. */
+          scrolled && !inverted && "shadow-[0_1px_12px_-6px_rgba(23,21,15,0.25)]",
         )}
       >
-        <Container className="flex h-16 items-center justify-between gap-4 sm:h-20">
+        {/*
+         * Condense on scroll: 64/80px at rest, 56/64px once moving. The
+         * height is on the Container because that is what owns the padding,
+         * and animating height here rather than on <header> keeps the fixed
+         * element's own box out of the transition.
+         */}
+        <Container
+          className={cn(
+            "flex items-center justify-between gap-4",
+            "transition-[height] duration-calm ease-out-soft",
+            scrolled ? "h-14 sm:h-16" : "h-16 sm:h-20",
+          )}
+        >
           <button
             type="button"
             onClick={() => setMenuOpen((open) => !open)}
@@ -95,9 +120,15 @@ export function SiteHeader({ hasPromo = false }: { hasPromo?: boolean }) {
 
           {/* The wordmark is optically centred on desktop and left-of-centre on
               a phone, where the menu button owns the left edge. */}
+          {/* Shrinks with the header. The transform origin is the centre, so
+              the optical centring survives the scale. */}
           <Link
             href="/"
-            className="font-display absolute left-1/2 -translate-x-1/2 text-lg tracking-[0.22em] uppercase sm:text-xl"
+            className={cn(
+              "font-display absolute left-1/2 -translate-x-1/2 text-lg tracking-[0.22em] uppercase sm:text-xl",
+              "transition-transform duration-calm ease-out-soft",
+              scrolled && "scale-90",
+            )}
           >
             {site.name}
           </Link>

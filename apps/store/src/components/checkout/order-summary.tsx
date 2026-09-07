@@ -103,7 +103,7 @@ export function OrderSummary({
         </div>
 
         {gap !== null && (
-          <p className="bg-gold-wash text-gold-deep px-3 py-2 text-xs leading-relaxed">
+          <p className="bg-gold-wash text-gold-deep px-3 py-2 text-copy-xs">
             Add {taka(gap)} more and delivery is free.
           </p>
         )}
@@ -115,7 +115,7 @@ export function OrderSummary({
       </div>
 
       {addressChosen && (
-        <p className="text-ink-muted border-line border-t px-5 py-4 text-xs leading-relaxed sm:px-6">
+        <p className="text-ink-muted border-line border-t px-5 py-4 text-copy-xs sm:px-6">
           Arrives in {dayRange(days.min, days.max)}. Pay the courier in cash
           when it reaches you.
         </p>

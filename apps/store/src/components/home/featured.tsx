@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { ProductCardTile } from "@/components/product/product-card";
-import { Container, Eyebrow, Section, SectionHeading } from "@/components/ui/layout";
+import { Container, Section, SectionHeader } from "@/components/ui/layout";
 import type { ProductCard } from "@/lib/erp/types";
 
 /*
@@ -12,6 +12,14 @@ import type { ProductCard } from "@/lib/erp/types";
  * story below, and a rail keeps the whole selection in one thumb sweep. From
  * sm: up it becomes a real grid.
  */
+/* Spelled out, because "Three pieces" reads as copy and "3 pieces" reads as a
+   database field. Only ever called for the handful the home page shows. */
+const COUNT_WORDS: Record<number, string> = {
+  2: "Two",
+  3: "Three",
+  4: "Four",
+};
+
 export function Featured({ products }: { products: ProductCard[] }) {
   if (products.length === 0) return null;
 
@@ -19,12 +27,21 @@ export function Featured({ products }: { products: ProductCard[] }) {
     <Section>
       <Container>
         <div className="flex items-end justify-between gap-6">
-          <div>
-            <Eyebrow>The collection</Eyebrow>
-            <SectionHeading className="mt-5 max-w-lg">
-              Four pieces people keep coming back for
-            </SectionHeading>
-          </div>
+          {/*
+           * The heading counts the pieces it is actually showing. It read
+           * "Four pieces people keep coming back for" as a hard-coded string,
+           * which is wrong the moment the owner flags three as featured or
+           * the catalogue drops below four — and the fallback path above can
+           * hand this fewer than four.
+           */}
+          <SectionHeader
+            eyebrow="The collection"
+            title={
+              products.length === 1
+                ? "The piece people keep coming back for"
+                : `${COUNT_WORDS[products.length] ?? products.length} pieces people keep coming back for`
+            }
+          />
           <Link
             href="/shop"
             className="text-eyebrow hidden shrink-0 items-center gap-2 uppercase decoration-1 underline-offset-8 hover:underline sm:inline-flex"

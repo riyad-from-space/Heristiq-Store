@@ -111,14 +111,14 @@ export default async function ContactPage({
 
       <div className="not-prose border-line mt-10 border-t pt-8">
         <h2 className="font-display text-display-s">Send us a message</h2>
-        <p className="text-ink-muted mt-2 mb-6 text-sm leading-relaxed">
+        <p className="text-ink-muted mt-2 mb-6 text-copy-sm">
           Leave a phone number or an email and we will come back to you.
         </p>
         <ContactForm orderReference={reference} />
       </div>
 
       {business.address && (
-        <p className="text-ink-faint mt-10 text-xs leading-relaxed">
+        <p className="text-ink-faint mt-10 text-copy-xs">
           {business.legalName}, {business.address}
           {business.tradeLicence && ` · Trade licence ${business.tradeLicence}`}
         </p>

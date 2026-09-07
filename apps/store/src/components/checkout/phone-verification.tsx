@@ -235,7 +235,7 @@ export function PhoneVerification({
         )}
 
         {!verified && (
-          <p className="text-ink-faint flex items-start gap-2 text-xs leading-relaxed">
+          <p className="text-ink-faint flex items-start gap-2 text-copy-xs">
             <ShieldCheck size={14} className="mt-0.5 shrink-0" />
             Verifying keeps cash-on-delivery working for everyone. We do not use
             your number for marketing.

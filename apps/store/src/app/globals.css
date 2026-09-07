@@ -63,6 +63,30 @@
   --text-eyebrow--line-height: 1.2;
   --text-eyebrow--letter-spacing: 0.16em;
 
+  /*
+   * Reading text — a scale of its own, deliberately separate from Tailwind's
+   * text-xs/sm/base.
+   *
+   * Those stay for UI: a button label, a courier name, a stock count. This set
+   * is for prose, and the difference is the line box. A 13px form label wants
+   * a tight 1.4 so the field does not grow; a 15px paragraph wants 1.7 or the
+   * eye loses its place on the return sweep. One scale cannot serve both, and
+   * trying was why `text-sm leading-relaxed` had grown three different
+   * companions across the home sections.
+   *
+   * `--text-copy` is the default body size. It is 15px rather than 16px
+   * because Inter runs large at a given size, and 15/1.7 next to Fraunces
+   * display type reads as editorial where 16/1.5 reads as a web form.
+   */
+  --text-copy-xs: 0.75rem; /* 12px — captions, helper text under a field */
+  --text-copy-xs--line-height: 1.6;
+  --text-copy-sm: 0.875rem; /* 14px — the workhorse; matches text-sm's size */
+  --text-copy-sm--line-height: 1.65;
+  --text-copy: 0.9375rem; /* 15px — body and section ledes */
+  --text-copy--line-height: 1.7;
+  --text-copy-lg: 1.0625rem; /* 17px — a hero paragraph, a page lede */
+  --text-copy-lg--line-height: 1.6;
+
   /* --- shape ---------------------------------------------------------- */
   /* Near-square. Jewellery reads as precious against crisp corners. */
   --radius-xs: 2px;
@@ -70,8 +94,35 @@
   --radius-md: 4px;
   --radius-lg: 6px;
 
+  /* --- rhythm --------------------------------------------------------- */
+  /*
+   * The gap between page sections, as one token instead of `py-16 sm:py-24`
+   * retyped in four files (which had already drifted — two sections used
+   * <Section>, two hand-rolled the same numbers and one of those was wrong).
+   *
+   * A clamp rather than a breakpoint jump: section spacing has no reason to
+   * change in one 8px step at exactly 640px, and the fluid version means a
+   * 400px-wide phone and a 700px-wide tablet each get spacing in proportion
+   * to the text they are separating. Use it as `py-section`.
+   */
+  --spacing-section: clamp(4rem, 9vw, 6.5rem);
+  /* Two thirds of the above, for a band that sits tighter to its neighbour. */
+  --spacing-section-tight: clamp(2.5rem, 6vw, 4rem);
+
   /* --- motion --------------------------------------------------------- */
+  /*
+   * One easing curve and three durations, so that a CSS transition and a
+   * `motion` animation on the same element cannot disagree about how the
+   * brand moves. Step 3 reads these from JS via getComputedStyle-free
+   * constants in lib/motion.ts, which mirrors them.
+   *
+   * The curve is a decelerate: fast out of the gate, long settle. It is what
+   * makes a hover feel answered rather than sluggish.
+   */
   --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration-quick: 180ms; /* buttons, focus, small state flips */
+  --duration-calm: 320ms; /* headers, sheets, crossfades */
+  --duration-slow: 700ms; /* image zooms, reveals */
 }
 
 @layer base {
@@ -185,8 +236,10 @@
  */
 @layer components {
   .prose-heristiq {
-    font-size: 0.9375rem;
-    line-height: 1.75;
+    /* Was a hand-typed 0.9375rem/1.75. Same size, now the shared token, so
+       written pages and section ledes cannot drift apart. */
+    font-size: var(--text-copy);
+    line-height: var(--text-copy--line-height);
     color: var(--color-ink-muted);
   }
 

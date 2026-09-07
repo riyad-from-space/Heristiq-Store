@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { TrackForm } from "@/components/track/track-form";
-import { Container, Eyebrow, SectionHeading } from "@/components/ui/layout";
+import { Container, SectionHeader } from "@/components/ui/layout";
 
 /*
  * Track an order.
@@ -29,16 +29,13 @@ export default async function TrackPage({ searchParams }: PageProps<"/track">) {
 
   return (
     <Container width="prose" className="py-10 sm:py-16">
-      <header>
-        <Eyebrow>Where is it</Eyebrow>
-        <SectionHeading as="h1" size="l" className="mt-5">
-          Track your order
-        </SectionHeading>
-        <p className="text-ink-muted mt-4 text-sm leading-relaxed">
-          Your order number and the mobile number you ordered with. We ask for
-          both so nobody else can look up your delivery.
-        </p>
-      </header>
+      <SectionHeader
+        as="h1"
+        size="l"
+        eyebrow="Where is it"
+        title="Track your order"
+        lede="Your order number and the mobile number you ordered with. We ask for both so nobody else can look up your delivery."
+      />
 
       <div className="mt-10">
         <TrackForm

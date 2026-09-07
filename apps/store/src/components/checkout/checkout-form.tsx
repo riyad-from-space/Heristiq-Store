@@ -126,7 +126,7 @@ export function CheckoutForm({
       <div className="border-warn/40 bg-paper border px-6 py-10 text-center">
         <AlertTriangle size={22} className="text-warn mx-auto" />
         <p className="font-display mt-4 text-display-s">One piece is not priced yet</p>
-        <p className="text-ink-muted mx-auto mt-2 max-w-sm text-sm leading-relaxed">
+        <p className="text-ink-muted mx-auto mt-2 max-w-sm text-copy-sm">
           We cannot take payment for something without a price. Remove it from
           your cart and we will confirm the price over WhatsApp.
         </p>

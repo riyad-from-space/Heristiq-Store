@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { ProductCardTile } from "@/components/product/product-card";
 import { EmptyResults, FilterBar } from "@/components/shop/filter-bar";
-import { Container, Eyebrow, SectionHeading } from "@/components/ui/layout";
+import { Container, SectionHeader } from "@/components/ui/layout";
 import { finishes, motifs, site } from "@/config/site";
 import { erp } from "@/lib/erp";
 import { SORTS, type ProductQuery, type SortKey } from "@/lib/erp/types";
@@ -71,16 +71,16 @@ export default async function ShopPage({ searchParams }: PageProps<"/shop">) {
 
   return (
     <Container className="py-10 sm:py-16">
-      <header className="max-w-xl">
-        <Eyebrow>The collection</Eyebrow>
-        <SectionHeading as="h1" size="l" className="mt-5">
-          {heading}
-        </SectionHeading>
-        <p className="text-ink-muted mt-4 text-sm leading-relaxed">
-          {blurb ??
-            "Gold and silver finishes on fine chain, sized to sit at the hip. Everything is in stock unless it says otherwise — sold-out pieces can be pre-ordered."}
-        </p>
-      </header>
+      <SectionHeader
+        as="h1"
+        size="l"
+        eyebrow="The collection"
+        title={heading}
+        lede={
+          blurb ??
+          "Gold and silver finishes on fine chain, sized to sit at the hip. Everything is in stock unless it says otherwise — sold-out pieces can be pre-ordered."
+        }
+      />
 
       <div className="mt-10 sm:mt-12">
         {/* useSearchParams needs a Suspense boundary above it. */}

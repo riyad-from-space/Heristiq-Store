@@ -1,4 +1,4 @@
-import { Container, Eyebrow, SectionHeading } from "@/components/ui/layout";
+import { Container, Section, SectionHeader } from "@/components/ui/layout";
 import { TESTIMONIALS_ARE_REAL, testimonials } from "@/config/testimonials";
 
 /*
@@ -18,14 +18,13 @@ export function SocialProof() {
   if (!TESTIMONIALS_ARE_REAL || testimonials.length === 0) return null;
 
   return (
-    <div className="bg-sea py-16 text-bone sm:py-24">
+    <Section tone="sea" as="div">
       <Container>
-        <div className="max-w-xl">
-          <Eyebrow onDark>From the DMs</Eyebrow>
-          <SectionHeading className="mt-5 text-bone">
-            What people say after it arrives
-          </SectionHeading>
-        </div>
+        <SectionHeader
+          onDark
+          eyebrow="From the DMs"
+          title="What people say after it arrives"
+        />
 
         <div className="mt-12 grid gap-10 sm:mt-16 sm:grid-cols-3 sm:gap-8">
           {testimonials.map((item) => (
@@ -33,7 +32,7 @@ export function SocialProof() {
               <span aria-hidden className="font-display text-3xl text-gold">
                 &ldquo;
               </span>
-              <p className="mt-2 text-sm leading-relaxed text-bone/85">
+              <p className="mt-2 text-copy-sm text-bone/85">
                 {item.quote}
               </p>
               <footer className="text-eyebrow mt-5 uppercase text-bone/50">
@@ -43,6 +42,6 @@ export function SocialProof() {
           ))}
         </div>
       </Container>
-    </div>
+    </Section>
   );
 }

@@ -40,7 +40,7 @@ export function TrustStrip() {
           <div key={title} className="flex flex-col gap-2">
             <Icon size={20} className="text-gold" strokeWidth={1.5} />
             <h3 className="text-sm font-medium">{title}</h3>
-            <p className="text-ink-muted text-xs leading-relaxed">{body}</p>
+            <p className="text-ink-muted text-copy-xs">{body}</p>
           </div>
         ))}
       </Container>

@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Container, Eyebrow, SectionHeading } from "@/components/ui/layout";
+import { Container, SectionHeader } from "@/components/ui/layout";
 
 /*
  * The shell every written page uses — About, Contact, Shipping, Size guide,
@@ -27,17 +27,13 @@ export function ProsePage({
 }) {
   return (
     <Container width="prose" className="py-10 sm:py-16">
-      <header>
-        <Eyebrow>{eyebrow}</Eyebrow>
-        <SectionHeading as="h1" size="l" className="mt-5">
-          {title}
-        </SectionHeading>
-        {lede && (
-          <p className="text-ink-muted mt-5 text-base leading-relaxed">
-            {lede}
-          </p>
-        )}
-      </header>
+      <SectionHeader
+        as="h1"
+        size="l"
+        eyebrow={eyebrow}
+        title={title}
+        lede={lede}
+      />
 
       {aside && <div className="mt-8">{aside}</div>}
 

@@ -71,13 +71,13 @@ export function CartView({ terms }: { terms: DeliveryTerms }) {
           </dl>
 
           {gap !== null && (
-            <p className="bg-gold-wash text-gold-deep mt-5 px-3 py-2.5 text-xs leading-relaxed">
+            <p className="bg-gold-wash text-gold-deep mt-5 px-3 py-2.5 text-copy-xs">
               Add {taka(gap)} more for free delivery.
             </p>
           )}
 
           {unpriced && (
-            <p className="border-warn/30 text-warn mt-5 border px-3 py-2.5 text-xs leading-relaxed">
+            <p className="border-warn/30 text-warn mt-5 border px-3 py-2.5 text-copy-xs">
               One piece in your cart is not priced yet. Remove it to check out,
               or message us and we will confirm the price.
             </p>
@@ -96,7 +96,7 @@ export function CartView({ terms }: { terms: DeliveryTerms }) {
             )}
           </Button>
 
-          <p className="text-ink-muted mt-4 text-center text-xs leading-relaxed">
+          <p className="text-ink-muted mt-4 text-center text-copy-xs">
             Cash on delivery · {terms.insideDays.min}–{terms.outsideDays.max}{" "}
             days
             {terms.freeThreshold > 0 && (
@@ -214,7 +214,7 @@ function EmptyCart() {
     <div className="border-line flex flex-col items-center border border-dashed px-6 py-20 text-center">
       <ShoppingBag size={24} className="text-ink-faint" strokeWidth={1.4} />
       <p className="font-display mt-5 text-display-s">Your cart is empty</p>
-      <p className="text-ink-muted mt-2 max-w-xs text-sm leading-relaxed">
+      <p className="text-ink-muted mt-2 max-w-xs text-copy-sm">
         Seven pieces in gold and silver, all of them cash on delivery.
       </p>
       <Button asChild size="lg" className="mt-8">

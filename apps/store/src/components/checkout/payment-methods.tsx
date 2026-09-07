@@ -87,7 +87,7 @@ export function PaymentMethods({
 
       {chosen && (
         <div className="border-line bg-paper mt-3 border p-4">
-          <ol className="text-ink-muted space-y-2 text-sm leading-relaxed">
+          <ol className="text-ink-muted space-y-2 text-copy-sm">
             <li>
               1. Open your {chosen.label} app and <strong className="text-ink">Send Money</strong> to{" "}
               <strong className="text-ink tnum whitespace-nowrap">
@@ -136,7 +136,7 @@ export function PaymentMethods({
             </Field>
           </div>
 
-          <p className="text-ink-faint mt-4 text-xs leading-relaxed">
+          <p className="text-ink-faint mt-4 text-copy-xs">
             We check the payment in our {chosen.label} app before confirming
             your order — usually within an hour. If it has not arrived we will
             call you and you can pay the courier in cash instead. Nothing is

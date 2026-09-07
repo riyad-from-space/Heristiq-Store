@@ -90,7 +90,7 @@ export function TrackForm({
       </form>
 
       {result && !result.ok && (
-        <p role="alert" className="border-danger/30 bg-danger/5 text-danger mt-8 border px-4 py-3 text-sm leading-relaxed">
+        <p role="alert" className="border-danger/30 bg-danger/5 text-danger mt-8 border px-4 py-3 text-copy-sm">
           {result.error}
         </p>
       )}
@@ -120,7 +120,7 @@ export function TrackForm({
                 <PackageSearch size={18} className="text-gold mt-0.5 shrink-0" />
                 <div>
                   <p className="text-sm font-medium">Being packed</p>
-                  <p className="text-ink-muted mt-1 text-sm leading-relaxed">
+                  <p className="text-ink-muted mt-1 text-copy-sm">
                     Not with a courier yet. We call to confirm before it ships,
                     and tracking appears here the moment it is collected.
                   </p>
@@ -187,7 +187,7 @@ export function TrackForm({
       )}
 
       {!result && (
-        <p className="text-ink-faint mt-8 text-xs leading-relaxed">
+        <p className="text-ink-faint mt-8 text-copy-xs">
           Your order number is in the confirmation we showed you after checkout
           — it looks like HQ-01042. Lost it?{" "}
           <Link href="/contact" className="underline underline-offset-4">

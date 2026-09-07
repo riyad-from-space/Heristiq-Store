@@ -17,7 +17,7 @@ export default function NotFound() {
       <SectionHeading as="h1" size="l" className="mt-5">
         This page has wandered off
       </SectionHeading>
-      <p className="text-ink-muted mx-auto mt-4 max-w-sm text-sm leading-relaxed">
+      <p className="text-ink-muted mx-auto mt-4 max-w-sm text-copy-sm">
         The link may be old, or the piece may have sold out and been retired.
         The collection is small — everything we make is one tap away.
       </p>

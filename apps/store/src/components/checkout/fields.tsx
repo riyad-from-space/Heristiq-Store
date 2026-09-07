@@ -84,7 +84,7 @@ export function Field({
       </FieldContext.Provider>
 
       {hint && !error && (
-        <p id={htmlFor ? `${htmlFor}-hint` : undefined} className="text-ink-faint mt-2 text-xs leading-relaxed">
+        <p id={htmlFor ? `${htmlFor}-hint` : undefined} className="text-ink-faint mt-2 text-copy-xs">
           {hint}
         </p>
       )}
@@ -189,7 +189,7 @@ export function RadioCard({
       <span className="min-w-0">
         <span className="block text-sm font-medium">{label}</span>
         {description && (
-          <span className="text-ink-muted mt-0.5 block text-xs leading-relaxed">
+          <span className="text-ink-muted mt-0.5 block text-copy-xs">
             {description}
           </span>
         )}

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Container, Eyebrow, SectionHeading } from "@/components/ui/layout";
+import { Container, Section, SectionHeader } from "@/components/ui/layout";
 import { ProductImage } from "@/components/ui/product-image";
 
 /*
@@ -29,19 +29,13 @@ const threads = [
 
 export function MotifStory() {
   return (
-    <div className="bg-shell py-16 sm:py-24">
+    <Section tone="shell" as="div">
       <Container>
-        <div className="max-w-xl">
-          <Eyebrow>Where it comes from</Eyebrow>
-          <SectionHeading className="mt-5">
-            Two threads, sky and sea
-          </SectionHeading>
-          <p className="text-ink-muted mt-5 text-base leading-relaxed">
-            Everything we make comes from one of two places. Nothing is gold, and
-            nothing pretends to be — these are pieces to wear on a Tuesday, not
-            to keep in a box for a wedding.
-          </p>
-        </div>
+        <SectionHeader
+          eyebrow="Where it comes from"
+          title="Two threads, sky and sea"
+          lede="Everything we make comes from one of two places. Nothing is gold, and nothing pretends to be — these are pieces to wear on a Tuesday, not to keep in a box for a wedding."
+        />
 
         <div className="mt-12 grid gap-8 sm:mt-16 sm:grid-cols-2 sm:gap-6">
           {threads.map((thread) => (
@@ -60,7 +54,7 @@ export function MotifStory() {
                 <h3 className="font-display mt-2 text-display-s decoration-line-strong underline-offset-4 group-hover:underline">
                   {thread.title}
                 </h3>
-                <p className="text-ink-muted mt-3 max-w-sm text-sm leading-relaxed">
+                <p className="text-ink-muted mt-3 max-w-sm text-copy-sm">
                   {thread.body}
                 </p>
               </div>
@@ -68,6 +62,6 @@ export function MotifStory() {
           ))}
         </div>
       </Container>
-    </div>
+    </Section>
   );
 }

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { CartView } from "@/components/cart/cart-view";
-import { Container, Eyebrow, SectionHeading } from "@/components/ui/layout";
+import { Container, SectionHeader } from "@/components/ui/layout";
 import { deliveryTerms } from "@/lib/delivery.server";
 
 /*
@@ -31,12 +31,7 @@ export const metadata: Metadata = {
 export default async function CartPage() {
   return (
     <Container className="py-10 sm:py-16">
-      <header className="max-w-xl">
-        <Eyebrow>Your bag</Eyebrow>
-        <SectionHeading as="h1" size="l" className="mt-5">
-          Cart
-        </SectionHeading>
-      </header>
+      <SectionHeader as="h1" size="l" eyebrow="Your bag" title="Cart" />
 
       <div className="mt-10 sm:mt-14">
         <CartView terms={await deliveryTerms()} />

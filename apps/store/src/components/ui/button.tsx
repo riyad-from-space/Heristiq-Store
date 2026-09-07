@@ -3,15 +3,32 @@ import type { ComponentProps } from "react";
 import { cn } from "@/lib/utils";
 
 /*
- * Three button roles, and no more:
+ * Five variants, in two groups. The comment used to say "three roles, and no
+ * more" while the object below defined five — `gold` and `onDark` were added
+ * for the hero and never written down. Reconciled rather than removed: both
+ * are load-bearing, and an accurate list is worth more than a tidy claim.
+ *
+ * On light ground:
  *   primary   — the one action on the screen (add to cart, place order)
  *   secondary — an outlined alternative next to it
  *   quiet     — text with a rule under it; for "see all" and inline links
  *
+ * On the sea/hero ground, where the three above have no contrast:
+ *   gold      — the primary action over a photograph
+ *   onDark    — the outlined alternative beside it
+ *
  * min-h-11 (44px) everywhere. Apple's touch minimum, and this is a phone site.
+ *
+ * The press: a 2% squash on pointer-down, which is the whole of the button's
+ * motion. It is behind `motion-safe:` rather than relying on the global
+ * reduced-motion rule, because that rule only shortens the duration — the
+ * scale would still happen, just instantly. Someone who asked for no motion
+ * should get none.
  */
 const base =
-  "inline-flex items-center justify-center gap-2 font-medium transition-colors duration-200 " +
+  "inline-flex items-center justify-center gap-2 font-medium " +
+  "transition-[color,background-color,border-color,text-decoration-color,scale,opacity] " +
+  "duration-quick ease-out-soft motion-safe:active:scale-[0.98] " +
   "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold " +
   "disabled:pointer-events-none disabled:opacity-40";
 

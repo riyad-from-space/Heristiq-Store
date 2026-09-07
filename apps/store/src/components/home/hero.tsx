@@ -73,7 +73,7 @@ export function Hero() {
           <span className="text-gold-wash italic">noticed twice.</span>
         </h1>
 
-        <p className="mt-6 max-w-md text-base leading-relaxed text-bone/75">
+        <p className="mt-6 max-w-md text-copy-lg text-bone/75">
           Moons, starfish and shells on fine chain — body jewellery you can
           actually wear every day. Cash on delivery, anywhere in Bangladesh.
         </p>

@@ -18,7 +18,7 @@ export function SiteFooter() {
             <p className="font-display text-2xl tracking-[0.22em] uppercase">
               {site.name}
             </p>
-            <p className="mt-4 max-w-xs text-sm leading-relaxed text-bone/70">
+            <p className="mt-4 max-w-xs text-copy-sm text-bone/70">
               {site.description}
             </p>
 

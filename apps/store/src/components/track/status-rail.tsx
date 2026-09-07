@@ -80,7 +80,7 @@ export function StatusRail({ status }: { status: CourierStatus }) {
         </span>
         <div>
           <p className="text-sm font-medium">{meta.label}</p>
-          <p className="text-ink-muted mt-1 text-sm leading-relaxed">
+          <p className="text-ink-muted mt-1 text-copy-sm">
             {meta.detail}
           </p>
         </div>
@@ -106,7 +106,7 @@ function ExceptionPanel({ status }: { status: CourierStatus }) {
       />
       <div>
         <p className="text-sm font-medium">{meta.label}</p>
-        <p className="text-ink-muted mt-1 text-sm leading-relaxed">{meta.detail}</p>
+        <p className="text-ink-muted mt-1 text-copy-sm">{meta.detail}</p>
       </div>
     </div>
   );

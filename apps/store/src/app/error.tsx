@@ -33,7 +33,7 @@ export default function Error({
       <SectionHeading as="h1" size="l" className="mt-5">
         That did not work
       </SectionHeading>
-      <p className="text-ink-muted mx-auto mt-4 max-w-sm text-sm leading-relaxed">
+      <p className="text-ink-muted mx-auto mt-4 max-w-sm text-copy-sm">
         Sorry — something went wrong at our end, not yours. Trying again usually
         fixes it.
       </p>
@@ -48,7 +48,7 @@ export default function Error({
         </Button>
       </div>
 
-      <p className="text-ink-faint mt-10 text-xs leading-relaxed">
+      <p className="text-ink-faint mt-10 text-copy-xs">
         If it keeps happening,{" "}
         <Link href="/contact" className="underline underline-offset-4">
           tell us

@@ -1,5 +1,5 @@
 import { InstagramIcon } from "@/components/ui/brand-icons";
-import { Container, Eyebrow } from "@/components/ui/layout";
+import { Container, Eyebrow, Section } from "@/components/ui/layout";
 import { ProductImage } from "@/components/ui/product-image";
 import { site } from "@/config/site";
 
@@ -23,7 +23,7 @@ const tiles = [1, 2, 3, 4, 5, 6].map((n) => ({
 
 export function InstagramFeed() {
   return (
-    <div className="py-16 sm:py-24">
+    <Section as="div">
       <Container>
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
@@ -61,6 +61,6 @@ export function InstagramFeed() {
           </a>
         ))}
       </div>
-    </div>
+    </Section>
   );
 }
