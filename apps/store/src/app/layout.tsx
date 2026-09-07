@@ -67,13 +67,30 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
             count. It is a client boundary, but a thin one: `children` stays a
             server tree and is passed through untouched. */}
         <CartProvider>
+          {/*
+           * Skip link. The header carries a menu button, a search link, a
+           * wordmark and a cart before the page's own content, and on the shop
+           * grid that is a lot of tabbing past for a keyboard or screen-reader
+           * user on every single navigation.
+           *
+           * Visually hidden until focused, then it appears as a real button —
+           * a skip link that stays invisible when focused is the classic
+           * broken version of this.
+           */}
+          <a
+            href="#main"
+            className="bg-ink text-bone sr-only rounded-sm px-4 py-2 text-sm focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-[60]"
+          >
+            Skip to content
+          </a>
+
           {/* Above the header, and the header's own offset accounts for it. */}
           <PromoBanner promo={promo} />
           <SiteHeader hasPromo={promo.enabled} />
           {/* pt-16/20 clears the fixed header. The home hero opts out of this
               by pulling itself back up, so it can sit under a transparent
               header. */}
-          <main className="flex-1 pt-16 sm:pt-20">{children}</main>
+          <main id="main" className="flex-1 pt-16 sm:pt-20">{children}</main>
           <SiteFooter />
         </CartProvider>
       </body>

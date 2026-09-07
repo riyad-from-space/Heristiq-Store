@@ -1,14 +1,33 @@
 @import "tailwindcss";
 
+/*
+ * ERP tokens.
+ *
+ * Shares the storefront's TYPE and its gold accent, so the two halves of the
+ * site read as one product — but deliberately keeps its own neutral surfaces
+ * rather than the storefront's bone-and-serif palette.
+ *
+ * That is a considered difference, not an oversight. The storefront sells:
+ * generous whitespace, a display serif, one photograph at a time. The ERP is
+ * dense tabular data read on a phone at a stall, where the same treatment
+ * would cost rows per screen and make numbers harder to scan. Shared identity,
+ * different job.
+ */
 :root {
   --background: #fafafa;
   --foreground: #171717;
+
+  /* The one brand colour both halves share. */
+  --brand: #a4854c;
+  --brand-deep: #85683a;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --color-brand: var(--brand);
+  --color-brand-deep: var(--brand-deep);
+  --font-sans: var(--font-inter);
   --font-mono: var(--font-geist-mono);
 }
 
@@ -16,11 +35,29 @@
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
+    /* The gold has to lift off a near-black ground to stay legible. */
+    --brand: #c9a869;
+    --brand-deep: #a4854c;
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  font-family: var(--font-inter), system-ui, sans-serif;
+}
+
+/* Money and counts must not shift width as digits change — the same rule the
+   storefront applies, and it matters more here where columns line up. */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }

@@ -115,6 +115,34 @@ correct failure rather than a half-written one.
   so a number stored two ways never matches. There used to be two copies kept
   in step by hand and a comment asking nicely.
 
+### Who can reach the ERP
+
+Until migration 1004 the ERP's only gate was "are you signed in". That was not
+enough, and the reason is worth stating: every ERP table's RLS policy read
+
+```sql
+create policy ... for all to authenticated using (true)
+```
+
+Supabase sign-ups are open by default, so anyone who registered got the
+`authenticated` role — and with it the public anon key plus their own JWT would
+read products, costs, suppliers, sales and margins straight from the API,
+without ever loading the ERP. The login screen was never the boundary.
+
+Now `is_erp_admin()` is. Every ERP and storefront-admin table checks membership
+of `erp_admins`, so an outsider reads nothing however they ask, and the ERP's
+own layout check turns that into a clear message instead of a screen of empty
+tables.
+
+**Bootstrap:** an empty `erp_admins` keeps the old open behaviour on purpose —
+failing closed would lock the owner out of their own ERP with no way back in.
+While it is empty the ERP shows an unmissable banner and one button that makes
+the signed-in user the only administrator. After that the bootstrap cannot be
+used again. `ERP_ADMIN_EMAILS` is a second lever that needs no database write.
+
+None of this replaces **turning off public sign-ups in Supabase**, which is the
+first thing to do — see the launch checklist.
+
 ### The apps must not import each other
 
 The storefront runs with the Supabase **service-role key** and is public. The

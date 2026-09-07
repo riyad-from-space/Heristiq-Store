@@ -26,6 +26,14 @@ export function NewsletterForm({ className }: { className?: string }) {
   return (
     <form
       className={cn("flex flex-col gap-2", className)}
+      /*
+       * noValidate, like the checkout's forms.
+       *
+       * `type="email"` makes the browser block submit on a malformed address
+       * and show its own bubble — which meant the message below never
+       * appeared, in the site's own voice and typography. One validator, ours.
+       */
+      noValidate
       onSubmit={(event) => {
         event.preventDefault();
         if (!/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(email)) {

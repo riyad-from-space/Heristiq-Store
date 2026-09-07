@@ -391,8 +391,17 @@ Each phase is runnable and committed on its own.
   mapping table; one-tap push with a double-send guard; delivery-status
   webhooks that are authenticated, idempotent and safe against out-of-order
   retries; advisory fraud check; tracking page.
-- [ ] **5 — Manual bKash/Nagad,** COD deposit toggle, pre-order flow.
-- [ ] **6 — Admin-lite,** promo/threshold config, SEO and performance polish.
+- [x] **5 — Manual bKash/Nagad,** COD deposit toggle, pre-order flow. The
+  manual flow is honest about being manual: the customer sends money and types
+  a transaction id, `amount_paid` stays 0, and the owner confirms it against
+  their own app before anything ships. A wallet with no number configured is
+  not offered rather than offered and broken.
+- [x] **6 — Admin,** promo/threshold config, SEO and polish. The admin lives in
+  the ERP (`/admin/orders`), not in a second half-built one here — orders,
+  messages, settings and the one-tap courier push. Settings come from
+  `storefront_settings` so a delivery fee changes without a deploy. Sitemap,
+  robots, manifest, error and not-found boundaries, and skeleton loading
+  states are all in.
 
 ## Before launch
 

@@ -127,8 +127,19 @@ export function placeholderDataUri(
    * and an "S" on every social tile — a letter that means nothing to a
    * customer. The optional label underneath is the SKU, which does.
    */
+  /*
+   * Paper, not shell — with a hairline frame.
+   *
+   * The fill used to be #f2ece1, which IS --color-shell, so on the two
+   * sections with a shell background (the motif story and the image wells
+   * themselves) the tile was invisible and the page read as a large empty
+   * void rather than a photograph that has not been uploaded. Paper with a
+   * line-strong border reads as a deliberate empty frame on every background
+   * the site has.
+   */
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
-<rect width="${w}" height="${h}" fill="#f2ece1"/>
+<rect width="${w}" height="${h}" fill="#fffdfa"/>
+<rect x="0.75" y="0.75" width="${w - 1.5}" height="${h - 1.5}" fill="none" stroke="#e5ddd0" stroke-width="1.5"/>
 <circle cx="${w / 2}" cy="${h / 2}" r="${w * 0.16}" fill="none" stroke="#d3c8b6" stroke-width="1.5"/>
 <text x="${w / 2}" y="${h / 2}" fill="#a4854c" font-family="Georgia,serif" font-size="${w * 0.12}" text-anchor="middle" dominant-baseline="central">H</text>${
     label
