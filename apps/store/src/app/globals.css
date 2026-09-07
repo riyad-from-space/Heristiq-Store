@@ -175,3 +175,77 @@
     opacity: 0;
   }
 }
+
+/*
+ * Written pages — About, Contact, Shipping, Policies, Size guide.
+ *
+ * Hand-rolled rather than @tailwindcss/typography: the site already has its own
+ * type scale and the plugin's defaults fight it, especially on link colour and
+ * heading sizes. This is the whole of it, and it stays small on purpose.
+ */
+@layer components {
+  .prose-heristiq {
+    font-size: 0.9375rem;
+    line-height: 1.75;
+    color: var(--color-ink-muted);
+  }
+
+  .prose-heristiq p + p,
+  .prose-heristiq ul + p,
+  .prose-heristiq p + ul,
+  .prose-heristiq ol + p,
+  .prose-heristiq p + ol {
+    margin-top: 1rem;
+  }
+
+  .prose-heristiq h3 {
+    color: var(--color-ink);
+    font-weight: 500;
+    font-size: 0.9375rem;
+    margin-top: 1.75rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .prose-heristiq strong {
+    color: var(--color-ink);
+    font-weight: 500;
+  }
+
+  .prose-heristiq ul,
+  .prose-heristiq ol {
+    padding-left: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .prose-heristiq ul {
+    list-style: disc;
+  }
+
+  .prose-heristiq ol {
+    list-style: decimal;
+  }
+
+  .prose-heristiq a {
+    color: var(--color-ink);
+    text-decoration: underline;
+    text-decoration-color: var(--color-line-strong);
+    text-underline-offset: 4px;
+    transition: text-decoration-color 200ms;
+  }
+
+  .prose-heristiq a:hover {
+    text-decoration-color: var(--color-gold);
+  }
+
+  /* A definition list, for the contact and shipping facts. */
+  .prose-heristiq dt {
+    color: var(--color-ink);
+    font-weight: 500;
+  }
+
+  .prose-heristiq dd + dt {
+    margin-top: 1rem;
+  }
+}

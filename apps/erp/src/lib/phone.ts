@@ -6,4 +6,8 @@
  * Shared by the client form (so the user is told before a round trip) and the
  * server action (which is what actually decides).
  */
-export { normalisePhone, isValidPhone } from "@heristiq/shared/phone";
+export {
+  normalisePhone,
+  isValidPhone,
+  displayPhone,
+} from "@heristiq/shared/phone";

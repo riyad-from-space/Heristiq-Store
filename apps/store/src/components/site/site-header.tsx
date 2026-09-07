@@ -18,7 +18,7 @@ import { cn } from "@/lib/utils";
  * full-bleed without losing the nav.
  *
  */
-export function SiteHeader() {
+export function SiteHeader({ hasPromo = false }: { hasPromo?: boolean }) {
   const pathname = usePathname();
   const { count, ready } = useCart();
   const [scrolled, setScrolled] = useState(false);
@@ -26,6 +26,13 @@ export function SiteHeader() {
 
   /* Only the home page has a hero the header can sit over. */
   const overHero = pathname === "/";
+
+  /*
+   * The promo strip is above the header and scrolls away with the page, so a
+   * fixed header would cover it. `top-9` matches the strip's min-h-9; once the
+   * page has scrolled past it the header returns to the top edge.
+   */
+  const offset = hasPromo && !scrolled ? "top-9" : "top-0";
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -56,7 +63,8 @@ export function SiteHeader() {
     <>
       <header
         className={cn(
-          "fixed inset-x-0 top-0 z-50 transition-colors duration-300",
+          "fixed inset-x-0 z-50 transition-[colors,top] duration-300",
+          offset,
           inverted
             ? "text-white"
             : "border-line bg-bone/95 border-b text-ink backdrop-blur-md",

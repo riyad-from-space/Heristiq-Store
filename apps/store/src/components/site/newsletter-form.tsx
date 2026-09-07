@@ -1,28 +1,46 @@
 "use client";
 
-import { useState } from "react";
-import { ArrowRight } from "lucide-react";
+import { useState, useTransition } from "react";
+import { ArrowRight, Loader2 } from "lucide-react";
+import { subscribeAction } from "@/app/contact/actions";
 import { cn } from "@/lib/utils";
 
 /*
  * Newsletter capture.
  *
- * Phase 1 has nowhere to store a subscriber, so this validates and then says so
- * honestly rather than showing a fake "you're subscribed". A form that silently
- * discards an address is worse than no form: the customer thinks they will hear
- * about the restock, and they will not. The real POST lands in phase 6 with the
- * storefront tables.
+ * This used to validate an address and then throw it away, which is worse than
+ * having no form: the customer believes they will hear about the restock, and
+ * they would not have. It now writes to storefront_subscribers.
+ *
+ * An address already on the list reports plain success. "You are already
+ * subscribed" tells anyone who asks who is on the list, and changes nothing
+ * for the person asking.
  */
 export function NewsletterForm({ className }: { className?: string }) {
   const [email, setEmail] = useState("");
-  const [state, setState] = useState<"idle" | "invalid" | "queued">("idle");
+  const [state, setState] = useState<"idle" | "invalid" | "queued" | "demo" | "failed">(
+    "idle",
+  );
+  const [pending, startTransition] = useTransition();
 
   return (
     <form
       className={cn("flex flex-col gap-2", className)}
       onSubmit={(event) => {
         event.preventDefault();
-        setState(/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(email) ? "queued" : "invalid");
+        if (!/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(email)) {
+          setState("invalid");
+          return;
+        }
+        startTransition(async () => {
+          const result = await subscribeAction(email);
+          if (!result.ok) {
+            setState("failed");
+            return;
+          }
+          setState(result.stored ? "queued" : "demo");
+          setEmail("");
+        });
       }}
     >
       <div className="flex items-center border-b border-white/25 focus-within:border-gold-wash">
@@ -47,9 +65,14 @@ export function NewsletterForm({ className }: { className?: string }) {
         <button
           type="submit"
           aria-label="Subscribe"
-          className="grid size-11 shrink-0 place-items-center text-bone/70 transition hover:text-bone"
+          disabled={pending}
+          className="grid size-11 shrink-0 place-items-center text-bone/70 transition hover:text-bone disabled:opacity-50"
         >
-          <ArrowRight size={18} />
+          {pending ? (
+            <Loader2 size={18} className="animate-spin" />
+          ) : (
+            <ArrowRight size={18} />
+          )}
         </button>
       </div>
 
@@ -61,8 +84,18 @@ export function NewsletterForm({ className }: { className?: string }) {
         )}
         {state === "queued" && (
           <span className="text-bone/60">
-            Thanks — sign-up goes live with the shop. Follow us on Instagram
-            meanwhile.
+            Thank you — we will email you when something new lands.
+          </span>
+        )}
+        {state === "demo" && (
+          <span className="text-bone/60">
+            Demo mode: no database configured, so this was logged rather than
+            saved.
+          </span>
+        )}
+        {state === "failed" && (
+          <span className="text-gold-wash">
+            That did not save. Please try again in a moment.
           </span>
         )}
       </p>

@@ -1,0 +1,124 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { ProsePage, ProseSection } from "@/components/site/prose";
+import { Button } from "@/components/ui/button";
+import { ProductImage } from "@/components/ui/product-image";
+import { business } from "@/config/business";
+import { site } from "@/config/site";
+
+/*
+ * The brand story.
+ *
+ * Written to the motif the catalogue is actually built on — moons, starfish,
+ * shells, oval links, gold and silver — because a story that does not match
+ * the products reads as filler. No invented founder biography and no claims
+ * about materials the ERP cannot back up.
+ */
+export const metadata: Metadata = {
+  title: "Our story",
+  description:
+    "Heristiq makes modern, non-gold body jewellery in Bangladesh — waist chains in gold and silver finishes, made for everyday wear.",
+  alternates: { canonical: "/about" },
+  openGraph: {
+    title: `Our story — ${site.name}`,
+    description:
+      "Modern body jewellery in Bangladesh, made for everyday wear rather than for a safe.",
+    url: "/about",
+  },
+};
+
+export default function AboutPage() {
+  return (
+    <ProsePage
+      eyebrow="Our story"
+      title="Jewellery you actually wear"
+      lede={`${business.name} makes body jewellery for everyday wear — not the kind that lives in a box and comes out twice a year.`}
+    >
+      <ProseSection title="Why waist chains">
+        <p>
+          Body jewellery in Bangladesh has long meant one of two things: heavy
+          gold kept for weddings, or something bought in a hurry that turns your
+          skin green in a fortnight. We wanted a third option — pieces light
+          enough to forget you are wearing, priced so that owning three is not a
+          decision, and finished well enough that the third one still looks like
+          the first.
+        </p>
+        <p>
+          We started with waist chains because they are the piece people ask
+          about most and find hardest to buy well. Everything we make is
+          non-gold by design: gold-plated and silver-plated brass, which is what
+          lets us price a piece at a few hundred taka instead of a few thousand.
+        </p>
+      </ProseSection>
+
+      <ProseSection title="The thread">
+        <p>
+          There is a line running through the collection, and it is not an
+          accident. Moons, starfish, shells and conches — celestial and
+          nautical, things that keep turning up in the same jewellery box.
+        </p>
+        <p>
+          Each piece comes in a gold or silver finish on fine chain, sized to
+          sit at the hip, with an extender so one length fits more than one
+          person. That is the whole idea: a small collection where every piece
+          belongs with the others.
+        </p>
+        <div className="not-prose mt-8 grid grid-cols-2 gap-4">
+          <div>
+            <ProductImage
+              image={{ id: "story/celestial", alt: "Celestial pieces" }}
+              sizes="(min-width: 640px) 20rem, 45vw"
+              maxWidth={828}
+              placeholderLabel="CELESTIAL"
+            />
+            <p className="text-ink-faint mt-2 text-xs">Moons and stars</p>
+          </div>
+          <div>
+            <ProductImage
+              image={{ id: "story/nautical", alt: "Nautical pieces" }}
+              sizes="(min-width: 640px) 20rem, 45vw"
+              maxWidth={828}
+              placeholderLabel="NAUTICAL"
+            />
+            <p className="text-ink-faint mt-2 text-xs">Shells and the sea</p>
+          </div>
+        </div>
+      </ProseSection>
+
+      <ProseSection title="How we work">
+        <p>
+          We are small and we are honest about it. Orders are packed by hand,
+          usually the same day, and sent by courier with cash on delivery
+          anywhere in Bangladesh. If we are out of something we say so and offer
+          a pre-order rather than taking your money and going quiet.
+        </p>
+        <p>
+          We do not run fake discounts, we do not invent reviews, and we do not
+          take payment for anything we cannot ship. If a piece arrives wrong or
+          damaged we replace it and cover the courier both ways — see{" "}
+          <Link href="/shipping">shipping and returns</Link> for exactly what
+          that means.
+        </p>
+      </ProseSection>
+
+      <ProseSection title="Care">
+        <p>
+          Plated jewellery lasts if you let it. Take it off before a shower, the
+          pool or the sea; put it on after perfume and lotion rather than
+          before; wipe it with a dry cloth and keep it in the pouch it arrived
+          in. Done that way, a piece keeps its finish for a long time. Worn in
+          the shower, it will not.
+        </p>
+      </ProseSection>
+
+      <div className="not-prose border-line mt-12 flex flex-col gap-3 border-t pt-8 sm:flex-row">
+        <Button asChild size="lg" className="flex-1">
+          <Link href="/shop">See the collection</Link>
+        </Button>
+        <Button asChild size="lg" variant="secondary" className="flex-1">
+          <Link href="/contact">Talk to us</Link>
+        </Button>
+      </div>
+    </ProsePage>
+  );
+}

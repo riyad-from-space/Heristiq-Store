@@ -24,8 +24,8 @@ import { isBuyable, isPreOrder } from "@/lib/erp/types";
  *   priced + sold out   → add to cart as a pre-order, clearly labelled
  *   unpriced            → no cart button at all, and say why
  */
-export function BuyBox({ product, url }: { product: Product; url: string }) {
-  const terms = deliveryTerms();
+export async function BuyBox({ product, url }: { product: Product; url: string }) {
+  const terms = await deliveryTerms();
   const preOrder = isPreOrder(product);
   const buyable = isBuyable(product);
   const wa = whatsappNumber(site.contact.phone);

@@ -68,9 +68,22 @@ export const checkoutSchema = z
 
     courier: z.enum(Object.keys(COURIERS) as [keyof typeof COURIERS]).nullable().default(null),
 
-    /* Only COD exists in phase 3. bKash and Nagad arrive in phase 5, and this
-       being an enum of one is what stops a payload asking for them early. */
-    paymentMethod: z.literal("cod").default("cod"),
+    /*
+     * Cash on delivery, or a manual mobile-money advance.
+     *
+     * "Manual" is the honest word: the customer sends money in their own bKash
+     * or Nagad app and types the transaction id here. Nothing verifies it —
+     * doing so needs a merchant API this business does not have — so the order
+     * is marked "advance pending verification" and the owner checks their own
+     * app before shipping. A gateway would slot in as a fourth value here.
+     */
+    paymentMethod: z
+      .enum(["cod", "manual_bkash", "manual_nagad"])
+      .default("cod"),
+
+    /* Required for the manual methods; the refine below enforces that. */
+    trxId: trimmedOptional(40),
+    senderPhone: trimmedOptional(24),
 
     note: trimmedOptional(CHECKOUT_LIMITS.note),
 
@@ -92,6 +105,22 @@ export const checkoutSchema = z
       return district !== null && district.divisionId === value.divisionId;
     },
     { path: ["districtId"], message: "Choose a district in that division." },
+  )
+  /*
+   * A mobile-money advance without proof is not an advance.
+   *
+   * Both halves are needed to find the payment: the transaction id identifies
+   * it, and the sending number is what the owner actually searches their app
+   * by when the customer mistypes the id — which they do.
+   */
+  .refine(
+    (value) =>
+      value.paymentMethod === "cod" ||
+      (value.trxId !== null && value.senderPhone !== null),
+    {
+      path: ["trxId"],
+      message: "Enter the transaction ID and the number you sent it from.",
+    },
   )
   /* One product per order, not the same product on three lines. Otherwise the
      stock check passes three times against the same units. */

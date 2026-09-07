@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { CheckoutForm } from "@/components/checkout/checkout-form";
 import { Container, Eyebrow, SectionHeading } from "@/components/ui/layout";
 import { deliveryTerms } from "@/lib/delivery.server";
+import { paymentSettings } from "@/lib/settings";
 
 /*
  * Checkout.
@@ -25,7 +26,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function CheckoutPage() {
+export default async function CheckoutPage() {
   return (
     <Container className="py-10 sm:py-16">
       <header className="max-w-xl">
@@ -36,7 +37,7 @@ export default function CheckoutPage() {
       </header>
 
       <div className="mt-10 sm:mt-14">
-        <CheckoutForm terms={deliveryTerms()} />
+        <CheckoutForm terms={await deliveryTerms()} payment={await paymentSettings()} />
       </div>
     </Container>
   );

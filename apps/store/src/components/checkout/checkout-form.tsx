@@ -3,11 +3,15 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { AlertTriangle, Banknote, Loader2, Lock } from "lucide-react";
+import { AlertTriangle, Loader2, Lock } from "lucide-react";
 import { placeOrderAction } from "@/app/checkout/actions";
 import { useCart } from "@/components/cart/cart-provider";
 import { AddressFields } from "@/components/checkout/address-fields";
 import { Field, RadioCard, Textarea } from "@/components/checkout/fields";
+import {
+  PaymentMethods,
+  type PaymentMethodKey,
+} from "@/components/checkout/payment-methods";
 import { OrderSummary } from "@/components/checkout/order-summary";
 import { PhoneVerification } from "@/components/checkout/phone-verification";
 import { Button } from "@/components/ui/button";
@@ -15,6 +19,7 @@ import { isInsideDhaka } from "@/lib/bd-geo";
 import { deliveryFeeFor, type DeliveryTerms } from "@/lib/delivery";
 import { hasUnpricedLine } from "@/lib/cart/types";
 import { COURIERS, type CourierKey } from "@/lib/orders/types";
+import type { PaymentSetting } from "@/lib/settings";
 import { CHECKOUT_LIMITS } from "@/lib/orders/schema";
 import type { LineProblem } from "@/lib/orders/place";
 
@@ -44,6 +49,9 @@ type Form = {
   landmark: string;
   courier: CourierKey | "";
   note: string;
+  paymentMethod: PaymentMethodKey;
+  trxId: string;
+  senderPhone: string;
 };
 
 const EMPTY: Form = {
@@ -56,9 +64,18 @@ const EMPTY: Form = {
   landmark: "",
   courier: "",
   note: "",
+  paymentMethod: "cod",
+  trxId: "",
+  senderPhone: "",
 };
 
-export function CheckoutForm({ terms }: { terms: DeliveryTerms }) {
+export function CheckoutForm({
+  terms,
+  payment,
+}: {
+  terms: DeliveryTerms;
+  payment: PaymentSetting;
+}) {
   const router = useRouter();
   const { cart, ready, subtotal, clear } = useCart();
 
@@ -134,7 +151,9 @@ export function CheckoutForm({ terms }: { terms: DeliveryTerms }) {
         addressLine: form.addressLine,
         landmark: form.landmark,
         courier: form.courier === "" ? null : form.courier,
-        paymentMethod: "cod",
+        paymentMethod: form.paymentMethod,
+        trxId: form.trxId,
+        senderPhone: form.senderPhone,
         note: form.note,
         lines: cart.lines.map((line) => ({
           productId: line.productId,
@@ -257,19 +276,18 @@ export function CheckoutForm({ terms }: { terms: DeliveryTerms }) {
             Payment
           </h2>
           <div className="mt-5">
-            {/*
-             * One option, and it is a radio anyway — bKash and Nagad arrive in
-             * phase 5 and will sit beside it. Showing them greyed out now
-             * would be advertising something that does not work.
-             */}
-            <RadioCard
-              name="payment"
-              value="cod"
-              checked
-              onSelect={() => {}}
-              label="Cash on delivery"
-              description="Pay the courier in cash when the parcel reaches you. Nothing now."
-              icon={<Banknote size={18} className="text-gold shrink-0" />}
+            <PaymentMethods
+              settings={payment}
+              method={form.paymentMethod}
+              onMethod={(paymentMethod) =>
+                patch({ paymentMethod, trxId: "", senderPhone: "" })
+              }
+              trxId={form.trxId}
+              senderPhone={form.senderPhone}
+              onTrxId={(trxId) => patch({ trxId })}
+              onSenderPhone={(senderPhone) => patch({ senderPhone })}
+              amountDue={subtotal + deliveryFee}
+              errors={errors}
             />
           </div>
 

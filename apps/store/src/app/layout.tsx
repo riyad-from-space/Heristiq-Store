@@ -1,9 +1,11 @@
 import type { Metadata, Viewport } from "next";
 import { Fraunces, Inter } from "next/font/google";
 import { CartProvider } from "@/components/cart/cart-provider";
+import { PromoBanner } from "@/components/site/promo-banner";
 import { SiteHeader } from "@/components/site/site-header";
 import { SiteFooter } from "@/components/site/site-footer";
 import { site } from "@/config/site";
+import { promoSettings } from "@/lib/settings";
 import "./globals.css";
 
 /*
@@ -55,7 +57,9 @@ export const viewport: Viewport = {
   themeColor: "#faf7f2",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const promo = await promoSettings();
+
   return (
     <html lang="en" className={`${fraunces.variable} ${inter.variable}`}>
       <body className="flex min-h-dvh flex-col">
@@ -63,7 +67,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             count. It is a client boundary, but a thin one: `children` stays a
             server tree and is passed through untouched. */}
         <CartProvider>
-          <SiteHeader />
+          {/* Above the header, and the header's own offset accounts for it. */}
+          <PromoBanner promo={promo} />
+          <SiteHeader hasPromo={promo.enabled} />
           {/* pt-16/20 clears the fixed header. The home hero opts out of this
               by pulling itself back up, so it can sit under a transparent
               header. */}

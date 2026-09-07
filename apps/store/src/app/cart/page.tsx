@@ -28,7 +28,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: true },
 };
 
-export default function CartPage() {
+export default async function CartPage() {
   return (
     <Container className="py-10 sm:py-16">
       <header className="max-w-xl">
@@ -39,7 +39,7 @@ export default function CartPage() {
       </header>
 
       <div className="mt-10 sm:mt-14">
-        <CartView terms={deliveryTerms()} />
+        <CartView terms={await deliveryTerms()} />
       </div>
     </Container>
   );

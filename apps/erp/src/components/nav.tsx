@@ -6,6 +6,9 @@ import { usePathname } from "next/navigation";
 
 const LINKS = [
   { href: "/", label: "Dashboard" },
+  /* Orders first after the dashboard: it is the screen opened most, because
+     it is the one with work waiting on it. */
+  { href: "/orders", label: "Orders" },
   { href: "/products", label: "Products" },
   { href: "/sales", label: "Sales" },
   { href: "/pre-orders", label: "Pre-orders" },
@@ -13,6 +16,8 @@ const LINKS = [
   { href: "/stock", label: "Stock" },
   { href: "/suppliers", label: "Suppliers" },
   { href: "/reports", label: "Reports" },
+  { href: "/messages", label: "Messages" },
+  { href: "/settings", label: "Settings" },
 ];
 
 export function Nav() {

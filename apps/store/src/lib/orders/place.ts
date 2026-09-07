@@ -2,6 +2,7 @@ import "server-only";
 import { findDistrict, findDivision, isInsideDhaka } from "@/lib/bd-geo";
 import { deliveryFeeFor } from "@/lib/delivery";
 import { deliveryTerms } from "@/lib/delivery.server";
+import { paymentSettings } from "@/lib/settings";
 import { erp } from "@/lib/erp";
 import { verifiedPhone } from "@/lib/otp/session";
 import { checkoutSchema, type CheckoutInput } from "@/lib/orders/schema";
@@ -184,16 +185,32 @@ export async function placeOrder(
     (sum, line) => sum + line.unitPrice * line.qty,
     0,
   );
-  const terms = deliveryTerms();
+  const terms = await deliveryTerms();
   const deliveryFee = deliveryFeeFor(subtotal, isInsideDhaka(district.id), terms);
   const total = subtotal + deliveryFee;
 
   /*
-   * Phase 3 is COD only, so nothing is paid up front and the whole total is
-   * collected at the door. Phase 5 adds the pre-order advance and the optional
-   * COD deposit, both of which move amountPaid above zero and change
-   * paymentState — which is why those are fields rather than constants.
+   * What is paid up front, and what that means for the order's state.
+   *
+   * A manual bKash/Nagad advance is recorded as CLAIMED, not received —
+   * amountPaid stays 0 until the owner finds the transaction in their own app
+   * and confirms it in the ERP. Trusting a typed transaction id would mean
+   * shipping against money that may not exist, which is precisely the fraud
+   * the deposit exists to prevent.
+   *
+   * So `amount_paid` is 0 here for every method, and only the payment STATE
+   * differs. The ERP's "Confirm received" is what moves the money.
    */
+  const payment = await paymentSettings();
+  const isManual = payload.paymentMethod !== "cod";
+
+  /* The advance a manual payment is expected to cover: the deposit when one is
+     configured, otherwise the whole total. */
+  const expectedAdvance =
+    payment.codDepositEnabled && payment.codDepositAmount > 0
+      ? Math.min(payment.codDepositAmount, total)
+      : total;
+
   const created = await client.createOrder({
     customerName: payload.name,
     customerPhone: payload.phone,
@@ -206,15 +223,20 @@ export async function placeOrder(
       landmark: payload.landmark,
     },
     courierPreference: payload.courier,
-    paymentMethod: "cod",
-    paymentState: "due_on_delivery",
+    paymentMethod: payload.paymentMethod,
+    paymentState: isManual ? "advance_pending_verification" : "due_on_delivery",
     lines,
     subtotal,
     deliveryFee,
     discount: 0,
     total,
     amountPaid: 0,
-    customerNote: buildNote(payload.note, lines, total),
+    customerNote: buildNote(payload.note, lines, total, {
+      method: payload.paymentMethod,
+      trxId: payload.trxId,
+      senderPhone: payload.senderPhone,
+      expected: expectedAdvance,
+    }),
   });
 
   return {
@@ -237,13 +259,39 @@ function buildNote(
   note: string | null,
   lines: OrderDraftLine[],
   total: number,
+  payment: {
+    method: string;
+    trxId: string | null;
+    senderPhone: string | null;
+    expected: number;
+  },
 ): string | null {
+  const headings: string[] = [];
+
+  /*
+   * The payment claim goes at the top, because it is what the owner has to act
+   * on before anything ships — and it is stated as a CLAIM, in those words, so
+   * nobody reads it as money received.
+   */
+  if (payment.method !== "cod" && payment.trxId) {
+    const wallet = payment.method === "manual_bkash" ? "bKash" : "Nagad";
+    headings.push(
+      `${wallet.toUpperCase()} ADVANCE CLAIMED — NOT VERIFIED. ` +
+        `trxID ${payment.trxId}, sent from ${payment.senderPhone ?? "unknown"}, ` +
+        `expected ${taka(payment.expected)}. Check your ${wallet} app and ` +
+        `confirm in the ERP before shipping.`,
+    );
+  }
+
   const preOrders = lines.filter((line) => line.isPreOrder);
-  if (preOrders.length === 0) return note;
+  if (preOrders.length > 0) {
+    headings.push(
+      `PRE-ORDER: ${preOrders.map((line) => line.sku).join(", ")} ` +
+        `— confirm restock date and advance before shipping. Total ${taka(total)}.`,
+    );
+  }
 
-  const heading =
-    `PRE-ORDER: ${preOrders.map((line) => line.sku).join(", ")} ` +
-    `— confirm restock date and advance before shipping. COD total ${taka(total)}.`;
-
+  if (headings.length === 0) return note;
+  const heading = headings.join("\n\n");
   return note ? `${heading}\n\n${note}` : heading;
 }

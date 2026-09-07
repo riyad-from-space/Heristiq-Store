@@ -1,22 +1,29 @@
 import { redirect } from "next/navigation";
 import { Nav } from "@/components/nav";
 import { SessionKeeper } from "@/components/session-keeper";
-import { createClient } from "@/lib/supabase/server";
+import { adminState } from "@/lib/admin";
 import { signOut } from "../login/actions";
+import { NoAccess } from "./no-access";
+import { BootstrapBanner } from "./bootstrap-banner";
 
 export default async function AppLayout({ children }: LayoutProps<"/">) {
-  // Every authenticated page renders through this layout, so this one check
-  // gates the whole app. The auth proxy did this before Cloudflare.
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) redirect("/login");
+  /*
+   * Every authenticated page renders through this layout, so these two checks
+   * gate the whole app: signed in, AND an administrator.
+   *
+   * The second is the one that was missing. Being signed in used to be enough,
+   * which meant anyone who registered — sign-ups are open by default — reached
+   * the ERP. The database enforces the same rule now (migration 1004); this is
+   * what makes the refusal legible instead of a screen of empty tables.
+   */
+  const admin = await adminState();
+  if (!admin) redirect("/login");
+  if (!admin.isAdmin) return <NoAccess email={admin.email} />;
 
   return (
     <div className="flex flex-1 flex-col">
       <SessionKeeper />
+      {admin.bootstrap && <BootstrapBanner email={admin.email} />}
       <header className="border-b border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
         <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-3 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center justify-between gap-4">
