@@ -12,6 +12,21 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    /*
+     * The Cloudflare build output, and the reason it is here.
+     *
+     * globalIgnores REPLACES eslint-config-next's defaults rather than adding
+     * to them, so anything not listed above is linted — and
+     * `opennextjs-cloudflare build` writes 32 MB of bundled worker into
+     * .open-next/. Linting that exhausts the default 2 GB heap and ESLint dies
+     * with "Ineffective mark-compacts near heap limit", which makes
+     * `npm run build && npm run lint` impossible to run in that order and
+     * would break any CI job or pre-deploy check that does.
+     *
+     * Both are generated, both are gitignored, and neither is ours to lint.
+     */
+    ".open-next/**",
+    ".wrangler/**",
   ]),
   {
     rules: {

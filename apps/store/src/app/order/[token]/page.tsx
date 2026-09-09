@@ -53,6 +53,42 @@ export default async function OrderPage({
       )}`
     : null;
 
+  /*
+   * "Confirm on WhatsApp" — the order confirmation, and it costs nothing.
+   *
+   * There is no confirmation SMS or email, and on a zero-cost launch there
+   * cannot be: every Bangladeshi SMS gateway bills per message, WhatsApp's
+   * Cloud API bills business-initiated templates, and the checkout collects
+   * no email address to send one to. So the customer would leave this page
+   * with their reference in a browser tab and nothing else — close it and the
+   * tracking link is gone.
+   *
+   * A wa.me deep link inverts it: the CUSTOMER'S OWN WhatsApp sends the
+   * message, which is free forever with no account, no API and no approval.
+   * It leaves the reference and the tracking link in their chat history where
+   * they will actually look for it, and it lands in the shop's inbox at the
+   * same time — so both sides get a record from one tap.
+   *
+   * Deliberately prefilled with the whole order rather than a greeting: the
+   * point is the RECORD, not the conversation.
+   */
+  const confirmHref = wa
+    ? `https://wa.me/${wa}?text=${encodeURIComponent(
+        [
+          `My Heristiq order ${order.reference}`,
+          ``,
+          ...order.lines.map(
+            (line) => `${line.qty} x ${line.name}${line.isPreOrder ? " (pre-order)" : ""}`,
+          ),
+          ``,
+          `Total ${taka(order.total)}${due > 0 ? ` — ${taka(due)} due on delivery` : ""}`,
+          `Name: ${order.customerName}`,
+          ``,
+          `Track it: ${site.url}/order/${order.token}`,
+        ].join("\n"),
+      )}`
+    : null;
+
   return (
     <Container width="prose" className="py-10 sm:py-16">
       {!erpIsLive() && (
@@ -251,16 +287,33 @@ export default async function OrderPage({
         )}
       </div>
 
-      <div className="mt-10 flex flex-col gap-3 sm:flex-row">
+      {confirmHref && (
+        <div className="border-info-line bg-info-wash rounded-card mt-10 border p-5">
+          <p className="text-copy font-semibold">Keep a copy of this order</p>
+          <p className="text-copy-sm text-stone mt-1">
+            We do not send a confirmation SMS. Tap below and your own WhatsApp
+            will send us the details — so the reference and the tracking link
+            stay in your chat, and we get your order in writing too.
+          </p>
+          <Button asChild size="lg" className="mt-4 w-full sm:w-auto">
+            <a href={confirmHref} target="_blank" rel="noopener noreferrer">
+              <WhatsAppIcon size={17} />
+              Confirm on WhatsApp
+            </a>
+          </Button>
+        </div>
+      )}
+
+      <div className="mt-6 flex flex-col gap-3 sm:flex-row">
         {waHref && (
           <Button asChild size="lg" variant="ghost" className="flex-1">
             <a href={waHref} target="_blank" rel="noopener noreferrer">
               <WhatsAppIcon size={17} />
-              Message us about this order
+              Ask us something
             </a>
           </Button>
         )}
-        <Button asChild size="lg" className="flex-1">
+        <Button asChild size="lg" variant="ghost" className="flex-1">
           <Link href="/shop">Keep shopping</Link>
         </Button>
       </div>

@@ -4,6 +4,7 @@ import { Container, SectionHeader } from "@/components/ui/layout";
 import { deliveryTerms } from "@/lib/delivery.server";
 import { paymentSettings } from "@/lib/settings";
 import { verifiedPhone } from "@/lib/otp/session";
+import { phoneVerificationEnabled } from "@/lib/otp/service";
 
 /*
  * Checkout.
@@ -55,6 +56,13 @@ export default async function CheckoutPage() {
            * tracking a second, losable copy of the same fact.
            */
           verifiedPhone={await verifiedPhone()}
+          /*
+           * False when no SMS gateway is configured. The checkout then drops
+           * the OTP step rather than asking for a code that reached nobody —
+           * see phoneVerificationEnabled(). The order is recorded unverified
+           * and the ERP flags it for a confirmation call.
+           */
+          verificationRequired={phoneVerificationEnabled()}
         />
       </div>
     </Container>

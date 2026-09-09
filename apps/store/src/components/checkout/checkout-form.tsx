@@ -73,11 +73,14 @@ export function CheckoutForm({
   terms,
   payment,
   verifiedPhone,
+  verificationRequired,
 }: {
   terms: DeliveryTerms;
   payment: PaymentSetting;
   /** From the OTP session cookie — see the note at the call site. */
   verifiedPhone: string | null;
+  /** False when there is no SMS gateway to send a code through. */
+  verificationRequired: boolean;
 }) {
   const router = useRouter();
   const { cart, ready, subtotal, clear } = useCart();
@@ -99,7 +102,11 @@ export function CheckoutForm({
    * must not un-verify someone. `verifiedPhone` comes from the same cookie
    * the order placement re-checks, so this survives it.
    */
-  const [verified, setVerified] = useState(verifiedPhone !== null);
+  const [verified, setVerified] = useState(
+    /* Nothing to verify against when there is no gateway, so the order must
+       not be gated on it — the alternative is a shop that cannot take money. */
+    !verificationRequired || verifiedPhone !== null,
+  );
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [problems, setProblems] = useState<LineProblem[]>([]);
   const [formError, setFormError] = useState<string | null>(null);
@@ -247,6 +254,7 @@ export function CheckoutForm({
           onPhone={(phone) => patch({ phone })}
           verified={verified}
           onVerified={setVerified}
+          verificationRequired={verificationRequired}
           errors={errors}
         />
 
@@ -362,7 +370,7 @@ export function CheckoutForm({
             )}
           </Button>
 
-          {!verified && (
+          {verificationRequired && !verified && (
             <p className="text-stone mt-3 text-center text-xs">
               Verify your mobile number to place the order.
             </p>

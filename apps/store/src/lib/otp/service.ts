@@ -1,5 +1,5 @@
 import "server-only";
-import { authEnv, otpEnv } from "@/lib/env";
+import { authEnv, otpEnv, smsEnv } from "@/lib/env";
 import { hmacHex, numericCode, safeEqual } from "@/lib/crypto";
 import { normalisePhone } from "@/lib/phone";
 import { otpSender, type OtpChannel } from "@/lib/otp/sender";
@@ -175,4 +175,28 @@ export async function verifyOtp(
 
   await markPhoneVerified(phone);
   return { ok: true, phone };
+}
+
+/**
+ * Can we actually verify a phone number?
+ *
+ * Only if there is a gateway to send a code through. With none configured the
+ * ConsoleOtpSender writes the code to the SERVER LOG — genuinely useful in
+ * development, and useless to a customer in production: they would be asked
+ * for a code that reached nobody, and could never place an order. The
+ * checkout was effectively closed without a paid SMS account.
+ *
+ * There is no free SMS gateway in Bangladesh, and WhatsApp's Cloud API bills
+ * authentication templates, so "verify every number" is not available on a
+ * zero-cost launch. When this is false the checkout drops the OTP step
+ * entirely, records the order with phone_verified_at NULL, and the ERP flags
+ * it so the owner rings to confirm before dispatch — which is what this
+ * market does anyway.
+ *
+ * The security cost is real and worth stating plainly: an unverified number is
+ * how undeliverable COD parcels happen. Set SMS_API_URL, SMS_API_KEY and
+ * SMS_SENDER_ID and this returns true again with no other change.
+ */
+export function phoneVerificationEnabled() {
+  return smsEnv.configured;
 }

@@ -5,6 +5,7 @@ import { deliveryTerms } from "@/lib/delivery.server";
 import { paymentSettings } from "@/lib/settings";
 import { erp } from "@/lib/erp";
 import { verifiedPhone } from "@/lib/otp/session";
+import { phoneVerificationEnabled } from "@/lib/otp/service";
 import { checkoutSchema, type CheckoutInput } from "@/lib/orders/schema";
 import type { OrderDraftLine } from "@/lib/orders/types";
 import { taka } from "@/lib/format";
@@ -78,8 +79,19 @@ export async function placeOrder(
    * and then submitting a stranger's is the obvious bypass, and it is the one
    * that produces the undeliverable COD parcels this control exists to stop.
    */
+  /*
+   * Only enforced when a code could actually have been sent. See
+   * phoneVerificationEnabled() — with no SMS gateway the customer is never
+   * shown an OTP step, so demanding one here would close the shop.
+   *
+   * The check itself is unchanged when it does apply, including the part that
+   * matters: it compares the verified number against the number ON THE ORDER,
+   * because verifying your own and then submitting a stranger's is the obvious
+   * bypass and the one that produces undeliverable parcels.
+   */
+  const verificationRequired = phoneVerificationEnabled();
   const verified = await verifiedPhone();
-  if (verified !== payload.phone) {
+  if (verificationRequired && verified !== payload.phone) {
     return {
       ok: false,
       error: verified

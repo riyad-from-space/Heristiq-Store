@@ -30,6 +30,7 @@ export function PhoneVerification({
   onPhone,
   verified,
   onVerified,
+  verificationRequired,
   errors,
 }: {
   name: string;
@@ -38,8 +39,29 @@ export function PhoneVerification({
   onPhone: (value: string) => void;
   verified: boolean;
   onVerified: (value: boolean) => void;
+  /**
+   * False when no SMS gateway is configured.
+   *
+   * The whole code-sending apparatus then disappears rather than offering a
+   * button that mails a code into the server log. The number is still
+   * required and still validated — it is how the courier reaches the customer
+   * — it is simply not proved, and the copy says so instead of implying it
+   * was.
+   */
+  verificationRequired: boolean;
   errors: Record<string, string>;
 }) {
+  /*
+   * "Locked" is not the same as "verified".
+   *
+   * In free mode `verified` arrives true because there is nothing to verify
+   * against — and locking the field on that would leave the customer unable
+   * to type their own number, or to correct a typo in the one thing the
+   * courier needs. The field only becomes read-only once a code has actually
+   * proved it.
+   */
+  const locked = verified && verificationRequired;
+
   const [sent, setSent] = useState(false);
   const [code, setCode] = useState("");
   const [message, setMessage] = useState<string | null>(null);
@@ -130,9 +152,13 @@ export function PhoneVerification({
           htmlFor="phone"
           error={errors.phone}
           hint={
-            verified
+            verified && verificationRequired
               ? undefined
-              : "We text a code to this number. The courier calls it before delivering."
+              : verificationRequired
+                ? "We text a code to this number. The courier calls it before delivering."
+                : /* No gateway: say what will actually happen instead of
+                     implying a code is coming. */
+                  "We call or WhatsApp this number to confirm before we dispatch, and the courier calls it before delivering."
           }
         >
           <div className="flex gap-2">
@@ -145,18 +171,25 @@ export function PhoneVerification({
                    checks the cookie against the submitted number anyway, and
                    showing a stale green tick would be a lie. */
                 onPhone(event.target.value);
-                if (verified) onVerified(false);
+              /*
+               * Guarded on verificationRequired: in free mode `verified`
+               * means "there is nothing to verify", not "a code proved
+               * this". Clearing it there set it false on the first
+               * keystroke with no way to set it back, which disabled Place
+               * order permanently — the shop could not take an order.
+               */
+              if (verificationRequired && verified) onVerified(false);
                 setSent(false);
               }}
               type="tel"
               inputMode="numeric"
               autoComplete="tel"
               placeholder="01XXXXXXXXX"
-              readOnly={verified}
-              className={verified ? "bg-sand text-stone" : undefined}
+              readOnly={locked}
+              className={locked ? "bg-sand text-stone" : undefined}
               required
             />
-            {verified ? (
+            {locked ? (
               <button
                 type="button"
                 onClick={() => {
@@ -167,7 +200,7 @@ export function PhoneVerification({
               >
                 Change
               </button>
-            ) : (
+            ) : !verificationRequired ? null : (
               <Button
                 type="button"
                 variant="ghost"
@@ -189,14 +222,14 @@ export function PhoneVerification({
           </div>
         </Field>
 
-        {verified && (
+        {verificationRequired && verified && (
           <p className="text-success flex items-center gap-2 text-sm">
             <CheckCircle2 size={16} />
             {displayPhone(phone)} verified
           </p>
         )}
 
-        {sent && !verified && (
+        {verificationRequired && sent && !verified && (
           <div className="border-line bg-white border p-4">
             <Field label="6-digit code" htmlFor="otp">
               <div className="flex gap-2">
@@ -251,11 +284,18 @@ export function PhoneVerification({
           </p>
         )}
 
-        {!verified && (
+        {verificationRequired && !verified && (
           <p className="text-stone-soft flex items-start gap-2 text-copy-xs">
             <ShieldCheck size={14} className="mt-0.5 shrink-0" />
             Verifying keeps cash-on-delivery working for everyone. We do not use
             your number for marketing.
+          </p>
+        )}
+        {!verificationRequired && (
+          <p className="text-stone-soft flex items-start gap-2 text-copy-xs">
+            <ShieldCheck size={14} className="mt-0.5 shrink-0" />
+            Please double-check the number — it is how we reach you, and how the
+            courier finds you. We do not use it for marketing.
           </p>
         )}
       </div>
