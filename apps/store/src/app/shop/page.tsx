@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { ProductCardTile } from "@/components/product/product-card";
 import { EmptyResults, FilterBar } from "@/components/shop/filter-bar";
 import { Container, SectionHeader } from "@/components/ui/layout";
-import { finishes, motifs, site } from "@/config/site";
+import { collections, finishes, motifs, site } from "@/config/site";
 import { erp } from "@/lib/erp";
 import { SORTS, type ProductQuery, type SortKey } from "@/lib/erp/types";
 
@@ -27,11 +27,21 @@ function parseQuery(raw: Record<string, string | string[] | undefined>): Product
 
   const finish = one("finish");
   const motif = one("motif");
+  const collection = one("collection");
   const sort = one("sort");
+  const q = one("q");
 
   return {
     finish: finish && finish in finishes ? (finish as ProductQuery["finish"]) : undefined,
     motif: motif && motif in motifs ? (motif as ProductQuery["motif"]) : undefined,
+    collection:
+      collection && collection in collections
+        ? (collection as ProductQuery["collection"])
+        : undefined,
+    /* Trimmed and length-capped. Everything else here is validated against a
+       known key set; a free-text field cannot be, so the only guards
+       available are "not blank" and "not absurd". */
+    q: q?.trim().slice(0, 60) || undefined,
     sort: sort && sort in SORTS ? (sort as SortKey) : "featured",
   };
 }
@@ -43,17 +53,28 @@ export async function generateMetadata({
 
   /* A filtered view gets its own title, but is canonicalised back to /shop so
      the same seven products are not indexed as six near-duplicate pages. */
-  const facet = query.finish
-    ? `${finishes[query.finish].label} waist chains`
-    : query.motif
-      ? `${motifs[query.motif].label} waist chains`
-      : "Waist chains";
+  const facet = query.q
+    ? `Search: ${query.q}`
+    : query.collection
+      ? `${collections[query.collection].label} waist chains`
+      : query.finish
+        ? `${finishes[query.finish].label} waist chains`
+        : query.motif
+          ? `${motifs[query.motif].label} waist chains`
+          : "Waist chains";
 
   return {
     title: facet,
     description: `${facet} in ${site.name}'s collection. Cash on delivery across Bangladesh.`,
     alternates: { canonical: "/shop" },
-    robots: query.finish || query.motif ? { index: false, follow: true } : undefined,
+        /* A faceted or searched view is canonicalised back to /shop and left out
+       of the index, so the same seven products are not indexed as a dozen
+       near-duplicate pages. A search results page in particular has no
+       business in a search engine. */
+    robots:
+      query.finish || query.motif || query.collection || query.q
+        ? { index: false, follow: true }
+        : undefined,
   };
 }
 
@@ -61,13 +82,23 @@ export default async function ShopPage({ searchParams }: PageProps<"/shop">) {
   const query = parseQuery(await searchParams);
   const products = await erp().getProducts(query);
 
-  const heading = query.finish
-    ? `${finishes[query.finish].label}`
-    : query.motif
-      ? motifs[query.motif].label
-      : "Waist chains";
+  const heading = query.q
+    ? `“${query.q}”`
+    : query.collection
+      ? collections[query.collection].label
+      : query.finish
+        ? `${finishes[query.finish].label}`
+        : query.motif
+          ? motifs[query.motif].label
+          : "Waist chains";
 
-  const blurb = query.motif ? motifs[query.motif].blurb : null;
+  const blurb = query.q
+    ? `${products.length} ${products.length === 1 ? "piece" : "pieces"} match your search.`
+    : query.collection
+      ? collections[query.collection].lede
+      : query.motif
+        ? motifs[query.motif].blurb
+        : null;
 
   return (
     <Container className="py-10 sm:py-16">

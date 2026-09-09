@@ -79,6 +79,7 @@ function toProduct(row: CatalogueRow): Product {
     compareAtPrice: null,
     finish: m.finish,
     motif: m.motif,
+    collections: m.collections,
     images: m.images,
     /*
      * `available`, not `on_hand`. A unit claimed by an open pre-order is still

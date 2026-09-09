@@ -1,3 +1,4 @@
+import { collections, finishes, motifs } from "@/config/site";
 import type { Product, ProductCard, ProductQuery } from "@/lib/erp/types";
 
 /*
@@ -11,12 +12,46 @@ import type { Product, ProductCard, ProductQuery } from "@/lib/erp/types";
  */
 export function sortProducts(
   products: Product[],
-  { finish, motif, sort = "featured", includeOutOfStock = true }: ProductQuery,
+  { finish, motif, collection, q, sort = "featured", includeOutOfStock = true }: ProductQuery,
 ): ProductCard[] {
   let rows = products;
 
   if (finish) rows = rows.filter((p) => p.finish === finish);
   if (motif) rows = rows.filter((p) => p.motif === motif);
+  if (collection) {
+    rows = rows.filter((p) => p.collections.includes(collection));
+  }
+
+  /*
+   * Free-text search, from the header field.
+   *
+   * Done here rather than in either client because this function is the ONE
+   * place both the mock and the Supabase catalogue pass through — so search
+   * works with no credentials and against real data, with one implementation.
+   *
+   * Matched against the name, the tagline and the finish and motif LABELS
+   * rather than their keys, because a customer types "gold" and "moon", not
+   * "celestial". Every term must match something (AND, not OR): typing
+   * "gold moon" should narrow, which is what a second word is for.
+   */
+  if (q) {
+    const terms = q.toLowerCase().split(/\s+/).filter(Boolean);
+    if (terms.length > 0) {
+      rows = rows.filter((p) => {
+        const haystack = [
+          p.name,
+          p.tagline ?? "",
+          p.sku,
+          p.finish ? finishes[p.finish].label : "",
+          p.motif ? motifs[p.motif].label : "",
+          ...p.collections.map((key) => collections[key].label),
+        ]
+          .join(" ")
+          .toLowerCase();
+        return terms.every((term) => haystack.includes(term));
+      });
+    }
+  }
   if (!includeOutOfStock) {
     rows = rows.filter((p) => p.availability.state !== "pre_order");
   }
@@ -64,6 +99,7 @@ export function toCard(p: Product): ProductCard {
     compareAtPrice: p.compareAtPrice,
     finish: p.finish,
     motif: p.motif,
+    collections: p.collections,
     images: p.images,
     availability: p.availability,
     featured: p.featured,

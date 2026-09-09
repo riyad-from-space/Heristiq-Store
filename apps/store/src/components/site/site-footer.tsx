@@ -3,106 +3,136 @@ import {
   FacebookIcon,
   InstagramIcon,
   TikTokIcon,
+  WhatsAppIcon,
 } from "@/components/ui/brand-icons";
-import { Container, Eyebrow } from "@/components/ui/layout";
-import { NewsletterForm } from "@/components/site/newsletter-form";
+import { Container } from "@/components/ui/layout";
 import { erpUrl, footerNav, site } from "@/config/site";
-import { displayPhone } from "@/lib/phone";
+import { displayPhone, whatsappNumber } from "@/lib/phone";
 
+/*
+ * The footer.
+ *
+ * Four columns per the mockup: the brand blurb and socials, then the three
+ * link lists. The newsletter USED to be the second half of that first column,
+ * squeezed under the blurb; it has its own sand-coloured section on the home
+ * page now, which is where the mockup puts it and where it actually reads as
+ * an ask rather than as furniture.
+ *
+ * The socials are circles with a hairline that fill rose on hover, and the
+ * bottom row carries the "pay on delivery" chips — Cash, bKash, Nagad. Those
+ * chips are the last trust signal on the page, and for a cash-on-delivery
+ * shop they are worth more than a row of card logos would be.
+ */
 export function SiteFooter() {
+  const wa = whatsappNumber(site.contact.phone);
+
+  const socials = [
+    { href: site.social.instagram, label: "Instagram", Icon: InstagramIcon },
+    { href: site.social.facebook, label: "Facebook", Icon: FacebookIcon },
+    { href: site.social.tiktok, label: "TikTok", Icon: TikTokIcon },
+    ...(wa
+      ? [
+          {
+            href: `https://wa.me/${wa}`,
+            label: "WhatsApp",
+            Icon: WhatsAppIcon,
+          },
+        ]
+      : []),
+  ];
+
   return (
-    <footer className="bg-inverted text-on-inverted">
-      <Container className="py-16 sm:py-20">
-        <div className="grid gap-12 lg:grid-cols-[1.2fr_2fr]">
-          <div>
-            <p className="font-display text-2xl tracking-[0.22em] uppercase">
+    <footer className="bg-inverted text-on-inverted/80">
+      <Container className="pt-section pb-7">
+        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-[1.6fr_1fr_1fr_1fr] lg:gap-10">
+          {/* The brand column spans the row on a phone, per the mockup. */}
+          <div className="sm:col-span-2 lg:col-span-1">
+            <p className="font-display text-on-inverted text-[1.9rem] font-semibold">
               {site.name}
+              <span className="text-rose">.</span>
             </p>
-            <p className="mt-4 max-w-xs text-copy-sm text-on-inverted/70">
+            <p className="text-copy-sm mt-4 max-w-[34ch]">
               {site.description}
             </p>
 
-            <Eyebrow onDark className="mt-10">
-              Newsletter
-            </Eyebrow>
-            <p className="mt-3 max-w-xs text-sm text-on-inverted/70">
-              New pieces and restocks, once or twice a month. Nothing else.
-            </p>
-            <NewsletterForm className="mt-4 max-w-xs" />
+            <div className="mt-5 flex gap-2.5">
+              {socials.map(({ href, label, Icon }) => (
+                <a
+                  key={label}
+                  href={href}
+                  aria-label={`${site.name} on ${label}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="border-on-inverted/25 text-on-inverted hover:bg-rose hover:border-rose duration-quick ease-out-soft grid size-10 place-items-center rounded-full border transition-colors hover:text-white"
+                >
+                  <Icon size={17} />
+                </a>
+              ))}
+            </div>
           </div>
 
-          <div className="grid gap-10 sm:grid-cols-3">
-            {footerNav.map((group) => (
-              <nav key={group.title}>
-                <h2 className="text-eyebrow text-rose/80 uppercase">
-                  {group.title}
-                </h2>
-                <ul className="mt-4 space-y-3">
-                  {group.links.map((link) => (
-                    <li key={link.href}>
-                      <Link
-                        href={link.href}
-                        className="text-sm text-on-inverted/75 decoration-on-inverted/30 underline-offset-4 transition hover:text-on-inverted hover:underline"
-                      >
-                        {link.label}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </nav>
+          {footerNav.map((group) => (
+            <nav key={group.title}>
+              <h2 className="text-eyebrow text-on-inverted font-bold uppercase">
+                {group.title}
+              </h2>
+              <ul className="mt-4 space-y-2.5">
+                {group.links.map((link) => (
+                  <li key={link.href}>
+                    <Link
+                      href={link.href}
+                      className="text-copy-sm hover:text-rose duration-quick transition-colors"
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          ))}
+        </div>
+
+        <div className="border-on-inverted/15 text-copy-xs text-on-inverted/60 mt-11 flex flex-col gap-4 border-t pt-6 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-5">
+            <span>
+              © {new Date().getFullYear()} {site.name}. Handmade in Bangladesh.
+            </span>
+            <a
+              href={`tel:+880${site.contact.phone.slice(1)}`}
+              className="hover:text-rose w-fit transition-colors"
+            >
+              {displayPhone(site.contact.phone)}
+            </a>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <span>Pay on delivery</span>
+            {["Cash", "bKash", "Nagad"].map((method) => (
+              <span
+                key={method}
+                className="bg-on-inverted/10 text-on-inverted rounded-[6px] px-2.5 py-1 text-[0.72rem] font-semibold"
+              >
+                {method}
+              </span>
             ))}
           </div>
         </div>
 
-        <div className="mt-14 flex flex-col gap-6 border-t border-white/10 pt-8 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-5">
-            <a
-              href={site.social.instagram}
-              aria-label="Heristiq on Instagram"
-              className="text-on-inverted/70 transition hover:text-on-inverted"
-            >
-              <InstagramIcon size={18} />
-            </a>
-            <a
-              href={site.social.tiktok}
-              aria-label="Heristiq on TikTok"
-              className="text-on-inverted/70 transition hover:text-on-inverted"
-            >
-              <TikTokIcon size={18} />
-            </a>
-            <a
-              href={site.social.facebook}
-              aria-label="Heristiq on Facebook"
-              className="text-on-inverted/70 transition hover:text-on-inverted"
-            >
-              <FacebookIcon size={18} />
-            </a>
-            <span className="text-sm text-on-inverted/50">
-              {displayPhone(site.contact.phone)}
-            </span>
-          </div>
-          <div className="flex flex-col gap-2 sm:items-end">
-            <p className="text-xs text-on-inverted/45">
-              © {new Date().getFullYear()} {site.name}. Prices in Bangladeshi
-              Taka.
-            </p>
-            {/*
-             * The owner's way in, from the site itself rather than a
-             * remembered workers.dev URL.
-             *
-             * Quiet on purpose — it is not for customers — but not hidden
-             * either: security here is the ERP's Supabase login, not the
-             * obscurity of the link, and a door nobody can find is a door the
-             * owner cannot find on a phone at a stall.
-             */}
-            <a
-              href={erpUrl}
-              className="text-on-inverted/30 hover:text-on-inverted/60 w-fit text-[0.6875rem] transition-colors"
-            >
-              Owner sign-in
-            </a>
-          </div>
-        </div>
+        {/*
+         * The owner's way in, from the site itself rather than a remembered
+         * workers.dev URL.
+         *
+         * Quiet on purpose — it is not for customers — but not hidden either:
+         * security here is the ERP's Supabase login, not the obscurity of the
+         * link, and a door nobody can find is a door the owner cannot find on
+         * a phone at a stall.
+         */}
+        <a
+          href={erpUrl}
+          className="text-on-inverted/30 hover:text-on-inverted/60 duration-quick mt-5 block w-fit text-[0.6875rem] transition-colors"
+        >
+          Owner sign-in
+        </a>
       </Container>
     </footer>
   );

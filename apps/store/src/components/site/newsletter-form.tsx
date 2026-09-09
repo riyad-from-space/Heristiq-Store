@@ -1,12 +1,18 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { ArrowRight, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { subscribeAction } from "@/app/contact/actions";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 /*
  * Newsletter capture.
+ *
+ * Restyled for its own sand-coloured section rather than the footer it used
+ * to live in: a white pill input beside a solid button, centred, stacking on
+ * a phone. The status line sits below and reserves its height, so confirming
+ * a subscription does not push the small print down the page.
  *
  * This used to validate an address and then throw it away, which is worse than
  * having no form: the customer believes they will hear about the restock, and
@@ -25,7 +31,7 @@ export function NewsletterForm({ className }: { className?: string }) {
 
   return (
     <form
-      className={cn("flex flex-col gap-2", className)}
+      className={cn("mx-auto w-full max-w-[440px]", className)}
       /*
        * noValidate, like the checkout's forms.
        *
@@ -51,7 +57,7 @@ export function NewsletterForm({ className }: { className?: string }) {
         });
       }}
     >
-      <div className="flex items-center border-b border-white/25 focus-within:border-rose">
+      <div className="flex flex-col gap-2.5 sm:flex-row">
         <label htmlFor="newsletter-email" className="sr-only">
           Email address
         </label>
@@ -60,49 +66,45 @@ export function NewsletterForm({ className }: { className?: string }) {
           type="email"
           inputMode="email"
           autoComplete="email"
-          placeholder="your@email.com"
+          placeholder="you@email.com"
           value={email}
           onChange={(event) => {
             setEmail(event.target.value);
             setState("idle");
           }}
+          aria-invalid={state === "invalid" || undefined}
           /* text-base: iOS Safari zooms the page for any focused input under
              16px, and this site is overwhelmingly phones. */
-          className="min-h-11 w-full bg-transparent text-base text-on-inverted placeholder:text-on-inverted/40 focus:outline-none sm:text-sm"
+          className="border-control rounded-pill focus-visible:border-rose focus-visible:ring-rose-soft aria-invalid:border-danger min-h-12 flex-1 border-[1.5px] bg-white px-5 text-base text-ink placeholder:text-stone-soft focus-visible:ring-[3px] focus-visible:outline-none"
         />
-        <button
-          type="submit"
-          aria-label="Subscribe"
-          disabled={pending}
-          className="grid size-11 shrink-0 place-items-center text-on-inverted/70 transition hover:text-on-inverted disabled:opacity-50"
-        >
-          {pending ? (
-            <Loader2 size={18} className="animate-spin" />
-          ) : (
-            <ArrowRight size={18} />
-          )}
-        </button>
+        <Button type="submit" size="lg" disabled={pending} className="sm:w-auto">
+          {pending && <Loader2 size={16} className="animate-spin" />}
+          {pending ? "Adding you" : "Notify me"}
+        </Button>
       </div>
 
-      <p aria-live="polite" className="min-h-5 text-xs">
+      {/* min-h reserves the line so a confirmation does not shove the small
+          print downward — a layout shift on the one element whose job is to
+          say "that worked". */}
+      <p aria-live="polite" className="text-copy-sm mt-4 min-h-6 font-semibold">
         {state === "invalid" && (
-          <span className="text-rose">
+          <span className="text-danger">
             That does not look like an email address.
           </span>
         )}
         {state === "queued" && (
-          <span className="text-on-inverted/60">
-            Thank you — we will email you when something new lands.
+          <span className="text-rose-deep">
+            You are on the list — watch your inbox for the next drop.
           </span>
         )}
         {state === "demo" && (
-          <span className="text-on-inverted/60">
+          <span className="text-stone">
             Demo mode: no database configured, so this was logged rather than
             saved.
           </span>
         )}
         {state === "failed" && (
-          <span className="text-rose">
+          <span className="text-danger">
             That did not save. Please try again in a moment.
           </span>
         )}

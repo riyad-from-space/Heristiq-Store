@@ -1,4 +1,4 @@
-import type { FinishKey, MotifKey } from "@/config/site";
+import type { CollectionKey, FinishKey, MotifKey } from "@/config/site";
 
 /*
  * Editorial overlay, keyed by ERP SKU.
@@ -23,6 +23,13 @@ export type Merchandising = {
   description: string;
   finish: FinishKey;
   motif: MotifKey;
+  /*
+   * Which moods this piece belongs to — see `collections` in config/site.ts.
+   * A list, not one value: a fine plain chain is honestly both an everyday
+   * piece and one that layers, and forcing a single choice would make one of
+   * those tiles thinner than it should be.
+   */
+  collections: readonly CollectionKey[];
   lengthInches: { min: number; max: number };
   materials: string;
   featured: boolean;
@@ -42,6 +49,7 @@ export const MERCHANDISING: Record<string, Merchandising> = {
       "Large and small ovals alternate the whole way round, so the chain catches light at two different rhythms as you move. The plainest piece we make, and the one that goes with everything.",
     finish: "silver",
     motif: "oval",
+    collections: ["everyday", "layered"],
     lengthInches: { min: 28, max: 34 },
     materials: CHAIN_MATERIAL,
     featured: false,
@@ -58,6 +66,7 @@ export const MERCHANDISING: Record<string, Merchandising> = {
       "The same alternating ovals in a warm gold finish. Worn low over linen or denim, it reads as jewellery rather than as a belt.",
     finish: "gold",
     motif: "oval",
+    collections: ["bridal", "occasion"],
     lengthInches: { min: 28, max: 34 },
     materials: CHAIN_MATERIAL,
     featured: true,
@@ -74,6 +83,7 @@ export const MERCHANDISING: Record<string, Merchandising> = {
       "Longer links mean fewer of them, and a cleaner line. The most restrained chain in the collection — barely there until it isn't.",
     finish: "silver",
     motif: "oval",
+    collections: ["everyday", "layered"],
     lengthInches: { min: 30, max: 36 },
     materials: CHAIN_MATERIAL,
     featured: false,
@@ -89,6 +99,7 @@ export const MERCHANDISING: Record<string, Merchandising> = {
       "Long gold ovals with enough weight to sit still. Our easiest first piece, and the one most people come back for in silver.",
     finish: "gold",
     motif: "oval",
+    collections: ["bridal", "everyday"],
     lengthInches: { min: 30, max: 36 },
     materials: CHAIN_MATERIAL,
     featured: true,
@@ -105,6 +116,7 @@ export const MERCHANDISING: Record<string, Merchandising> = {
       "A single crescent moon drops from a fine silver chain and settles at the hip. The piece the rest of the collection is named after.",
     finish: "silver",
     motif: "celestial",
+    collections: ["occasion", "everyday"],
     lengthInches: { min: 28, max: 34 },
     materials: CHAIN_MATERIAL,
     featured: true,
@@ -122,6 +134,7 @@ export const MERCHANDISING: Record<string, Merchandising> = {
       "Five arms, textured across the top, smooth underneath so it lies flat against skin. Somewhere between the sea and the sky, which is the whole idea.",
     finish: "gold",
     motif: "nautical",
+    collections: ["occasion"],
     lengthInches: { min: 28, max: 34 },
     materials: CHAIN_MATERIAL,
     featured: true,
@@ -138,6 +151,7 @@ export const MERCHANDISING: Record<string, Merchandising> = {
       "The heaviest charm in the collection and the one people notice. Ridged along the spiral, hollow-cast so it stays light enough to forget about.",
     finish: "gold",
     motif: "nautical",
+    collections: ["bridal", "occasion"],
     lengthInches: { min: 28, max: 34 },
     materials: CHAIN_MATERIAL,
     featured: false,
@@ -166,6 +180,10 @@ export function fallbackMerchandising(
     description: "",
     finish: lower.includes("gold") ? "gold" : "silver",
     motif: "oval",
+    /* No mood guessed from a product name. An unmerchandised piece appears in
+       the shop and on search, and simply does not surface in a mood tile
+       until someone has decided which mood it belongs to. */
+    collections: [],
     lengthInches: { min: 28, max: 34 },
     materials: CHAIN_MATERIAL,
     featured: false,

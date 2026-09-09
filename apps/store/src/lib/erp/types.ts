@@ -1,4 +1,4 @@
-import type { FinishKey, MotifKey } from "@/config/site";
+import type { CollectionKey, FinishKey, MotifKey } from "@/config/site";
 
 /*
  * The storefront's view of a product.
@@ -48,6 +48,7 @@ export type Product = {
   compareAtPrice: number | null;
   finish: FinishKey | null;
   motif: MotifKey | null;
+  collections: readonly CollectionKey[];
   images: ProductImage[];
   availability: Availability;
   /** Length in inches, as a range the chain adjusts across. */
@@ -69,6 +70,7 @@ export type ProductCard = Pick<
   | "compareAtPrice"
   | "finish"
   | "motif"
+  | "collections"
   | "images"
   | "availability"
   | "featured"
@@ -77,6 +79,9 @@ export type ProductCard = Pick<
 export type ProductQuery = {
   finish?: FinishKey;
   motif?: MotifKey;
+  collection?: CollectionKey;
+  /** Free-text search from the header. Matched in sortProducts. */
+  q?: string;
   sort?: SortKey;
   /** Include products with no free stock. Default true — they can be pre-ordered. */
   includeOutOfStock?: boolean;

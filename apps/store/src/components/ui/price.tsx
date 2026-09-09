@@ -20,15 +20,15 @@ export function Price({
   size?: "sm" | "md" | "lg";
 }) {
   const scale = {
-    sm: "text-sm",
-    md: "text-base",
+    sm: "text-[0.98rem]",
+    md: "text-[1.05rem]",
     lg: "text-xl sm:text-2xl",
   }[size];
 
   if (amount === null) {
     return (
       <span
-        className={cn("text-stone italic", scale, className)}
+        className={cn("text-stone text-[0.9em] italic", scale, className)}
         /* The em dash-free wording is intentional: this is read aloud by
            screen readers as a sentence, not as a price. */
       >

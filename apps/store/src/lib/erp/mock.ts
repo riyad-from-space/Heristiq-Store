@@ -74,6 +74,7 @@ function toProduct(row: MockRow): Product {
     compareAtPrice: null,
     finish: m.finish,
     motif: m.motif,
+    collections: m.collections,
     images: m.images,
     availability: availabilityFrom(available),
     lengthInches: m.lengthInches,

@@ -105,3 +105,47 @@ export const finishes = {
 } as const;
 
 export type FinishKey = keyof typeof finishes;
+
+/**
+ * Collections — "shop by mood".
+ *
+ * A third axis alongside finish and motif, and like both of those it lives in
+ * the merchandising overlay rather than the ERP: inventory is about units and
+ * cost, and which mood a piece belongs to is a selling decision the owner
+ * changes without touching stock. (lib/erp/merchandising.ts explains the join;
+ * the whole overlay moves to a storefront_products table in phase 6.)
+ *
+ * A piece belongs to as MANY moods as honestly apply — a fine plain chain is
+ * both an everyday piece and one that layers — so a product carries a list,
+ * not a single value.
+ *
+ * One copy deviation from the approved mockup, deliberately: its fourth tile
+ * reads "Layered sets · Curated stacks, one order", which promises a bundle
+ * SKU. There is no such product, and a tile that sells one would be a lie
+ * that ends at an empty shop page. So the mood is the pieces that layer well,
+ * and the subtitle says that instead.
+ */
+export const collections = {
+  everyday: {
+    label: "Everyday",
+    blurb: "Light, layer-friendly chains",
+    lede: "The pieces that go on in the morning and are forgotten about until someone asks.",
+  },
+  occasion: {
+    label: "Occasion",
+    blurb: "Statement pieces for the night",
+    lede: "More charm, more movement, more of a reason to be looked at twice.",
+  },
+  bridal: {
+    label: "Bridal",
+    blurb: "For the mehendi and beyond",
+    lede: "Gold-finish pieces that sit with a saree or a lehenga, and keep working afterwards.",
+  },
+  layered: {
+    label: "Layers",
+    blurb: "Fine chains made to stack",
+    lede: "Slim chains that sit together without tangling. Wear two, or wear four.",
+  },
+} as const;
+
+export type CollectionKey = keyof typeof collections;

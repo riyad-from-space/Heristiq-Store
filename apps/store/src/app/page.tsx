@@ -1,7 +1,9 @@
 import { Hero } from "@/components/home/hero";
 import { TrustStrip } from "@/components/home/trust-strip";
 import { Featured } from "@/components/home/featured";
+import { Collections } from "@/components/home/collections";
 import { MotifStory } from "@/components/home/motif-story";
+import { NewsletterSection } from "@/components/home/newsletter-section";
 import { HowItWorks } from "@/components/home/how-it-works";
 import { SocialProof } from "@/components/home/social-proof";
 import { InstagramFeed } from "@/components/home/instagram-feed";
@@ -31,11 +33,13 @@ export default async function HomePage() {
     <>
       <Hero />
       <TrustStrip />
+      <Collections products={products} />
       <Featured products={showcase} />
       <MotifStory />
       <HowItWorks />
       <SocialProof />
       <InstagramFeed />
+      <NewsletterSection />
 
       {/* Organisation-level structured data. Product JSON-LD lives on the PDP,
           which is the page Google actually shows a price against. */}

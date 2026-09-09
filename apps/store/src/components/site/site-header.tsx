@@ -2,8 +2,10 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Menu, Search, ShoppingBag, X } from "lucide-react";
+import { Heart, Menu, ShoppingBag, X } from "lucide-react";
 import { useCart } from "@/components/cart/cart-provider";
+import { useWishlist } from "@/components/wishlist/wishlist-provider";
+import { SearchField } from "@/components/site/search-field";
 import { WhatsAppIcon } from "@/components/ui/brand-icons";
 import { Button } from "@/components/ui/button";
 import { Container } from "@/components/ui/layout";
@@ -26,6 +28,7 @@ import { cn } from "@/lib/utils";
  */
 export function SiteHeader({ hasPromo = false }: { hasPromo?: boolean }) {
   const { count, ready } = useCart();
+  const { count: saved, ready: savedReady } = useWishlist();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -117,7 +120,7 @@ export function SiteHeader({ hasPromo = false }: { hasPromo?: boolean }) {
               <Link
                 key={item.href}
                 href={item.href}
-                className="text-eyebrow decoration-1 underline-offset-8 uppercase hover:underline"
+                className="nav-wipe text-[0.94rem] font-medium"
               >
                 {item.label}
               </Link>
@@ -137,34 +140,43 @@ export function SiteHeader({ hasPromo = false }: { hasPromo?: boolean }) {
             )}
           >
             {site.name}
+            <span className="text-rose">.</span>
           </Link>
 
-          <div className="flex items-center justify-end gap-1">
+          {/* Desktop only — see the note in search-field.tsx. */}
+          <SearchField className="ml-auto hidden w-[min(260px,30vw)] lg:flex" />
+
+          <div className="flex items-center justify-end gap-0.5">
             <Link
-              href="/shop"
-              aria-label="Search the shop"
-              className="hidden size-11 place-items-center sm:grid"
+              href="/wishlist"
+              aria-label={
+                saved > 0 ? `Saved pieces, ${saved} items` : "Saved pieces"
+              }
+              className="hover:bg-rose-soft duration-quick relative grid size-10 place-items-center rounded-full transition-colors"
             >
-              <Search size={18} />
+              <Heart size={19} strokeWidth={1.8} />
+              {/* Same `ready` gate as the cart count: the server cannot know
+                  what is in localStorage, so rendering a number during the
+                  first client render would not match the server's HTML. */}
+              {savedReady && saved > 0 && (
+                <span className="tnum bg-rose-deep absolute top-0.5 right-0 grid min-w-[17px] place-items-center rounded-full px-1 text-[0.65rem] leading-[17px] font-bold text-white">
+                  {saved}
+                </span>
+              )}
             </Link>
             <Link
               href="/cart"
               aria-label={count > 0 ? `Cart, ${count} items` : "Cart"}
-              className="relative -mr-2 grid size-11 place-items-center"
+              className="hover:bg-rose-soft duration-quick relative grid size-10 place-items-center rounded-full transition-colors"
             >
-              <ShoppingBag size={19} />
+              <ShoppingBag size={19} strokeWidth={1.8} />
               {/*
                * `ready` gates this on localStorage having been read. Rendering
                * the count during the first client render would not match the
                * server's HTML, and React would blame the whole header.
                */}
               {ready && count > 0 && (
-                <span
-                  className={cn(
-                    "tnum absolute top-1.5 right-1 grid min-w-4 place-items-center rounded-full px-1 text-[0.625rem] leading-4 font-medium",
-                    "bg-rose-deep text-white",
-                  )}
-                >
+                <span className="tnum bg-rose-deep absolute top-0.5 right-0 grid min-w-[17px] place-items-center rounded-full px-1 text-[0.65rem] leading-[17px] font-bold text-white">
                   {count}
                 </span>
               )}
@@ -198,14 +210,19 @@ export function SiteHeader({ hasPromo = false }: { hasPromo?: boolean }) {
         )}
         aria-hidden={!menuOpen}
       >
-        <Container className="flex h-full flex-col pt-24 pb-10">
+        <Container className="flex h-full flex-col overflow-y-auto pt-24 pb-10">
+          {/* The phone's search lives here rather than in the bar, where a
+              field beside a burger, a wordmark, a heart and a cart would be
+              about 60px wide. */}
+          <SearchField className="mb-7" onSubmitted={closeMenu} />
+
           <nav className="flex flex-col">
             {nav.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
                 onClick={closeMenu}
-                className="border-line font-display border-b py-5 text-2xl"
+                className="border-line font-display border-b py-4 text-[1.7rem]"
               >
                 {item.label}
               </Link>
@@ -213,14 +230,14 @@ export function SiteHeader({ hasPromo = false }: { hasPromo?: boolean }) {
             <Link
               href="/track"
               onClick={closeMenu}
-              className="border-line border-b py-5 text-sm"
+              className="border-line text-copy-sm border-b py-4"
             >
               Track your order
             </Link>
             <Link
               href="/contact"
               onClick={closeMenu}
-              className="border-line border-b py-5 text-sm"
+              className="border-line text-copy-sm border-b py-4"
             >
               Contact
             </Link>

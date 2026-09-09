@@ -3,6 +3,7 @@ import { QuickAdd } from "@/components/cart/quick-add";
 import { Price } from "@/components/ui/price";
 import { ProductImage } from "@/components/ui/product-image";
 import { StockBadge } from "@/components/ui/badge";
+import { SaveButton } from "@/components/wishlist/save-button";
 import { finishes } from "@/config/site";
 import { cartLineFor } from "@/lib/cart/line";
 import { isBuyable } from "@/lib/erp/types";
@@ -24,10 +25,19 @@ import { cn } from "@/lib/utils";
 export function ProductCardTile({
   product,
   priority = false,
+  feature = false,
   className,
 }: {
   product: ProductCardType;
   priority?: boolean;
+  /**
+   * The mockup's first card, spanning two columns and running taller.
+   *
+   * It changes the media's shape rather than the card's contents: a feature
+   * card is the same product, given more room. Everything below the image is
+   * identical, which is what keeps a row of mixed sizes reading as one grid.
+   */
+  feature?: boolean;
   className?: string;
 }) {
   const [hero, second] = product.images;
@@ -47,25 +57,34 @@ export function ProductCardTile({
        * the shop grid, where nine more client components would be the most
        * expensive animation on the site for the least gain.
        */}
-      <div className="relative overflow-hidden">
+      <div className="rounded-card relative overflow-hidden">
         <div className="ease-out-soft transition-transform duration-slow motion-safe:group-hover:scale-[1.04]">
           <ProductImage
             image={hero}
-            sizes="(min-width: 1024px) 30vw, (min-width: 640px) 45vw, 92vw"
+            sizes={
+              feature
+                ? "(min-width: 1024px) 46vw, (min-width: 640px) 92vw, 92vw"
+                : "(min-width: 1024px) 23vw, (min-width: 640px) 45vw, 92vw"
+            }
             priority={priority}
-            maxWidth={828}
+            maxWidth={feature ? 1080 : 828}
             placeholderLabel={product.sku}
             className={cn(
               "duration-calm transition-opacity",
+              feature ? "aspect-4/3 sm:aspect-16/11" : "aspect-[3/3.6]",
               second && "group-hover:opacity-0",
             )}
           />
           {second && (
             <ProductImage
               image={second}
-              sizes="(min-width: 1024px) 30vw, (min-width: 640px) 45vw, 92vw"
-              maxWidth={828}
-              className="duration-calm absolute inset-0 opacity-0 transition-opacity group-hover:opacity-100"
+              sizes={
+                feature
+                  ? "(min-width: 1024px) 46vw, 92vw"
+                  : "(min-width: 1024px) 23vw, (min-width: 640px) 45vw, 92vw"
+              }
+              maxWidth={feature ? 1080 : 828}
+              className="duration-calm absolute inset-0 h-full opacity-0 transition-opacity group-hover:opacity-100"
             />
           )}
         </div>
@@ -73,6 +92,12 @@ export function ProductCardTile({
         <div className="absolute top-3 left-3 flex flex-col items-start gap-1.5">
           <StockBadge availability={product.availability} />
         </div>
+
+        <SaveButton
+          productId={product.id}
+          name={product.name}
+          className="absolute top-3 right-3"
+        />
 
         {/*
          * The focus ring goes on the image, not the whole card, so keyboard
@@ -85,7 +110,7 @@ export function ProductCardTile({
          * indicator the ring exists to provide. Inset draws it inward, where
          * nothing can clip it.
          */}
-        <span className="ring-rose pointer-events-none absolute inset-0 transition group-focus-visible:ring-2 group-focus-visible:ring-inset" />
+        <span className="ring-rose rounded-card pointer-events-none absolute inset-0 transition group-focus-visible:ring-2 group-focus-visible:ring-inset" />
 
         {/*
          * Quick add. On a mouse it slides up on hover; on a touch screen it
@@ -127,8 +152,9 @@ export function ProductCardTile({
        * either, and every price on the site is currently one of those two
        * shapes.
        */}
-      <div className="pt-4">
-        <h3 className="font-display text-base leading-snug">
+      <div className="flex items-baseline justify-between gap-3 pt-3">
+        <div className="min-w-0">
+        <h3 className="text-[0.98rem] leading-snug font-semibold">
           {/* The stretched link. Everything in the card except quick-add is
               inside its hit area, and the accessible name is the piece. */}
           <Link
@@ -138,23 +164,28 @@ export function ProductCardTile({
             {product.name}
           </Link>
         </h3>
-        <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
-          <Price
-            amount={product.price}
-            compareAt={product.compareAtPrice}
-            size="sm"
-          />
-          {finish && (
-            <span className="text-stone flex items-center gap-1.5 text-xs">
-              <span
-                aria-hidden
-                className="border-line-strong inline-block size-2.5 rounded-full border"
-                style={{ background: finish.swatch }}
-              />
-              {finish.label}
-            </span>
-          )}
+        {finish && (
+          <span className="text-copy-xs text-stone mt-0.5 flex items-center gap-1.5">
+            <span
+              aria-hidden
+              /* The finish swatch is a literal product colour and stays out
+                 of the palette — gold is gold whatever the page looks like. */
+              className="border-line-strong inline-block size-2.5 shrink-0 rounded-full border"
+              style={{ background: finish.swatch }}
+            />
+            {finish.label}
+          </span>
+        )}
         </div>
+        {/* The price is its own column so a long name wraps beside it rather
+            than pushing it onto a second line — the two-column phone grid is
+            narrow enough that this happens with the shortest of names. */}
+        <Price
+          amount={product.price}
+          compareAt={product.compareAtPrice}
+          size="sm"
+          className="shrink-0"
+        />
       </div>
     </div>
   );
