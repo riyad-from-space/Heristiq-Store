@@ -1,11 +1,9 @@
 import { Hero } from "@/components/home/hero";
 import { TrustStrip } from "@/components/home/trust-strip";
-import { Featured } from "@/components/home/featured";
+import { ProductGrid } from "@/components/home/featured";
 import { Collections } from "@/components/home/collections";
-import { MotifStory } from "@/components/home/motif-story";
+import { StoryBand } from "@/components/home/story-band";
 import { NewsletterSection } from "@/components/home/newsletter-section";
-import { HowItWorks } from "@/components/home/how-it-works";
-import { SocialProof } from "@/components/home/social-proof";
 import { InstagramFeed } from "@/components/home/instagram-feed";
 import { erp } from "@/lib/erp";
 import { site } from "@/config/site";
@@ -23,21 +21,43 @@ export const revalidate = 300;
 
 export default async function HomePage() {
   const products = await erp().getProducts({ sort: "featured" });
-  const featured = products.filter((p) => p.featured).slice(0, 4);
-
-  /* If nothing is flagged featured, show the first four rather than an empty
-     section — a merchandising oversight should not blank the home page. */
-  const showcase = featured.length > 0 ? featured : products.slice(0, 4);
+  /*
+   * The two grids split the catalogue rather than sharing it, so no piece
+   * appears twice on one page.
+   *
+   * "New this week" takes the first three flagged featured, because the
+   * mockup's feature card spans two columns and 2 + 1 + 1 fills a
+   * four-column row with three products. "The edit" takes everything else.
+   *
+   * If nothing is flagged, the first three stand in — a merchandising
+   * oversight should not blank half the home page.
+   */
+  const flagged = products.filter((p) => p.featured);
+  const fresh = (flagged.length > 0 ? flagged : products).slice(0, 3);
+  const freshIds = new Set(fresh.map((p) => p.id));
+  const edit = products.filter((p) => !freshIds.has(p.id));
 
   return (
     <>
       <Hero />
-      <TrustStrip />
       <Collections products={products} />
-      <Featured products={showcase} />
-      <MotifStory />
-      <HowItWorks />
-      <SocialProof />
+      <ProductGrid
+        products={fresh}
+        eyebrow="The collection"
+        title="New this week"
+        lede="Fresh off the bench — small batches, restocked when they sell out."
+        linkLabel="See everything new"
+        feature
+        priority
+      />
+      <StoryBand />
+      <ProductGrid
+        products={edit}
+        title="The waist chain edit"
+        lede="The pieces we keep restocking — and the ones you keep asking for."
+        linkLabel="Shop all chains"
+      />
+      <TrustStrip />
       <InstagramFeed />
       <NewsletterSection />
 

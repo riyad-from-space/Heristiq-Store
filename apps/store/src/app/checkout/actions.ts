@@ -1,13 +1,13 @@
 "use server";
 
-import { requestOtp, verifyOtp } from "@/lib/otp/service";
+import { requestOtp } from "@/lib/otp/service";
 import { placeOrder } from "@/lib/orders/place";
 import type { CheckoutInput } from "@/lib/orders/schema";
-import type { OtpRequestResult, OtpVerifyResult } from "@/lib/otp/service";
+import type { OtpRequestResult } from "@/lib/otp/service";
 import type { PlaceOrderResult } from "@/lib/orders/place";
 
 /*
- * The checkout's three server actions.
+ * The checkout's two server actions.
  *
  * Thin on purpose: every rule lives in lib/, which is testable without a
  * request and reusable by phase 6's admin. What this file adds is the trust
@@ -40,18 +40,19 @@ export async function requestOtpAction(phone: string): Promise<OtpRequestResult>
   }
 }
 
-export async function verifyOtpAction(
-  phone: string,
-  code: string,
-): Promise<OtpVerifyResult> {
-  try {
-    return await verifyOtp(phone, code);
-  } catch (error) {
-    console.error("[checkout] verifyOtp failed", error);
-    return { ok: false, error: "We could not check that code. Try again." };
-  }
-}
-
+/*
+ * verifyOtpAction used to live here and is deliberately gone.
+ *
+ * It called verifyOtp, which sets the OTP session cookie — and a cookie write
+ * inside a Server Action makes Next refresh the current route. On the
+ * force-dynamic checkout page that remounted the form and discarded
+ * everything typed into it, so verifying a number un-verified it. It is now
+ * app/api/otp/verify/route.ts, a fetch that sets the same cookie without
+ * touching the router.
+ *
+ * requestOtpAction stays an action: sending a code writes no cookie, so it
+ * causes no refresh.
+ */
 export async function placeOrderAction(
   input: CheckoutInput,
 ): Promise<PlaceOrderResult> {

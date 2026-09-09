@@ -34,17 +34,22 @@ const points = [
 
 export function TrustStrip() {
   return (
-    <div className="border-line bg-white border-b">
-      <Container className="py-10 sm:py-12">
-        {/* The grid moved off <Container> and onto the stagger parent: the
-            animating element has to be the one that owns grid-cols, or the
-            cells are no longer its direct children. */}
-        <div className="grid grid-cols-2 gap-x-6 gap-y-8 lg:grid-cols-4">
+    /* Hairlines top AND bottom, on the blush base — the mockup's treatment.
+       It reads as a band without introducing a fourth surface colour. */
+    <div className="border-line bg-blush border-y">
+      <Container className="py-9 sm:py-10">
+        <div className="grid grid-cols-2 gap-x-7 gap-y-7 lg:grid-cols-4">
           {points.map(({ icon: Icon, title, body }) => (
-            <div key={title} className="flex flex-col gap-2">
-              <Icon size={20} className="text-rose" strokeWidth={1.5} />
-              <h3 className="text-sm font-medium">{title}</h3>
-              <p className="text-stone text-copy-xs">{body}</p>
+            <div key={title} className="flex items-start gap-3.5">
+              {/* A rounded tile rather than a bare icon: it gives the rose
+                  somewhere to sit at a size the eye reads as deliberate. */}
+              <span className="bg-rose-soft text-rose-deep grid size-11 shrink-0 place-items-center rounded-[12px]">
+                <Icon size={20} strokeWidth={1.8} />
+              </span>
+              <div>
+                <h3 className="text-[0.98rem] font-bold">{title}</h3>
+                <p className="text-stone text-copy-xs mt-0.5">{body}</p>
+              </div>
             </div>
           ))}
         </div>

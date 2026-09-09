@@ -147,7 +147,7 @@ function CartLineRow({
             </h3>
             <p className="text-stone-soft mt-1 text-xs">{line.sku}</p>
             {line.isPreOrder && (
-              <Badge tone="inverted" className="mt-2">
+              <Badge tone="action" className="mt-2">
                 Pre-order
               </Badge>
             )}

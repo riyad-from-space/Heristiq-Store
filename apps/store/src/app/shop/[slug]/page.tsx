@@ -115,7 +115,7 @@ export default async function ProductPage({ params }: PageProps<"/shop/[slug]">)
               {product.availability.state !== "in_stock" && (
                 <Badge
                   tone={
-                    product.availability.state === "low_stock" ? "warn" : "inverted"
+                    product.availability.state === "low_stock" ? "fact" : "action"
                   }
                 >
                   {availabilityLabel(product.availability)}

@@ -104,7 +104,7 @@ export function TrackForm({
                 Placed {dateTimeDhaka(result.placedAt)}
               </p>
             </div>
-            {result.hasPreOrder && <Badge tone="inverted">Includes a pre-order</Badge>}
+            {result.hasPreOrder && <Badge tone="action">Includes a pre-order</Badge>}
           </div>
 
           <div className="mt-8">

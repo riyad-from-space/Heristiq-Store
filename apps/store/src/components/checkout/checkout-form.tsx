@@ -72,15 +72,34 @@ const EMPTY: Form = {
 export function CheckoutForm({
   terms,
   payment,
+  verifiedPhone,
 }: {
   terms: DeliveryTerms;
   payment: PaymentSetting;
+  /** From the OTP session cookie — see the note at the call site. */
+  verifiedPhone: string | null;
 }) {
   const router = useRouter();
   const { cart, ready, subtotal, clear } = useCart();
 
-  const [form, setForm] = useState<Form>(EMPTY);
-  const [verified, setVerified] = useState(false);
+  /*
+   * The number the cookie already vouches for is prefilled, and it has to be:
+   * placeOrder compares the session's verified phone against the one in the
+   * payload (lib/orders/place.ts), so a form that claimed "verified" over an
+   * empty field would fail server-side validation with nothing on screen
+   * explaining why.
+   */
+  const [form, setForm] = useState<Form>(
+    verifiedPhone ? { ...EMPTY, phone: verifiedPhone } : EMPTY,
+  );
+  /*
+   * Seeded from the server, not `false`.
+   *
+   * A remount — which a cookie-writing server action triggers on this page —
+   * must not un-verify someone. `verifiedPhone` comes from the same cookie
+   * the order placement re-checks, so this survives it.
+   */
+  const [verified, setVerified] = useState(verifiedPhone !== null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [problems, setProblems] = useState<LineProblem[]>([]);
   const [formError, setFormError] = useState<string | null>(null);

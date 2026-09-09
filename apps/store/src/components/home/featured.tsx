@@ -5,86 +5,101 @@ import { Container, Section, SectionHeader } from "@/components/ui/layout";
 import type { ProductCard } from "@/lib/erp/types";
 
 /*
- * Featured pieces.
+ * A product grid, used twice on the home page — "New this week" and "The
+ * waist chain edit".
  *
- * On a phone this is a horizontal snap rail rather than a stacked grid: four
- * stacked cards is four screens of scrolling before the customer reaches the
- * story below, and a rail keeps the whole selection in one thumb sweep. From
- * sm: up it becomes a real grid.
+ * One component rather than two, because the mockup's two grids differ only
+ * in their words, whether the first card is a feature, and which pieces they
+ * hold. Two files would have been two places to fix the next grid bug.
+ *
+ * The FEATURE card spans two columns on the widest layout, which is what makes
+ * a four-column row hold three products: 2 + 1 + 1. That is the mockup's
+ * arithmetic, and it is why "New this week" shows three pieces rather than
+ * four — not a shortage of stock.
+ *
+ * On a phone this is a horizontal snap rail rather than a stacked column:
+ * three or four stacked cards is three or four screens of scrolling before
+ * the customer reaches anything else, and a rail keeps the selection in one
+ * thumb sweep. The feature card loses its span there, because at two columns
+ * there is nothing to span.
  */
-/* Spelled out, because "Three pieces" reads as copy and "3 pieces" reads as a
-   database field. Only ever called for the handful the home page shows. */
-const COUNT_WORDS: Record<number, string> = {
-  2: "Two",
-  3: "Three",
-  4: "Four",
-};
-
-export function Featured({ products }: { products: ProductCard[] }) {
+export function ProductGrid({
+  products,
+  eyebrow,
+  title,
+  lede,
+  linkLabel = "See everything new",
+  feature = false,
+  priority = false,
+}: {
+  products: ProductCard[];
+  eyebrow?: string;
+  title: string;
+  lede?: string;
+  linkLabel?: string;
+  /** Give the first card two columns, per the mockup's first grid. */
+  feature?: boolean;
+  /** Set on the grid that is above the fold. */
+  priority?: boolean;
+}) {
   if (products.length === 0) return null;
 
   return (
     <Section>
       <Container>
-        <div className="flex items-end justify-between gap-6">
-          {/*
-           * The heading counts the pieces it is actually showing. It read
-           * "Four pieces people keep coming back for" as a hard-coded string,
-           * which is wrong the moment the owner flags three as featured or
-           * the catalogue drops below four — and the fallback path above can
-           * hand this fewer than four.
-           */}
-          <SectionHeader
-            eyebrow="The collection"
-            title={
-              products.length === 1
-                ? "The piece people keep coming back for"
-                : `${COUNT_WORDS[products.length] ?? products.length} pieces people keep coming back for`
-            }
-          />
-          <Link
-            href="/shop"
-            className="text-eyebrow hidden shrink-0 items-center gap-2 uppercase decoration-1 underline-offset-8 hover:underline sm:inline-flex"
-          >
-            See all <ArrowRight size={14} />
-          </Link>
-        </div>
+        <SectionHeader
+          eyebrow={eyebrow}
+          title={title}
+          lede={lede}
+          action={
+            <Link
+              href="/shop"
+              className="text-rose-deep decoration-rose-soft hover:decoration-rose-deep duration-quick inline-flex items-center gap-1.5 border-b-[1.5px] border-transparent pb-0.5 font-semibold transition-colors"
+            >
+              {linkLabel} <ArrowRight size={15} />
+            </Link>
+          }
+        />
       </Container>
 
       {/* The rail bleeds into the gutter on purpose — a card half-cut at the
           right edge is what makes it obvious the row scrolls. */}
-      <div className="mt-10 sm:mt-14">
-        {/* scroll-pl-5 as well as px-5: scroll-snap aligns a snap-start child
-            to the SNAPPORT edge, which ignores padding, so padding alone makes
-            the browser scroll the gutter away and the first card sits flush to
-            the screen edge. scroll-padding moves the snapport instead. */}
-        <div className="scrollbar-none flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 pb-2 scroll-pl-5 sm:hidden">
+      <div className="mt-8">
+        {/* scroll-pl-gutter as well as px-gutter: scroll-snap aligns a
+            snap-start child to the SNAPPORT edge, which ignores padding, so
+            padding alone makes the browser scroll the gutter away and the
+            first card sits flush to the screen edge. scroll-padding moves the
+            snapport instead. */}
+        <div className="scrollbar-none px-gutter scroll-pl-gutter flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2 sm:hidden">
           {products.map((product, index) => (
             <div key={product.id} className="w-[74vw] shrink-0 snap-start">
-              <ProductCardTile product={product} priority={index === 0} />
+              <ProductCardTile
+                product={product}
+                priority={priority && index === 0}
+              />
             </div>
           ))}
         </div>
 
         <Container className="hidden sm:block">
-          <div className="grid grid-cols-2 gap-x-6 gap-y-12 lg:grid-cols-4">
-            {products.map((product) => (
-              <div key={product.id}>
-                <ProductCardTile product={product} />
+          <div className="grid grid-cols-2 gap-x-5 gap-y-9 lg:grid-cols-4">
+            {products.map((product, index) => (
+              <div
+                key={product.id}
+                className={
+                  feature && index === 0 ? "sm:col-span-2" : undefined
+                }
+              >
+                <ProductCardTile
+                  product={product}
+                  feature={feature && index === 0}
+                  priority={priority && index === 0}
+                />
               </div>
             ))}
           </div>
         </Container>
       </div>
-
-      <Container className="mt-10 sm:hidden">
-        <Link
-          href="/shop"
-          className="text-eyebrow inline-flex items-center gap-2 uppercase decoration-1 underline-offset-8 hover:underline"
-        >
-          See all pieces <ArrowRight size={14} />
-        </Link>
-      </Container>
     </Section>
   );
 }

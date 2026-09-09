@@ -131,7 +131,7 @@ export default async function OrderPage({
                   {line.sku} · qty {line.qty}
                 </p>
                 {line.isPreOrder && (
-                  <Badge tone="inverted" className="mt-2">
+                  <Badge tone="action" className="mt-2">
                     Pre-order
                   </Badge>
                 )}

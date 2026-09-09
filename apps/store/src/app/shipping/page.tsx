@@ -81,6 +81,26 @@ export default async function ShippingPage() {
 
       <ProseSection title="How you pay">
         <p>
+          Three steps, and none of them is &ldquo;send money to a page you have
+          never heard of&rdquo;.
+        </p>
+        <ol>
+          <li>
+            <strong>Pick your piece.</strong> Add it to the cart. Nothing is
+            charged and nothing is reserved until you confirm.
+          </li>
+          <li>
+            <strong>Confirm your number.</strong> We text a code to your
+            mobile. It is how we make sure the parcel and the tracking link
+            reach the right person.
+          </li>
+          <li>
+            <strong>Pay the courier.</strong> Cash, at your door, when it
+            arrives. Nothing in advance for anything we have in stock.
+          </li>
+        </ol>
+        
+        <p>
           <strong>Cash on delivery.</strong> You pay the courier in cash when
           the parcel reaches you. Nothing is charged when you place the order.
         </p>

@@ -63,7 +63,7 @@ export function OrderSummary({
                     Qty {line.qty}
                   </p>
                   {line.isPreOrder && (
-                    <Badge tone="inverted" className="mt-1.5">
+                    <Badge tone="action" className="mt-1.5">
                       Pre-order
                     </Badge>
                   )}

@@ -1,16 +1,27 @@
 import { cn } from "@/lib/utils";
 import { availabilityLabel, type Availability } from "@/lib/erp/types";
 
+/*
+ * Solid pills, per the mockup, which has exactly two: ink for a statement of
+ * fact ("Bestseller", "Restocked") and rose-deep for a call to act
+ * ("Pre-order"). Those map cleanly onto what this site actually needs to say
+ * about stock, so the tones are named for the job rather than the colour.
+ *
+ * White-on-ink and white-on-rose-deep are both above AA. The brighter `rose`
+ * is deliberately not a fill here — it is 3.46:1 behind white text.
+ */
 const tones = {
-  neutral: "bg-white/90 text-ink border-line",
-  accent: "bg-rose-soft text-rose-deep border-rose/30",
-  warn: "bg-white/90 text-warn border-warn/30",
-  inverted: "bg-inverted text-on-inverted border-transparent",
+  /* A fact about the piece. */
+  fact: "bg-ink text-white",
+  /* Something to act on: available to pre-order. */
+  action: "bg-rose-deep text-white",
+  /* A soft tint, for use on a light card rather than over a photograph. */
+  soft: "bg-rose-soft text-rose-deep",
 } as const;
 
 export function Badge({
   children,
-  tone = "neutral",
+  tone = "fact",
   className,
 }: {
   children: React.ReactNode;
@@ -20,7 +31,7 @@ export function Badge({
   return (
     <span
       className={cn(
-        "text-eyebrow inline-flex items-center border px-2.5 py-1 font-medium uppercase backdrop-blur-sm",
+        "rounded-pill inline-flex items-center px-2.5 py-1 text-[0.7rem] font-bold",
         tones[tone],
         className,
       )}
@@ -43,7 +54,12 @@ export function StockBadge({
 }) {
   if (availability.state === "in_stock") return null;
 
-  const tone = availability.state === "low_stock" ? "warn" : "inverted";
+  /*
+   * Low stock is a fact ("Only 2 left"); sold out is an invitation to
+   * pre-order, which is an action. That is the whole distinction the mockup's
+   * two badge colours encode, and it happens to be the right one here.
+   */
+  const tone = availability.state === "low_stock" ? "fact" : "action";
   return (
     <Badge tone={tone} className={className}>
       {availabilityLabel(availability)}

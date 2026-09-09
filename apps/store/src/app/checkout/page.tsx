@@ -3,6 +3,7 @@ import { CheckoutForm } from "@/components/checkout/checkout-form";
 import { Container, SectionHeader } from "@/components/ui/layout";
 import { deliveryTerms } from "@/lib/delivery.server";
 import { paymentSettings } from "@/lib/settings";
+import { verifiedPhone } from "@/lib/otp/session";
 
 /*
  * Checkout.
@@ -32,7 +33,29 @@ export default async function CheckoutPage() {
       <SectionHeader as="h1" size="l" eyebrow="Almost there" title="Checkout" />
 
       <div className="mt-10 sm:mt-14">
-        <CheckoutForm terms={await deliveryTerms()} payment={await paymentSettings()} />
+        <CheckoutForm
+          terms={await deliveryTerms()}
+          payment={await paymentSettings()}
+          /*
+           * The verified number, read from the OTP session cookie.
+           *
+           * This is not a convenience — it is what makes verification stick.
+           * verifyOtp writes that cookie from inside a server action, and
+           * mutating cookies in an action makes Next refresh the route; on a
+           * force-dynamic page that remounts this form and threw away the
+           * `verified` boolean it was holding in useState. The customer
+           * verified successfully, watched the code field vanish, and was
+           * told to verify their number to place the order — with the Place
+           * order button disabled. No order could be completed through the
+           * UI at all.
+           *
+           * Passing it down makes the remount harmless: the cookie was always
+           * the source of truth (lib/orders/place.ts re-checks it server-side
+           * before writing anything), so the UI now reflects it instead of
+           * tracking a second, losable copy of the same fact.
+           */
+          verifiedPhone={await verifiedPhone()}
+        />
       </div>
     </Container>
   );

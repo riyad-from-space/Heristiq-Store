@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { CheckCircle2, Loader2, ShieldCheck } from "lucide-react";
-import { requestOtpAction, verifyOtpAction } from "@/app/checkout/actions";
+import { requestOtpAction } from "@/app/checkout/actions";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/checkout/fields";
 import { displayPhone, isValidPhone } from "@/lib/phone";
@@ -77,7 +77,24 @@ export function PhoneVerification({
   const verify = () => {
     setMessage(null);
     startTransition(async () => {
-      const result = await verifyOtpAction(phone, code);
+      /*
+       * fetch to a route handler, not the server action this used to call.
+       *
+       * verifyOtp sets the OTP session cookie, and a cookie write inside a
+       * Server Action makes Next refresh the route — which remounted this
+       * whole form and wiped the name, address and the verified flag the
+       * moment verification succeeded. See the note in
+       * app/api/otp/verify/route.ts.
+       */
+      const response = await fetch("/api/otp/verify", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ phone, code }),
+      });
+      const result = (await response.json().catch(() => null)) ?? {
+        ok: false as const,
+        error: "We could not check that code. Try again.",
+      };
       if (result.ok) {
         onVerified(true);
         setSent(false);

@@ -368,7 +368,7 @@ src/lib/otp/             sender + store seams, verification, signed cookie
 src/lib/courier/         provider seam, Pathao, Steadfast, status model, dispatch
 src/lib/                 format (৳ / Asia/Dhaka), phone, cloudinary, bd-geo,
                          delivery, crypto, env
-src/config/              brand copy, nav, motifs, testimonials
+src/config/              brand copy, nav, finishes, motifs, collections
 supabase/migrations/     storefront-owned tables (1001+)
 ```
 
@@ -416,12 +416,14 @@ Real content has to replace placeholders. Nothing below is a code change.
 - [ ] **Upload photography to Cloudinary** under the IDs in
   `src/lib/erp/merchandising.ts` (`wc-005/front`, `wc-005/worn`, …), plus
   `hero/home`, `story/celestial`, `story/nautical` and `social/1…6`.
-- [ ] **Testimonials are OFF.** `TESTIMONIALS_ARE_REAL` in
-  `src/config/testimonials.ts` is `false`, so the section renders nothing and
-  the sample quotes never reach a customer. Replace every entry with a real
-  message you have permission to quote and set the flag to `true`, or leave it
-  off — the home page reads fine without it. **Do not publish invented
-  reviews.**
+- [ ] **Tag each piece with its moods.** `collections` in
+  `src/lib/erp/merchandising.ts` drives the "Shop by mood" tiles, and a mood
+  with nothing in it is not rendered rather than linking to an empty page. A
+  piece can belong to several.
+- [ ] **If you add customer quotes, they must be real.** The approved design
+  has no testimonials section, so there is nothing to fill in — but if one is
+  added later, quote only messages you have permission to use. Publishing
+  invented reviews as genuine is deceptive and, in most markets, unlawful.
 - [ ] **Confirm the contact number and social handles** in `src/config/site.ts`.
   They are placeholders.
 - [ ] **Set the Pathao webhook** in their merchant dashboard: callback URL
