@@ -97,7 +97,7 @@ function ExceptionPanel({ status }: { status: CourierStatus }) {
     <div
       className={cn(
         "flex items-start gap-3 border px-4 py-4",
-        bad ? "border-danger/30 bg-danger/5" : "border-warn/30 bg-warn/5",
+        bad ? "border-danger/30 bg-danger-wash" : "border-warn/30 bg-warn-wash",
       )}
     >
       <CircleAlert

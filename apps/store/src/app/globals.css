@@ -1,41 +1,239 @@
 @import "tailwindcss";
 
 /*
- * Heristiq design tokens.
+ * ============================================================================
+ *  The `dark` variant
+ * ============================================================================
+ *
+ * Tailwind's built-in `dark` variant is `@media (prefers-color-scheme: dark)`
+ * and nothing else. This site also lets a customer choose a theme explicitly,
+ * which lib/theme.ts implements as a `data-theme` attribute on <html>. Without
+ * the declaration below, every `dark:` utility would fire for a dark OS and
+ * stay silent for someone who picked dark on a light phone — half-wired in a
+ * way that only shows up on one of the three theme choices.
+ *
+ * Two branches, because the two cases are genuinely different:
+ *   1. the attribute is present  -> the customer chose; honour it
+ *   2. the attribute is absent   -> follow the OS, which is also what a
+ *      JavaScript-less visitor gets, since nothing stamped the attribute
+ *
+ * The `:not([data-theme="light"])` guard on branch 2 is what lets an explicit
+ * LIGHT choice win over a dark OS. Both use :where() so specificity stays 0
+ * and a plain utility can still override a dark: one.
+ *
+ * Verified against the installed tailwindcss 4.3.3 — it compiles to one
+ * attribute rule plus one media rule per utility.
+ */
+@custom-variant dark {
+  &:where([data-theme="dark"], [data-theme="dark"] *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:where(:root:not([data-theme="light"]), :root:not([data-theme="light"]) *) {
+      @slot;
+    }
+  }
+}
+
+/*
+ * ============================================================================
+ *  Heristiq design tokens — the LIGHT palette
+ * ============================================================================
  *
  * The palette is deliberately small: bone paper, deep ink, ONE gold accent and
  * one deep-sea tone. Every extra colour makes a jewellery photograph compete
  * with the page instead of sitting in it, so restraint here is the whole look.
  *
- * No dark mode. The brand is bone-and-gold; inverting it produces a different,
- * cheaper-looking brand, and 85% of traffic is a phone in daylight.
+ * ---------------------------------------------------------------------------
+ * How dark mode works here, and the trap that shapes it
+ *
+ * Dark mode is a TOKEN SWAP: components keep their classes and the values
+ * underneath change. `bg-bone` is the page ground in both themes; only its
+ * hex differs. That is what keeps the change small across 519 utility usages.
+ *
+ * The dark values are therefore NOT in a second @theme block, and must never
+ * be. Verified with the installed compiler:
+ *
+ *   @theme { --color-bone: #faf7f2; }
+ *   @media (prefers-color-scheme: dark) { @theme { --color-bone: #12100e; } }
+ *
+ * compiles to `:root { --color-bone: #12100e }` with NO media query and the
+ * light value simply gone — Tailwind hoists @theme to :root regardless of
+ * nesting, so the last declaration wins unconditionally and the site is
+ * permanently dark for everyone. It is the most natural first attempt at
+ * CSS-first dark mode and it fails silently, with no error and no warning.
+ * The dark overrides live in ordinary CSS rules further down this file.
+ *
+ * Nor may this become `@theme inline`: that emits `background-color: #faf7f2`
+ * straight into `.bg-bone` and never emits the custom property at all, which
+ * makes runtime re-theming impossible.
+ *
+ * ---------------------------------------------------------------------------
+ * Appearance names, role meanings
+ *
+ * These names describe the LIGHT palette, and they are kept because renaming
+ * 519 usages buys nothing. What matters is that each one carries exactly ONE
+ * role, so the dark value is a straightforward substitution. Three tokens did
+ * not, and were split (see --color-on-inverted, --color-inverted and
+ * --color-control below). Contrast for every real pairing, in both themes, is
+ * asserted by scripts/contrast-test.mjs — run it after changing any value.
  */
 @theme {
   /* --- surfaces ------------------------------------------------------- */
+  /* An elevation ladder: shell BELOW the ground, paper ABOVE it. The order
+     must survive into dark mode or a "raised" card reads as a hole. */
   --color-bone: #faf7f2; /* page ground */
   --color-paper: #fffdfa; /* cards, sheets, anything lifted off the ground */
   --color-shell: #f2ece1; /* quiet fill: image wells, section bands */
 
   /* --- ink ------------------------------------------------------------ */
+  /* A hierarchy, not three greys: ink louder than muted, muted louder than
+     faint, measured against their own ground. In dark this means muted gets
+     LIGHTER while faint gets DARKER — a blanket "lighten the inks" pass
+     inverts the hierarchy and makes disabled text shout. */
   --color-ink: #17150f; /* headings, body */
   --color-ink-muted: #6a635a; /* captions, secondary copy */
-  --color-ink-faint: #a29a8e; /* placeholders, disabled */
+  /* Was #a29a8e, which is 2.40:1 on the ground — too weak for anything
+     carrying words. Now decorative/disabled only; placeholders moved to
+     ink-muted. */
+  --color-ink-faint: #8a8177;
+  /*
+   * The hover state of the primary action's plate.
+   *
+   * `bg-ink text-bone` survives the theme swap by itself — ink and bone trade
+   * places, so it is a dark plate with light text in light mode and a light
+   * plate with dark text in dark mode. Its hover did NOT: it was
+   * `hover:bg-sea`, and sea stays navy, so in dark mode hovering the primary
+   * button put the now-dark text on a navy plate at 1.3:1. This token moves
+   * with the plate instead of against it.
+   */
+  --color-ink-hover: #24313a;
 
   /* --- accents -------------------------------------------------------- */
-  --color-gold: #a4854c; /* the single accent — rules, prices, small marks */
-  --color-gold-deep: #85683a; /* hover/active only */
-  --color-gold-wash: #f0e7d5; /* tinted fill behind gold text */
-  --color-sea: #1b2c36; /* moonlit navy: footer, inverted blocks */
+  /* Nudged from #a4854c so gold clears 3:1 on the shell band, where the
+     eyebrow rule sits. Imperceptible as a hue, and it removes a judgement
+     call about whether a decorative rule owes contrast. */
+  --color-gold: #a08149; /* the accent — rules, icons, small marks */
+  /*
+   * Gold that carries WORDS, and the hover state. Was --color-gold-deep.
+   *
+   * Renamed because "deep" is only true in light mode: this token's job is
+   * "more contrast against my own ground", which means darker on bone and
+   * LIGHTER on near-black. A token called `deep` resolving to a pale gold
+   * would be a lie in exactly the theme where it matters.
+   */
+  --color-gold-strong: #7d6135;
+  --color-gold-wash: #f0e7d5; /* tinted FILL behind gold text, light grounds */
+  /*
+   * Pale gold as a FOREGROUND on a permanently dark surface — the hero's
+   * italic line, the footer's column headings, the on-dark eyebrow.
+   *
+   * Split from --color-gold-wash for the same reason --color-on-inverted was
+   * split from --color-bone: gold-wash is a light tint that must go DARK in
+   * dark mode to stay a plate, while these seven call sites are text on a
+   * surface that is dark in BOTH themes and must stay pale. Sharing one token
+   * meant the hero's "noticed twice" would have gone near-black on navy.
+   */
+  --color-gold-pale: #ecdfc6;
+
+  /*
+   * --color-sea is a literal brand colour: the hero ground and the lightbox
+   * scrim, both of which stay dark navy in BOTH themes because a photograph's
+   * brightness does not follow the theme.
+   *
+   * --color-inverted is the ROLE that used to share it — the footer and the
+   * feature bands. Inversion is relational, not a colour: against bone it has
+   * to be dark, and against a near-black ground it has to be LIGHTER, or the
+   * footer stops being a surface and merges into the page. Same value today,
+   * opposite directions in dark, which is precisely why they had to split.
+   */
+  --color-sea: #1b2c36;
+  --color-inverted: #1b2c36;
+  /* Kept, and NOT unused: hero-backdrop.tsx carries this exact value as an
+     rgba() literal in an inline style. Deleting it would leave that literal
+     as the only record of the colour. */
   --color-sea-soft: #2f4753;
 
+  /*
+   * Text on a permanently dark surface.
+   *
+   * Split out of --color-bone, which was doing two jobs at once: the page
+   * ground AND the foreground on every dark block (27 `text-bone` uses across
+   * 16 files). Re-point bone to a dark value and all 27 go dark-on-dark;
+   * leave it light and the page never darkens. There is no single value, so
+   * the roles had to separate. This one stays light in both themes.
+   */
+  --color-on-inverted: #faf7f2;
+
+  /*
+   * The hero's celestial field.
+   *
+   * These were three rgba() literals inside a JS style object in
+   * hero-backdrop.tsx, which is the one place no token, media query or dark:
+   * variant can reach. Named here so they are documented rather than
+   * mysterious, and so the next person does not "fix" them by pointing them
+   * at --color-gold / --color-sea-soft / --color-bone.
+   *
+   * They are deliberately theme-INDEPENDENT. The hero sits on --color-sea,
+   * which is a literal brand colour and stays navy in both themes because a
+   * photograph's brightness does not follow the theme. Making the field
+   * theme-aware would put it out of register with its own ground — the 0.9
+   * alpha depth wash is nearly opaque, so it would become a visible
+   * discoloured blob rather than atmosphere.
+   */
+  --hero-glow: rgb(164 133 76 / 0.28);
+  --hero-depth: rgb(47 71 83 / 0.9);
+  --hero-star: rgb(250 247 242 / 0.55);
+
   /* --- lines ---------------------------------------------------------- */
-  --color-line: #e5ddd0;
-  --color-line-strong: #d3c8b6;
+  --color-line: #e5ddd0; /* decorative hairline */
+  --color-line-strong: #cfc4b1; /* heavier decorative rule */
+  /*
+   * The boundary of a form control, which WCAG 1.4.11 requires to reach 3:1 —
+   * an input here is bg-paper on a bone page, a 1.05:1 difference, so the
+   * border is the ONLY thing identifying it as a control.
+   *
+   * Split from line-strong, which was being used for both and sits at 1.61:1.
+   * A decorative rule between two bands does not owe 3:1 and should stay
+   * quiet; a control's edge does. One token could not be both.
+   */
+  --color-control: #8d857a;
 
   /* --- state ---------------------------------------------------------- */
   --color-success: #3f6b4f;
-  --color-warn: #96662a;
+  /* Was #96662a (4.64:1). Darkened to clear AA with margin on all three
+     grounds, since this carries low-stock and demo-mode warnings. */
+  --color-warn: #8a5d26;
   --color-danger: #8f3b32;
+
+  /*
+   * Tinted panels behind state text — as real tokens, not `bg-danger/5`.
+   *
+   * Two reasons the alpha modifier could not survive dark mode. First, 5% of
+   * a mid-tone over a near-black ground is still the ground: measured, those
+   * panels separate by 1.02–1.08, so the checkout rejection banner, the
+   * pre-order notice and the courier exception panel all vanish. Second, and
+   * worse, the installed Tailwind compiles `bg-warn/5` to
+   * `color-mix(in srgb, #8a5d26 5%, transparent)` with the LIGHT hex inlined,
+   * and only reads the variable inside an `@supports (color: color-mix(in lab,
+   * ...))` branch — so on a browser without lab color-mix the panels freeze at
+   * their light values while every plain utility flips, producing a
+   * half-inverted page. Older Android WebViews are real traffic here.
+   *
+   * A plain token compiles to a bare var() and sidesteps both.
+   */
+  /*
+   * The informational panel — the pre-order notice on the PDP and the order
+   * page. It was `bg-sea/5` + `border-sea/20`, and sea stays navy in both
+   * themes, so on a dark ground a 5% navy tint over near-black is simply the
+   * ground. This is the one state that had no token at all.
+   */
+  --color-info-wash: #edf1f3;
+  --color-info-line: #ccd7dd;
+
+  --color-success-wash: #e8efe9;
+  --color-warn-wash: #f6ecdd;
+  --color-danger-wash: #f7e7e4;
 
   /* --- type ----------------------------------------------------------- */
   --font-display: var(--font-fraunces), ui-serif, Georgia, serif;
@@ -125,10 +323,190 @@
   --duration-slow: 700ms; /* image zooms, reveals */
 }
 
+/*
+ * ============================================================================
+ *  The DARK palette
+ * ============================================================================
+ *
+ * Ordinary CSS rules, deliberately NOT a second @theme — see the long note at
+ * the top of the file for what that does instead (it deletes the light values
+ * and makes the site permanently dark, silently).
+ *
+ * These rules are unlayered, and Tailwind's @theme output is inside
+ * `@layer theme`. Unlayered declarations beat layered ones regardless of
+ * specificity, so these win without needing !important or a specificity war.
+ *
+ * The hex values appear ONCE, in --dk-*, and are then mapped twice — once for
+ * the attribute and once for the media query. Two mappings of one value set is
+ * the least-bad option available: CSS has no way to share a declaration block
+ * between a media-gated and a non-media-gated selector, and duplicating twenty
+ * hex values would guarantee they drift apart.
+ *
+ * The two mapping rules have equal specificity (0,2,0) and never conflict:
+ *   OS dark  + chose light -> :not([data-theme="light"]) fails, @theme wins
+ *   OS light + chose dark  -> media fails, attribute rule wins
+ *   OS dark  + no choice   -> media wins
+ *   OS dark  + chose dark  -> both apply, identical values
+ *
+ * Every value below is asserted by scripts/contrast-test.mjs.
+ */
+:root {
+  /* surfaces — the ladder inverts direction but keeps its ORDER:
+     shell below ground, paper above it, exactly as in light. */
+  --dk-bone: #12100e; /* warm near-black, not #000: the brand is warm, and
+                         a little headroom above black is what lets shell
+                         still sit below the ground */
+  /*
+   * Both surfaces sit ABOVE the ground in dark, and that is a deliberate role
+   * shift rather than an oversight.
+   *
+   * In light, shell is RECESSED — an image well and a quiet band read as
+   * holes below the page. That cannot survive near-black: with the ground at
+   * #12100e, a genuinely recessed shell measured 1.04:1 against it, which is
+   * not a subtle band, it is an invisible one. Luminance differences compress
+   * hard at the bottom of the range, so there is no value below the ground
+   * that a phone in daylight can show.
+   *
+   * So in dark the ladder runs ground < shell < paper, with steps wide enough
+   * to actually see (1.13:1 and 1.36:1 against the ground). Wells and bands
+   * become faintly lifted frames instead of holes. Verified visually — the
+   * motif band and the twelve image wells were indistinguishable from the
+   * page before this.
+   */
+  --dk-shell: #1c1915; /* quiet band / image well — a faint lift */
+  --dk-paper: #26221c; /* cards and sheets — a clear lift */
+
+  /* ink — muted rises, faint falls, so the hierarchy holds */
+  --dk-ink: #f2eee6; /* warm off-white, never #fff: pure white on warm
+                        near-black is the cheap-dark-mode tell, and it
+                        thickens Fraunces' strokes */
+  --dk-ink-muted: #a9a196;
+  --dk-ink-hover: #ded9d0; /* dims the light plate rather than darkening it */
+  --dk-ink-faint: #6f685e;
+
+  /* the accent is the one token that gets BETTER in dark: 3.43:1 on bone
+     today, 7.68:1 here. A small lift keeps it metal rather than mustard. */
+  --dk-gold: #c1a068;
+  --dk-gold-strong: #d9bc8a;
+  --dk-gold-wash: #2b2317; /* a dark gold-tinted plate, not a cream slab */
+  /* gold-pale does NOT appear here: it is a foreground on a surface that is
+     dark in both themes, so it keeps its light value. Listing it would make
+     the hero's italic line unreadable in exactly one theme. */
+  --dk-info-wash: #162026;
+  --dk-info-line: #2c3b44;
+
+  /* sea does NOT move — it is the hero photograph's ground and the lightbox
+     scrim, neither of which follows the theme. `inverted` moves the other
+     way, LIGHTER than the ground, so the footer stays a surface. */
+  --dk-inverted: #25353f;
+
+  /* Lifted alongside paper: a hairline tuned to the ground disappears on a
+     raised card, and the control border owes 3:1 on BOTH. */
+  --dk-line: #332f29;
+  --dk-line-strong: #4a443c;
+  --dk-control: #7c7469;
+
+  /* the state triplet cannot be reused: measured on this ground, the light
+     values are 2.47–3.68:1, all below AA, and they carry money, the only
+     failure message a mistyping customer sees, and every field error */
+  --dk-success: #7fb894;
+  --dk-warn: #d3a05e;
+  --dk-danger: #e0857a;
+  --dk-success-wash: #16211a;
+  --dk-warn-wash: #251c11;
+  --dk-danger-wash: #2a1815;
+}
+
+/* 1. No explicit choice: follow the OS. This is also the branch that gives a
+      visitor with JavaScript disabled the right theme, because nothing
+      stamped an attribute for the script to have set. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --color-bone: var(--dk-bone);
+    --color-paper: var(--dk-paper);
+    --color-shell: var(--dk-shell);
+    --color-ink: var(--dk-ink);
+    --color-ink-muted: var(--dk-ink-muted);
+  --color-ink-hover: var(--dk-ink-hover);
+    --color-ink-hover: var(--dk-ink-hover);
+    --color-ink-faint: var(--dk-ink-faint);
+    --color-gold: var(--dk-gold);
+    --color-gold-strong: var(--dk-gold-strong);
+    --color-gold-wash: var(--dk-gold-wash);
+    --color-inverted: var(--dk-inverted);
+    --color-line: var(--dk-line);
+    --color-line-strong: var(--dk-line-strong);
+    --color-control: var(--dk-control);
+    --color-success: var(--dk-success);
+    --color-warn: var(--dk-warn);
+    --color-danger: var(--dk-danger);
+    --color-info-wash: var(--dk-info-wash);
+    --color-info-line: var(--dk-info-line);
+    --color-info-wash: var(--dk-info-wash);
+  --color-info-line: var(--dk-info-line);
+  --color-success-wash: var(--dk-success-wash);
+    --color-warn-wash: var(--dk-warn-wash);
+    --color-danger-wash: var(--dk-danger-wash);
+  }
+}
+
+/* 2. Chose dark explicitly, whatever the OS says. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --color-bone: var(--dk-bone);
+  --color-paper: var(--dk-paper);
+  --color-shell: var(--dk-shell);
+  --color-ink: var(--dk-ink);
+  --color-ink-muted: var(--dk-ink-muted);
+  --color-ink-hover: var(--dk-ink-hover);
+  --color-ink-faint: var(--dk-ink-faint);
+  --color-gold: var(--dk-gold);
+  --color-gold-strong: var(--dk-gold-strong);
+  --color-gold-wash: var(--dk-gold-wash);
+  --color-inverted: var(--dk-inverted);
+  --color-line: var(--dk-line);
+  --color-line-strong: var(--dk-line-strong);
+  --color-control: var(--dk-control);
+  --color-success: var(--dk-success);
+  --color-warn: var(--dk-warn);
+  --color-danger: var(--dk-danger);
+  --color-info-wash: var(--dk-info-wash);
+  --color-info-line: var(--dk-info-line);
+  --color-success-wash: var(--dk-success-wash);
+  --color-warn-wash: var(--dk-warn-wash);
+  --color-danger-wash: var(--dk-danger-wash);
+}
+
+/* 3. Chose light explicitly on a dark OS. The tokens are already light from
+      @theme; this only has to correct `color-scheme`, which would otherwise
+      still be the UA's dark default and would paint native controls dark on a
+      light page. */
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+
 @layer base {
   * {
     /* Nothing in this design uses a browser default focus ring. */
     outline-color: var(--color-gold);
+  }
+
+  /*
+   * Declares which schemes the page supports, so the browser paints the
+   * things CSS cannot reach: <select> and <datalist> popups, scrollbars,
+   * spinners, the caret, and form-control chrome.
+   *
+   * Nothing in the tree set this before, and checkout has four UA-painted
+   * surfaces — the Division and District selects, the area datalist, and the
+   * shop's sort select. Without it, flipping the tokens gives a correct-looking
+   * closed control whose open popup is still white with light-on-white options.
+   *
+   * The explicit `dark`/`light` values in the rules above narrow this per
+   * theme; this line is the default for the no-preference case.
+   */
+  :root {
+    color-scheme: light dark;
   }
 
   html {

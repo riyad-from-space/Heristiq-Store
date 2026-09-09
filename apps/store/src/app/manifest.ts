@@ -13,6 +13,14 @@ export default function manifest(): MetadataRoute.Manifest {
     description: site.description,
     start_url: "/",
     display: "standalone",
+    /*
+     * A manifest carries ONE colour and is read at install time, long before
+     * any theme choice exists — there is no media-query form here the way
+     * there is for the viewport's themeColor. So these stay the light values:
+     * the splash screen a customer sees when they open the installed shop
+     * matches the default the site ships with, and once the app is running the
+     * page itself follows their theme normally.
+     */
     background_color: "#faf7f2",
     theme_color: "#faf7f2",
     icons: [

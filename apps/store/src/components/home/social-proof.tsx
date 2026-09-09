@@ -19,7 +19,7 @@ export function SocialProof() {
   if (!TESTIMONIALS_ARE_REAL || testimonials.length === 0) return null;
 
   return (
-    <Section tone="sea" as="div">
+    <Section tone="inverted" as="div">
       <Container>
         <Reveal>
           <SectionHeader
@@ -36,10 +36,10 @@ export function SocialProof() {
               <span aria-hidden className="font-display text-3xl text-gold">
                 &ldquo;
               </span>
-              <p className="mt-2 text-copy-sm text-bone/85">
+              <p className="mt-2 text-copy-sm text-on-inverted/85">
                 {item.quote}
               </p>
-              <footer className="text-eyebrow mt-5 uppercase text-bone/50">
+              <footer className="text-eyebrow mt-5 uppercase text-on-inverted/50">
                 {item.name} · {item.city}
               </footer>
             </blockquote>

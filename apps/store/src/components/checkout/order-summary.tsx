@@ -103,7 +103,7 @@ export function OrderSummary({
         </div>
 
         {gap !== null && (
-          <p className="bg-gold-wash text-gold-deep px-3 py-2 text-copy-xs">
+          <p className="bg-gold-wash text-gold-strong px-3 py-2 text-copy-xs">
             Add {taka(gap)} more and delivery is free.
           </p>
         )}

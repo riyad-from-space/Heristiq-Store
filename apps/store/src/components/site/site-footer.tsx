@@ -11,21 +11,21 @@ import { displayPhone } from "@/lib/phone";
 
 export function SiteFooter() {
   return (
-    <footer className="bg-sea text-bone">
+    <footer className="bg-inverted text-on-inverted">
       <Container className="py-16 sm:py-20">
         <div className="grid gap-12 lg:grid-cols-[1.2fr_2fr]">
           <div>
             <p className="font-display text-2xl tracking-[0.22em] uppercase">
               {site.name}
             </p>
-            <p className="mt-4 max-w-xs text-copy-sm text-bone/70">
+            <p className="mt-4 max-w-xs text-copy-sm text-on-inverted/70">
               {site.description}
             </p>
 
             <Eyebrow onDark className="mt-10">
               Newsletter
             </Eyebrow>
-            <p className="mt-3 max-w-xs text-sm text-bone/70">
+            <p className="mt-3 max-w-xs text-sm text-on-inverted/70">
               New pieces and restocks, once or twice a month. Nothing else.
             </p>
             <NewsletterForm className="mt-4 max-w-xs" />
@@ -34,7 +34,7 @@ export function SiteFooter() {
           <div className="grid gap-10 sm:grid-cols-3">
             {footerNav.map((group) => (
               <nav key={group.title}>
-                <h2 className="text-eyebrow text-gold-wash/80 uppercase">
+                <h2 className="text-eyebrow text-gold-pale/80 uppercase">
                   {group.title}
                 </h2>
                 <ul className="mt-4 space-y-3">
@@ -42,7 +42,7 @@ export function SiteFooter() {
                     <li key={link.href}>
                       <Link
                         href={link.href}
-                        className="text-sm text-bone/75 decoration-bone/30 underline-offset-4 transition hover:text-bone hover:underline"
+                        className="text-sm text-on-inverted/75 decoration-on-inverted/30 underline-offset-4 transition hover:text-on-inverted hover:underline"
                       >
                         {link.label}
                       </Link>
@@ -59,30 +59,30 @@ export function SiteFooter() {
             <a
               href={site.social.instagram}
               aria-label="Heristiq on Instagram"
-              className="text-bone/70 transition hover:text-bone"
+              className="text-on-inverted/70 transition hover:text-on-inverted"
             >
               <InstagramIcon size={18} />
             </a>
             <a
               href={site.social.tiktok}
               aria-label="Heristiq on TikTok"
-              className="text-bone/70 transition hover:text-bone"
+              className="text-on-inverted/70 transition hover:text-on-inverted"
             >
               <TikTokIcon size={18} />
             </a>
             <a
               href={site.social.facebook}
               aria-label="Heristiq on Facebook"
-              className="text-bone/70 transition hover:text-bone"
+              className="text-on-inverted/70 transition hover:text-on-inverted"
             >
               <FacebookIcon size={18} />
             </a>
-            <span className="text-sm text-bone/50">
+            <span className="text-sm text-on-inverted/50">
               {displayPhone(site.contact.phone)}
             </span>
           </div>
           <div className="flex flex-col gap-2 sm:items-end">
-            <p className="text-xs text-bone/45">
+            <p className="text-xs text-on-inverted/45">
               © {new Date().getFullYear()} {site.name}. Prices in Bangladeshi
               Taka.
             </p>
@@ -97,7 +97,7 @@ export function SiteFooter() {
              */}
             <a
               href={erpUrl}
-              className="text-bone/30 hover:text-bone/60 w-fit text-[0.6875rem] transition-colors"
+              className="text-on-inverted/30 hover:text-on-inverted/60 w-fit text-[0.6875rem] transition-colors"
             >
               Owner sign-in
             </a>

@@ -28,7 +28,7 @@ export function SizeGuideContent({
   return (
     <div className="space-y-6 text-copy-sm">
       {lengthInches && (
-        <p className="bg-gold-wash text-gold-deep flex items-start gap-3 px-4 py-3">
+        <p className="bg-gold-wash text-gold-strong flex items-start gap-3 px-4 py-3">
           <Ruler size={16} className="mt-0.5 shrink-0" strokeWidth={1.6} />
           <span>
             This piece adjusts from{" "}

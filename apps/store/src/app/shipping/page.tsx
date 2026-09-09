@@ -62,7 +62,7 @@ export default async function ShippingPage() {
           </table>
         </div>
         {terms.freeThreshold > 0 && (
-          <p className="not-prose bg-gold-wash text-gold-deep mt-5 px-4 py-3 text-sm">
+          <p className="not-prose bg-gold-wash text-gold-strong mt-5 px-4 py-3 text-sm">
             Delivery is free on orders over {taka(terms.freeThreshold)}.
           </p>
         )}

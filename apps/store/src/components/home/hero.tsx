@@ -61,15 +61,15 @@ export function Hero() {
            * composites off the main thread, so the movement is free.
            */}
           <StaggerItem rise className="mt-6">
-            <h1 className="font-display text-display-xl text-bone max-w-3xl font-normal">
+            <h1 className="font-display text-display-xl text-on-inverted max-w-3xl font-normal">
               Worn low,
               <br />
-              <span className="text-gold-wash italic">noticed twice.</span>
+              <span className="text-gold-pale italic">noticed twice.</span>
             </h1>
           </StaggerItem>
 
           <StaggerItem className="mt-6">
-            <p className="text-copy-lg text-bone/75 max-w-md">
+            <p className="text-copy-lg text-on-inverted/75 max-w-md">
               Moons, starfish and shells on fine chain — body jewellery you can
               actually wear every day. Cash on delivery, anywhere in Bangladesh.
             </p>

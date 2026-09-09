@@ -102,8 +102,8 @@ export function Field({
 }
 
 const control =
-  "w-full min-h-12 border border-line-strong bg-paper px-3.5 text-base " +
-  "placeholder:text-ink-faint focus:border-ink focus:outline-none " +
+  "w-full min-h-12 border border-control bg-paper px-3.5 text-base " +
+  "placeholder:text-ink-muted focus:border-ink focus:outline-none " +
   "disabled:opacity-50 aria-invalid:border-danger";
 
 export function Input({ className, ...props }: ComponentProps<"input">) {
@@ -174,7 +174,7 @@ export function RadioCard({
         "flex min-h-12 cursor-pointer items-center gap-3 border px-4 py-3 transition-colors",
         checked
           ? "border-ink bg-paper"
-          : "border-line hover:border-line-strong",
+          : "border-line hover:border-control",
       )}
     >
       <input

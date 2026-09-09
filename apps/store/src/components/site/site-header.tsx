@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Menu, Search, ShoppingBag, X } from "lucide-react";
 import { useCart } from "@/components/cart/cart-provider";
+import { ThemeToggle } from "@/components/site/theme-toggle";
 import { WhatsAppIcon } from "@/components/ui/brand-icons";
 import { Button } from "@/components/ui/button";
 import { Container } from "@/components/ui/layout";
@@ -83,8 +84,13 @@ export function SiteHeader({ hasPromo = false }: { hasPromo?: boolean }) {
             ? "border-b border-transparent text-white"
             : "border-line bg-bone/90 border-b text-ink backdrop-blur-md",
           /* A whisper of lift once it is floating over content, so the
-             hairline is not the only thing separating it from the page. */
-          scrolled && !inverted && "shadow-[0_1px_12px_-6px_rgba(23,21,15,0.25)]",
+             hairline is not the only thing separating it from the page — but
+             only in light mode. A dark shadow does nothing on a dark page, so
+             there the separation comes from the hairline alone, which the
+             token layer has already made visible against the ground. */
+          scrolled &&
+            !inverted &&
+            "shadow-[0_1px_12px_-6px_rgba(23,21,15,0.25)] dark:shadow-none",
         )}
       >
         {/*
@@ -138,6 +144,23 @@ export function SiteHeader({ hasPromo = false }: { hasPromo?: boolean }) {
           </Link>
 
           <div className="flex items-center justify-end gap-1">
+            {/*
+             * Desktop only. On a phone the header has four controls in 390px
+             * and a fifth would push the wordmark off centre, so the phone
+             * gets the labelled version in the menu instead — which is also
+             * the more discoverable of the two.
+             *
+             * `inverted` is threaded in because over the hero the header is
+             * transparent with white text, and the toggle's own hairline and
+             * faint-ink colours vanish against a photograph.
+             */}
+            <ThemeToggle
+              className={cn(
+                "mr-1 hidden lg:inline-flex",
+                inverted && "border-white/25",
+              )}
+              inverted={inverted}
+            />
             <Link
               href="/shop"
               aria-label="Search the shop"
@@ -234,6 +257,12 @@ export function SiteHeader({ hasPromo = false }: { hasPromo?: boolean }) {
            * fastest path to a human should not be two taps and an inference.
            */}
           <div className="mt-auto flex flex-col gap-4 pt-8">
+            <div>
+              <p className="text-eyebrow text-ink-muted mb-2 uppercase">
+                Theme
+              </p>
+              <ThemeToggle variant="full" />
+            </div>
             {wa && (
               <Button asChild size="lg" variant="secondary" onClick={closeMenu}>
                 <a

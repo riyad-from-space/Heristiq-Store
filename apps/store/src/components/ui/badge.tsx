@@ -3,9 +3,9 @@ import { availabilityLabel, type Availability } from "@/lib/erp/types";
 
 const tones = {
   neutral: "bg-paper/90 text-ink border-line",
-  gold: "bg-gold-wash text-gold-deep border-gold/30",
+  gold: "bg-gold-wash text-gold-strong border-gold/30",
   warn: "bg-paper/90 text-warn border-warn/30",
-  sea: "bg-sea text-bone border-transparent",
+  sea: "bg-inverted text-on-inverted border-transparent",
 } as const;
 
 export function Badge({

@@ -17,7 +17,7 @@ export function DraftNotice() {
   if (missing.length === 0) return null;
 
   return (
-    <div className="border-warn/40 bg-warn/5 flex items-start gap-3 border border-dashed px-4 py-3">
+    <div className="border-warn/40 bg-warn-wash flex items-start gap-3 border border-dashed px-4 py-3">
       <AlertTriangle size={16} className="text-warn mt-0.5 shrink-0" />
       <p className="text-warn text-copy-xs">
         <strong className="font-medium">Draft.</strong> This policy is missing

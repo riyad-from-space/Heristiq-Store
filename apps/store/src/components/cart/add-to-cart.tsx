@@ -50,7 +50,7 @@ export function AddToCart({
     <div className={className}>
       <div className="flex flex-col gap-3 sm:flex-row">
         <div
-          className="border-line-strong flex items-center justify-between border sm:w-32"
+          className="border-control flex items-center justify-between border sm:w-32"
           role="group"
           aria-label="Quantity"
         >

@@ -71,7 +71,7 @@ export function CartView({ terms }: { terms: DeliveryTerms }) {
           </dl>
 
           {gap !== null && (
-            <p className="bg-gold-wash text-gold-deep mt-5 px-3 py-2.5 text-copy-xs">
+            <p className="bg-gold-wash text-gold-strong mt-5 px-3 py-2.5 text-copy-xs">
               Add {taka(gap)} more for free delivery.
             </p>
           )}
@@ -165,7 +165,7 @@ function CartLineRow({
 
         <div className="mt-4 flex items-end justify-between gap-4">
           <div
-            className="border-line-strong flex items-center border"
+            className="border-control flex items-center border"
             role="group"
             aria-label={`Quantity of ${line.name}`}
           >

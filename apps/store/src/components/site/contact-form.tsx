@@ -42,7 +42,7 @@ export function ContactForm({ orderReference = "" }: { orderReference?: string }
 
   if (sent) {
     return (
-      <div className="border-success/30 bg-success/5 border px-5 py-8 text-center">
+      <div className="border-success/30 bg-success-wash border px-5 py-8 text-center">
         <CheckCircle2 size={24} className="text-success mx-auto" />
         <p className="font-display mt-4 text-display-s">Message sent</p>
         <p className="text-ink-muted mx-auto mt-2 max-w-sm text-copy-sm">
@@ -82,7 +82,7 @@ export function ContactForm({ orderReference = "" }: { orderReference?: string }
       {formError && (
         <p
           role="alert"
-          className="border-danger/40 bg-danger/5 text-danger border px-4 py-3 text-sm"
+          className="border-danger/40 bg-danger-wash text-danger border px-4 py-3 text-sm"
         >
           {formError}
         </p>

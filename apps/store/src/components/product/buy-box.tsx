@@ -39,7 +39,7 @@ export async function BuyBox({ product, url }: { product: Product; url: string }
       )}
 
       {preOrder && (
-        <div className="border-sea/20 bg-sea/5 mb-5 border px-4 py-3">
+        <div className="border-info-line bg-info-wash mb-5 border px-4 py-3">
           <p className="text-sm font-medium">Sold out — available to pre-order</p>
           <p className="text-ink-muted mt-1 text-copy-sm">
             Pay a small advance now and the balance to the courier on delivery.

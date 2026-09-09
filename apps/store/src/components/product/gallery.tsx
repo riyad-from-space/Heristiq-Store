@@ -137,7 +137,7 @@ export function Gallery({
             <div className="flex items-center justify-end p-4">
               <Dialog.Close
                 aria-label="Close"
-                className="text-bone grid size-11 place-items-center"
+                className="text-on-inverted grid size-11 place-items-center"
               >
                 <X size={22} />
               </Dialog.Close>
@@ -168,18 +168,18 @@ export function Gallery({
                   onClick={() =>
                     setIndex((i) => (i - 1 + shots.length) % shots.length)
                   }
-                  className="text-bone grid size-11 place-items-center"
+                  className="text-on-inverted grid size-11 place-items-center"
                 >
                   <ChevronLeft size={24} />
                 </button>
-                <span className="text-bone/70 text-xs tnum">
+                <span className="text-on-inverted/70 text-xs tnum">
                   {index + 1} / {shots.length}
                 </span>
                 <button
                   type="button"
                   aria-label="Next image"
                   onClick={() => setIndex((i) => (i + 1) % shots.length)}
-                  className="text-bone grid size-11 place-items-center"
+                  className="text-on-inverted grid size-11 place-items-center"
                 >
                   <ChevronRight size={24} />
                 </button>

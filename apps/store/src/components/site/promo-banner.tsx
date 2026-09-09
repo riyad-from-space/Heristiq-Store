@@ -17,11 +17,11 @@ export function PromoBanner({ promo }: { promo: PromoSetting }) {
   );
 
   return (
-    <div className="bg-sea text-bone relative z-50 flex min-h-9 items-center justify-center px-4 text-center">
+    <div className="bg-inverted text-on-inverted relative z-50 flex min-h-9 items-center justify-center px-4 text-center">
       {promo.href ? (
         <Link
           href={promo.href}
-          className="decoration-gold-wash/50 underline-offset-4 hover:underline"
+          className="decoration-gold-pale/50 underline-offset-4 hover:underline"
         >
           {content}
         </Link>

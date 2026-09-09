@@ -90,7 +90,7 @@ export function TrackForm({
       </form>
 
       {result && !result.ok && (
-        <p role="alert" className="border-danger/30 bg-danger/5 text-danger mt-8 border px-4 py-3 text-copy-sm">
+        <p role="alert" className="border-danger/30 bg-danger-wash text-danger mt-8 border px-4 py-3 text-copy-sm">
           {result.error}
         </p>
       )}

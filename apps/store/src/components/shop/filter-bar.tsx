@@ -193,7 +193,7 @@ function Chip({
         "inline-flex min-h-9 items-center rounded-sm border px-3 text-xs transition-colors",
         active
           ? "border-ink bg-ink text-bone"
-          : "border-line hover:border-line-strong hover:bg-shell",
+          : "border-line hover:border-control hover:bg-shell",
       )}
     >
       {children}

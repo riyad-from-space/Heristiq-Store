@@ -173,63 +173,22 @@ export function ogImageUrl(id: string) {
   return `https://res.cloudinary.com/${cloud}/image/upload/f_jpg,q_auto,w_1200,h_630,c_fill,g_auto/${publicId(id)}`;
 }
 
+
 /*
  * ---------------------------------------------------------------- placeholders
  *
- * Retail prices and photography are both still to come, so the site has to look
- * finished without either. An unset image renders a designed tile — bone ground,
- * a gold monogram, the SKU — rather than a broken-image icon. It reads as
- * "photograph pending", which is true, instead of as a bug.
+ * The empty state moved OUT of this module, to
+ * components/ui/placeholder-tile.tsx.
+ *
+ * It used to be a function here that built an SVG data URI with literal hex —
+ * #fffdfa paper, #e5ddd0 hairline, #a4854c monogram — and handed it to an
+ * <img src>. That cannot be themed: a data URI is opaque to CSS, so every one
+ * of those colours was frozen at a value chosen for a bone-coloured page, and
+ * in dark mode each tile would have rendered as a bright white rectangle.
+ * With no photographs in the repo yet, that is every image on the site.
+ *
+ * The replacement is inline SVG carrying `fill-paper` / `stroke-line` classes,
+ * which compile to `var(--color-*)` and therefore follow the active theme with
+ * no second copy of the palette. ProductImage picks between a real <img> and
+ * that tile.
  */
-const PLACEHOLDER_RATIO: Record<ImageCrop, number> = {
-  square: 1,
-  portrait: 1.25,
-  wide: 0.5625,
-  natural: 1.25,
-};
-
-export function placeholderDataUri(
-  crop: ImageCrop = "portrait",
-  label?: string,
-) {
-  const w = 800;
-  const h = Math.round(w * PLACEHOLDER_RATIO[crop]);
-
-  /*
-   * The monogram is always the brand H. An earlier version took the first
-   * letter of the Cloudinary path, which produced a "W" on every waist chain
-   * and an "S" on every social tile — a letter that means nothing to a
-   * customer. The optional label underneath is the SKU, which does.
-   */
-  /*
-   * Paper, not shell — with a hairline frame.
-   *
-   * The fill used to be #f2ece1, which IS --color-shell, so on the two
-   * sections with a shell background (the motif story and the image wells
-   * themselves) the tile was invisible and the page read as a large empty
-   * void rather than a photograph that has not been uploaded. Paper with a
-   * line-strong border reads as a deliberate empty frame on every background
-   * the site has.
-   */
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
-<rect width="${w}" height="${h}" fill="#fffdfa"/>
-<rect x="0.75" y="0.75" width="${w - 1.5}" height="${h - 1.5}" fill="none" stroke="#e5ddd0" stroke-width="1.5"/>
-<circle cx="${w / 2}" cy="${h / 2}" r="${w * 0.16}" fill="none" stroke="#d3c8b6" stroke-width="1.5"/>
-<text x="${w / 2}" y="${h / 2}" fill="#a4854c" font-family="Georgia,serif" font-size="${w * 0.12}" text-anchor="middle" dominant-baseline="central">H</text>${
-    label
-      ? `
-<text x="${w / 2}" y="${h / 2 + w * 0.23}" fill="#a29a8e" font-family="Helvetica,Arial,sans-serif" font-size="${w * 0.026}" letter-spacing="${w * 0.008}" text-anchor="middle">${escapeXml(label.toUpperCase())}</text>`
-      : ""
-  }
-</svg>`;
-
-  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
-}
-
-function escapeXml(value: string) {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}

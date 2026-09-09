@@ -6,6 +6,7 @@ import { SiteHeader } from "@/components/site/site-header";
 import { SiteFooter } from "@/components/site/site-footer";
 import { site } from "@/config/site";
 import { promoSettings } from "@/lib/settings";
+import { THEME_COLOR, THEME_SCRIPT } from "@/lib/theme";
 import "./globals.css";
 
 /*
@@ -54,15 +55,64 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#faf7f2",
+  /*
+   * One theme-colour per scheme, so the browser chrome above the page matches
+   * it. Verified against the installed docs
+   * (node_modules/next/dist/docs/01-app/03-api-reference/04-functions/generate-viewport.md)
+   * — this version emits one <meta name="theme-color" media="..."> per entry.
+   *
+   * These cover `system` and nothing else, because metadata is static and
+   * prefers-color-scheme is all it can ask about. A customer on a light phone
+   * who explicitly chose dark would still get a bone-coloured browser bar
+   * above a dark page, so theme-provider.tsx patches an unmediated tag on the
+   * client, where the override is actually known.
+   */
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: THEME_COLOR.light },
+    { media: "(prefers-color-scheme: dark)", color: THEME_COLOR.dark },
+  ],
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   const promo = await promoSettings();
 
   return (
-    <html lang="en" className={`${fraunces.variable} ${inter.variable}`}>
+    /*
+     * suppressHydrationWarning is on <html> and nowhere else.
+     *
+     * The pre-paint script below sets `data-theme` on this element before
+     * React ever sees it, so the DOM React hydrates against has an attribute
+     * the server never rendered. Without this, React reports a mismatch on
+     * every page load for anyone who has chosen a theme.
+     *
+     * Its blast radius is exactly one level deep — attributes and text of
+     * <html> itself, not the tree inside it — so this does not hide genuine
+     * mismatches in the app. Putting it on <body> or lower would; that is the
+     * common mistake with this prop.
+     */
+    <html
+      lang="en"
+      className={`${fraunces.variable} ${inter.variable}`}
+      suppressHydrationWarning
+    >
       <head>
+        {/*
+         * Theme, applied before first paint.
+         *
+         * This must be inline, synchronous, and in <head> ABOVE the
+         * stylesheet-consuming body. Anything deferred — an external file, a
+         * React effect, next/script with any strategy — runs after the
+         * browser has painted, which is the flash of light theme this exists
+         * to prevent. On a slow Bangladeshi mobile connection that flash is
+         * not a flicker; it is a second of white before the shop appears.
+         *
+         * It sets an attribute only for an explicit light/dark choice and
+         * leaves it off for `system`, so the media query in globals.css
+         * resolves that case — which is what makes the theme correct with
+         * JavaScript disabled too. See lib/theme.ts.
+         */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+
         {/*
          * The no-JavaScript half of the scroll-reveal guardrail. (The
          * reduced-motion half is a media query in globals.css.)

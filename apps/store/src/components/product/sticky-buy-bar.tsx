@@ -122,7 +122,7 @@ export function StickyBuyBar({
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="Ask about this piece on WhatsApp"
-                  className="border-line-strong text-ink hover:bg-shell grid size-12 shrink-0 place-items-center rounded-sm border transition-colors"
+                  className="border-control text-ink hover:bg-shell grid size-12 shrink-0 place-items-center rounded-sm border transition-colors"
                 >
                   <WhatsAppIcon size={19} />
                 </a>
@@ -132,7 +132,7 @@ export function StickyBuyBar({
                 <button
                   type="button"
                   onClick={onAdd}
-                  className="bg-ink text-bone hover:bg-sea duration-quick ease-out-soft focus-visible:outline-gold inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-sm px-5 text-sm font-medium tracking-wide transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:active:scale-[0.98]"
+                  className="bg-ink text-bone hover:bg-ink-hover duration-quick ease-out-soft focus-visible:outline-gold inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-sm px-5 text-sm font-medium tracking-wide transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:active:scale-[0.98]"
                 >
                   {added ? (
                     <>

@@ -46,7 +46,7 @@ export function Section({
       — and nothing here needs a ref. Everything else is identical between
       <section> and <div>. */
 Omit<ComponentProps<"section">, "ref"> & {
-  tone?: "bone" | "shell" | "sea" | "paper";
+  tone?: "bone" | "shell" | "inverted" | "paper";
   spacing?: "default" | "tight" | "none";
   as?: "section" | "div";
 }) {
@@ -57,7 +57,7 @@ Omit<ComponentProps<"section">, "ref"> & {
         spacing === "tight" && "py-section-tight",
         tone === "shell" && "bg-shell",
         tone === "paper" && "bg-paper",
-        tone === "sea" && "bg-sea text-bone",
+        tone === "inverted" && "bg-inverted text-on-inverted",
         className,
       )}
       {...props}
@@ -86,7 +86,7 @@ export function Eyebrow({
       <span
         className={cn(
           "text-eyebrow font-medium uppercase",
-          onDark ? "text-gold-wash/80" : "text-ink-muted",
+          onDark ? "text-gold-pale/80" : "text-ink-muted",
         )}
       >
         {children}
@@ -173,14 +173,14 @@ export function SectionHeader({
           {eyebrow}
         </Eyebrow>
       )}
-      <SectionHeading as={as} size={size} className={cn(onDark && "text-bone")}>
+      <SectionHeading as={as} size={size} className={cn(onDark && "text-on-inverted")}>
         {title}
       </SectionHeading>
       {lede && (
         <p
           className={cn(
             "mt-5 text-copy",
-            onDark ? "text-bone/70" : "text-ink-muted",
+            onDark ? "text-on-inverted/70" : "text-ink-muted",
           )}
         >
           {lede}

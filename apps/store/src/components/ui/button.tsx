@@ -13,9 +13,16 @@ import { cn } from "@/lib/utils";
  *   secondary — an outlined alternative next to it
  *   quiet     — text with a rule under it; for "see all" and inline links
  *
- * On the sea/hero ground, where the three above have no contrast:
+ * On a PERMANENTLY dark surface — the hero photograph and the inverted
+ * bands — where the three above have no contrast:
  *   gold      — the primary action over a photograph
  *   onDark    — the outlined alternative beside it
+ *
+ * `onDark` keeps literal whites rather than tokens, and that is correct now
+ * that the palette themes: the surfaces it sits on are dark in BOTH themes
+ * (a photograph's brightness does not follow the theme), so theming it would
+ * make it drift off its own ground. It is not interchangeable with
+ * `secondary`, which is token-driven and follows the page.
  *
  * min-h-11 (44px) everywhere. Apple's touch minimum, and this is a phone site.
  *
@@ -33,10 +40,10 @@ const base =
   "disabled:pointer-events-none disabled:opacity-40";
 
 const variants = {
-  primary: "bg-ink text-bone hover:bg-sea rounded-sm",
+  primary: "bg-ink text-bone hover:bg-ink-hover rounded-sm",
   secondary:
-    "border border-line-strong bg-transparent text-ink hover:border-ink hover:bg-shell rounded-sm",
-  gold: "bg-gold text-white hover:bg-gold-deep rounded-sm",
+    "border border-control bg-transparent text-ink hover:border-ink hover:bg-shell rounded-sm",
+  gold: "bg-gold text-white hover:bg-gold-strong rounded-sm",
   quiet:
     "text-ink underline decoration-line-strong decoration-1 underline-offset-4 hover:decoration-gold px-0",
   onDark:

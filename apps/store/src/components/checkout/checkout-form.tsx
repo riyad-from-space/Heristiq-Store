@@ -197,7 +197,7 @@ export function CheckoutForm({
         {formError && (
           <div
             role="alert"
-            className="border-danger/40 bg-danger/5 text-danger border px-4 py-3 text-sm"
+            className="border-danger/40 bg-danger-wash text-danger border px-4 py-3 text-sm"
           >
             <p className="font-medium">{formError}</p>
             {problems.length > 0 && (

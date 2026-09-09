@@ -1,9 +1,6 @@
 import { cn } from "@/lib/utils";
-import {
-  cloudinarySrcSet,
-  placeholderDataUri,
-  type ImageCrop,
-} from "@/lib/cloudinary";
+import { cloudinarySrcSet, type ImageCrop } from "@/lib/cloudinary";
+import { PlaceholderTile } from "@/components/ui/placeholder-tile";
 import type { ProductImage as ProductImageType } from "@/lib/erp/types";
 
 /*
@@ -54,32 +51,46 @@ export function ProductImage({
 }) {
   const label = alt ?? image?.alt ?? "";
   const remote = image ? cloudinarySrcSet(image.id, { crop, maxWidth }) : null;
-  const src = remote?.src ?? placeholderDataUri(crop, placeholderLabel);
 
   return (
     <div
       className={cn(
-        "relative overflow-hidden bg-shell",
+        "bg-shell relative overflow-hidden",
         RATIO[crop],
         className,
       )}
     >
-      <img
-        src={src}
-        srcSet={remote?.srcSet}
-        sizes={remote ? sizes : undefined}
-        alt={label}
-        loading={priority ? "eager" : "lazy"}
-        decoding={priority ? "sync" : "async"}
-        // fetchPriority is what actually moves the LCP image up the queue;
-        // loading="eager" alone still leaves it behind the CSS.
-        fetchPriority={priority ? "high" : "auto"}
-        className={cn(
-          "h-full w-full object-cover",
-          crop === "natural" && "h-auto",
-          imgClassName,
-        )}
-      />
+      {remote ? (
+        <img
+          src={remote.src}
+          srcSet={remote.srcSet}
+          sizes={sizes}
+          alt={label}
+          loading={priority ? "eager" : "lazy"}
+          decoding={priority ? "sync" : "async"}
+          // fetchPriority is what actually moves the LCP image up the queue;
+          // loading="eager" alone still leaves it behind the CSS.
+          fetchPriority={priority ? "high" : "auto"}
+          className={cn(
+            "h-full w-full object-cover",
+            crop === "natural" && "h-auto",
+            imgClassName,
+          )}
+        />
+      ) : (
+        /*
+         * No photograph. Inline SVG rather than the old <img> pointing at an
+         * SVG data URI, so the tile's colours come from the theme tokens
+         * instead of being baked in as hex — see placeholder-tile.tsx. This is
+         * currently every image on the site.
+         */
+        <PlaceholderTile
+          crop={crop}
+          label={placeholderLabel}
+          alt={label || undefined}
+          className={imgClassName}
+        />
+      )}
     </div>
   );
 }

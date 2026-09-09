@@ -76,15 +76,15 @@ export function HeroBackdrop({
           className="absolute inset-0"
           style={{
             backgroundImage:
-              "radial-gradient(ellipse 80% 60% at 70% 15%, rgba(164,133,76,0.28), transparent 70%)," +
-              "radial-gradient(ellipse 60% 50% at 10% 90%, rgba(47,71,83,0.9), transparent 70%)",
+              "radial-gradient(ellipse 80% 60% at 70% 15%, var(--hero-glow), transparent 70%)," +
+              "radial-gradient(ellipse 60% 50% at 10% 90%, var(--hero-depth), transparent 70%)",
           }}
         />
         <div
           className="absolute inset-0 opacity-[0.35]"
           style={{
             backgroundImage:
-              "radial-gradient(rgba(250,247,242,0.55) 0.5px, transparent 0.5px)",
+              "radial-gradient(var(--hero-star) 0.5px, transparent 0.5px)",
             backgroundSize: "34px 34px",
           }}
         />

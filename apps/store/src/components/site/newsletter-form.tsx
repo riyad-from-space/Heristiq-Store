@@ -51,7 +51,7 @@ export function NewsletterForm({ className }: { className?: string }) {
         });
       }}
     >
-      <div className="flex items-center border-b border-white/25 focus-within:border-gold-wash">
+      <div className="flex items-center border-b border-white/25 focus-within:border-gold-pale">
         <label htmlFor="newsletter-email" className="sr-only">
           Email address
         </label>
@@ -68,13 +68,13 @@ export function NewsletterForm({ className }: { className?: string }) {
           }}
           /* text-base: iOS Safari zooms the page for any focused input under
              16px, and this site is overwhelmingly phones. */
-          className="min-h-11 w-full bg-transparent text-base text-bone placeholder:text-bone/40 focus:outline-none sm:text-sm"
+          className="min-h-11 w-full bg-transparent text-base text-on-inverted placeholder:text-on-inverted/40 focus:outline-none sm:text-sm"
         />
         <button
           type="submit"
           aria-label="Subscribe"
           disabled={pending}
-          className="grid size-11 shrink-0 place-items-center text-bone/70 transition hover:text-bone disabled:opacity-50"
+          className="grid size-11 shrink-0 place-items-center text-on-inverted/70 transition hover:text-on-inverted disabled:opacity-50"
         >
           {pending ? (
             <Loader2 size={18} className="animate-spin" />
@@ -86,23 +86,23 @@ export function NewsletterForm({ className }: { className?: string }) {
 
       <p aria-live="polite" className="min-h-5 text-xs">
         {state === "invalid" && (
-          <span className="text-gold-wash">
+          <span className="text-gold-pale">
             That does not look like an email address.
           </span>
         )}
         {state === "queued" && (
-          <span className="text-bone/60">
+          <span className="text-on-inverted/60">
             Thank you — we will email you when something new lands.
           </span>
         )}
         {state === "demo" && (
-          <span className="text-bone/60">
+          <span className="text-on-inverted/60">
             Demo mode: no database configured, so this was logged rather than
             saved.
           </span>
         )}
         {state === "failed" && (
-          <span className="text-gold-wash">
+          <span className="text-gold-pale">
             That did not save. Please try again in a moment.
           </span>
         )}

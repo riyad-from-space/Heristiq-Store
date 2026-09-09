@@ -62,7 +62,7 @@ export default async function OrderPage({
          * looks real for an order nobody will ever pack is the one outcome
          * this whole flow must not produce.
          */
-        <div className="border-warn/40 bg-warn/5 text-warn mb-8 border border-dashed px-4 py-3 text-copy-sm">
+        <div className="border-warn/40 bg-warn-wash text-warn mb-8 border border-dashed px-4 py-3 text-copy-sm">
           <strong className="font-medium">Demo mode.</strong> No ERP credentials
           are configured, so this order exists only in this server&apos;s memory
           and nobody has been notified. Set <code>SUPABASE_URL</code> and{" "}
@@ -71,7 +71,7 @@ export default async function OrderPage({
       )}
 
       <div className="flex items-center gap-3">
-        <span className="bg-success/10 text-success grid size-10 shrink-0 place-items-center rounded-full">
+        <span className="bg-success-wash text-success grid size-10 shrink-0 place-items-center rounded-full">
           <Check size={20} strokeWidth={2.5} />
         </span>
         <Eyebrow rule={false}>Order placed</Eyebrow>
@@ -93,7 +93,7 @@ export default async function OrderPage({
       </p>
 
       {order.hasPreOrder && (
-        <div className="border-sea/20 bg-sea/5 mt-6 border px-4 py-3">
+        <div className="border-info-line bg-info-wash mt-6 border px-4 py-3">
           <p className="text-sm font-medium">This order includes a pre-order</p>
           <p className="text-ink-muted mt-1 text-copy-sm">
             One piece is being restocked. We will confirm the date when we call,

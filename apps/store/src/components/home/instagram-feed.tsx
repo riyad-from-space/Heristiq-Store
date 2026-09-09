@@ -56,7 +56,7 @@ export function InstagramFeed() {
               sizes="(min-width: 640px) 17vw, 33vw"
               maxWidth={640}
             />
-            <span className="absolute inset-0 grid place-items-center bg-sea/0 text-bone opacity-0 transition group-hover:bg-sea/40 group-hover:opacity-100">
+            <span className="absolute inset-0 grid place-items-center bg-sea/0 text-on-inverted opacity-0 transition group-hover:bg-sea/40 group-hover:opacity-100">
               <InstagramIcon size={18} />
             </span>
           </a>

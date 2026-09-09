@@ -64,7 +64,7 @@ export async function HowItWorks() {
   ];
 
   return (
-    <Section tone="sea" as="div">
+    <Section tone="inverted" as="div">
       <Container>
         <Reveal>
           <SectionHeader
@@ -87,16 +87,16 @@ export async function HowItWorks() {
               >
                 {step.n}
               </span>
-              <h3 className="text-bone mt-3 text-sm font-medium">
+              <h3 className="text-on-inverted mt-3 text-sm font-medium">
                 {step.title}
               </h3>
-              <p className="text-copy-sm text-bone/70 mt-2">{step.body}</p>
+              <p className="text-copy-sm text-on-inverted/70 mt-2">{step.body}</p>
             </StaggerItem>
           ))}
         </StaggerGrid>
 
-        <Reveal className="border-bone/10 mt-12 flex flex-col gap-6 border-t pt-8 sm:mt-16 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-copy-sm text-bone/70 max-w-md">
+        <Reveal className="border-on-inverted/10 mt-12 flex flex-col gap-6 border-t pt-8 sm:mt-16 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-copy-sm text-on-inverted/70 max-w-md">
             Delivery is {taka(terms.insideDhakaFee)} inside Dhaka and{" "}
             {taka(terms.outsideDhakaFee)} outside
             {terms.freeThreshold > 0 && (
