@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { adminState } from "@/lib/admin";
 import type { StorefrontOrderStatus } from "@/lib/store-types";
@@ -14,7 +15,12 @@ import type { StorefrontOrderStatus } from "@/lib/store-types";
  * RLS would refuse them too, but a silent no-op from RLS is a worse experience
  * than an explicit refusal, and defence in depth is the point.
  *
- * Deliberately NOT here: anything that moves stock. That is post_sale()'s job
+ * Recording a delivered order as a sale IS here now, as recordSale below —
+ * and it is the one action in this file that moves stock, by calling
+ * convert_storefront_order_to_sale, which calls post_sale. Everything else
+ * still only changes a status.
+ *
+ * Otherwise deliberately NOT here: anything that moves stock. That is post_sale()'s job
  * on the ERP side, reached through the normal sale flow — a storefront order
  * becomes stock movement only when it is converted to a sale.
  */
@@ -117,6 +123,50 @@ export async function rejectAdvance(formData: FormData): Promise<void> {
  * record all live there (apps/store/src/lib/courier/dispatch.ts), and a second
  * implementation would be a second set of bugs. One tap, as the brief asked.
  */
+/**
+ * Record a delivered website order as an ERP sale.
+ *
+ * The step that makes the profit reports true. Until this exists, revenue,
+ * COGS, margin and stock all exclude every online order, and the owner has to
+ * re-key each delivered parcel on the Sales screen from memory.
+ *
+ * A button rather than something that fires automatically when the status
+ * becomes `delivered`, because "delivered" is a button a tired person taps on
+ * a phone and a stock movement is not something to write by accident. The
+ * database enforces the rest: convert_storefront_order_to_sale refuses an
+ * order that is not delivered, refuses a caller who is not an admin, and — via
+ * a unique constraint on sales.storefront_order_id — refuses to do it twice,
+ * so a double tap on a slow connection cannot double-count revenue.
+ *
+ * The error is surfaced rather than swallowed. Every other action here fails
+ * silently on purpose (a status that did not change is visible on the next
+ * render), but this one moves money and stock: if it did not happen, the owner
+ * has to know, or they will believe their reports.
+ */
+export async function recordSale(formData: FormData): Promise<void> {
+  await guard();
+
+  const id = String(formData.get("id") ?? "");
+  if (!id) return;
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("convert_storefront_order_to_sale", {
+    p_order_id: id,
+  });
+
+  if (error) {
+    /* The RPC's messages are written for this reader — "is placed, not
+       delivered", "is already recorded as a sale" — so they are shown as-is
+       rather than replaced with something vaguer. */
+    redirect(`/orders/${id}?error=${encodeURIComponent(error.message)}`);
+  }
+
+  revalidatePath(`/orders/${id}`);
+  revalidatePath("/orders");
+  revalidatePath("/sales");
+  revalidatePath("/stock");
+}
+
 export async function pushToCourier(
   formData: FormData,
 ): Promise<string | null> {

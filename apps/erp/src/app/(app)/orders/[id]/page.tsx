@@ -10,7 +10,7 @@ import {
   PAYMENT_STATE_LABEL,
   type StorefrontOrder,
 } from "@/lib/store-types";
-import { setOrderStatus, verifyAdvance, rejectAdvance } from "../actions";
+import { setOrderStatus, verifyAdvance, rejectAdvance, recordSale } from "../actions";
 import { PushToCourierButton } from "./order-actions";
 
 /*
@@ -49,8 +49,16 @@ const NEXT_STATUS: Record<string, { to: string; label: string }[]> = {
   returned: [{ to: "placed", label: "Reopen" }],
 };
 
-export default async function OrderPage({ params }: PageProps<"/orders/[id]">) {
+export default async function OrderPage({
+  params,
+  searchParams: searchParamsPromise,
+}: PageProps<"/orders/[id]">) {
   const { id } = await params;
+  /* recordSale redirects back here with ?error= when the database refuses —
+     see the note on that action. */
+  const searchParams = await searchParamsPromise;
+  const errorMessage =
+    typeof searchParams?.error === "string" ? searchParams.error : null;
   const supabase = await createClient();
 
   const { data } = await supabase
@@ -61,6 +69,19 @@ export default async function OrderPage({ params }: PageProps<"/orders/[id]">) {
 
   if (!data) notFound();
   const order = data as unknown as StorefrontOrder;
+
+  /*
+   * Has this order already been recorded as a sale?
+   *
+   * Read rather than inferred from the order's own status: the link lives on
+   * sales.storefront_order_id (unique), so this is the single source of truth
+   * for "already done" and it cannot drift from what the RPC would allow.
+   */
+  const { data: sale } = await supabase
+    .from("sales")
+    .select("id, posted")
+    .eq("storefront_order_id", id)
+    .maybeSingle();
 
   const { data: events } = await supabase
     .from("storefront_order_events")
@@ -210,6 +231,48 @@ export default async function OrderPage({ params }: PageProps<"/orders/[id]">) {
         </div>
 
         <div className="flex flex-col gap-4">
+          {/*
+            * The accounting step, above "Next step" once it is due: recording the
+            * sale is what makes the reports true, and burying it under the status
+            * buttons is how it gets forgotten.
+            */}
+          {order.status === "delivered" && (
+            <Card>
+              <h2 className="text-sm font-semibold">Accounting</h2>
+              {sale ? (
+                <p className="mt-2 text-sm text-neutral-500">
+                  Recorded as a sale
+                  {sale.posted ? " and posted to stock" : " (not yet posted)"}.{" "}
+                  <a
+                    href={`/sales/${sale.id}`}
+                    className="underline underline-offset-4"
+                  >
+                    Open the sale
+                  </a>{" "}
+                  and add what the courier charged you, so the margin is right.
+                </p>
+              ) : (
+                <>
+                  <p className="mt-2 text-xs leading-relaxed text-neutral-500">
+                    This order is not in your sales, stock or profit figures yet.
+                    Recording it creates the sale and moves the stock — do it once
+                    the cash is actually in hand.
+                  </p>
+                  {errorMessage && (
+                    <p className="mt-2 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700 dark:bg-red-950/40 dark:text-red-300">
+                      {errorMessage}
+                    </p>
+                  )}
+                  <form action={recordSale} className="mt-3">
+                    <input type="hidden" name="id" value={order.id} />
+                    <button className="min-h-10 rounded-lg bg-neutral-900 px-3 text-sm font-medium text-white transition hover:bg-neutral-700 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200">
+                      Record as sale
+                    </button>
+                  </form>
+                </>
+              )}
+            </Card>
+          )}
           <Card>
             <h2 className="text-sm font-semibold">Next step</h2>
             <div className="mt-3 flex flex-wrap gap-2">
