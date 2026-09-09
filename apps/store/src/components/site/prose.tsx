@@ -70,7 +70,7 @@ export function ProseSection({
 /** A dated "last updated" line for policy pages. */
 export function LastUpdated({ date }: { date: string }) {
   return (
-    <p className="text-ink-faint border-line mt-12 border-t pt-6 text-xs">
+    <p className="text-stone-soft border-line mt-12 border-t pt-6 text-xs">
       Last updated {date}. We will post any change here.
     </p>
   );

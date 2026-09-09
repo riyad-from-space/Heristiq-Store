@@ -28,7 +28,7 @@ export function SizeGuideContent({
   return (
     <div className="space-y-6 text-copy-sm">
       {lengthInches && (
-        <p className="bg-gold-wash text-gold-strong flex items-start gap-3 px-4 py-3">
+        <p className="bg-rose-soft text-rose-deep flex items-start gap-3 px-4 py-3">
           <Ruler size={16} className="mt-0.5 shrink-0" strokeWidth={1.6} />
           <span>
             This piece adjusts from{" "}
@@ -42,7 +42,7 @@ export function SizeGuideContent({
 
       <div>
         <h3 className="text-sm font-medium">How to measure</h3>
-        <ol className="text-ink-muted mt-3 list-decimal space-y-2 pl-5">
+        <ol className="text-stone mt-3 list-decimal space-y-2 pl-5">
           <li>
             Decide where you want it to sit — most people wear it on the hip
             bone, a few inches below the natural waist.
@@ -62,7 +62,7 @@ export function SizeGuideContent({
       <div className="overflow-x-auto">
         <table className="w-full min-w-[26rem] text-left">
           <thead>
-            <tr className="border-line text-eyebrow text-ink-faint border-b uppercase">
+            <tr className="border-line text-eyebrow text-stone-soft border-b uppercase">
               <th scope="col" className="py-2 pr-4 font-medium">
                 Size
               </th>
@@ -83,8 +83,8 @@ export function SizeGuideContent({
                 <th scope="row" className="py-2.5 pr-4 font-medium">
                   {row.size}
                 </th>
-                <td className="text-ink-muted py-2.5 pr-4">{row.waist}</td>
-                <td className="text-ink-muted py-2.5 pr-4">{row.cm}</td>
+                <td className="text-stone py-2.5 pr-4">{row.waist}</td>
+                <td className="text-stone py-2.5 pr-4">{row.cm}</td>
                 <td className="py-2.5">{row.chain}</td>
               </tr>
             ))}
@@ -92,7 +92,7 @@ export function SizeGuideContent({
         </table>
       </div>
 
-      <p className="text-ink-muted text-xs">
+      <p className="text-stone text-xs">
         Between two sizes? Take the longer one — the extender shortens a chain,
         it cannot lengthen one.
       </p>

@@ -13,8 +13,11 @@ export function Container({
   return (
     <div
       className={cn(
-        "mx-auto w-full px-5 sm:px-8",
-        width === "default" && "max-w-6xl",
+        /* px-gutter is clamp(20px, 5vw, 56px) — one fluid gutter instead of a
+           breakpoint step, so a 360px phone and a 700px tablet each get a
+           margin in proportion to the text it is holding in. */
+        "mx-auto w-full px-gutter",
+        width === "default" && "max-w-wrap",
         width === "wide" && "max-w-[100rem]",
         width === "prose" && "max-w-2xl",
         className,
@@ -37,7 +40,7 @@ export function Container({
  */
 export function Section({
   className,
-  tone = "bone",
+  tone = "blush",
   spacing = "default",
   as: As = "section",
   ...props
@@ -46,17 +49,16 @@ export function Section({
       — and nothing here needs a ref. Everything else is identical between
       <section> and <div>. */
 Omit<ComponentProps<"section">, "ref"> & {
-  tone?: "bone" | "shell" | "inverted" | "paper";
-  spacing?: "default" | "tight" | "none";
+  tone?: "blush" | "sand" | "inverted" | "white";
+  spacing?: "default" | "none";
   as?: "section" | "div";
 }) {
   return (
     <As
       className={cn(
         spacing === "default" && "py-section",
-        spacing === "tight" && "py-section-tight",
-        tone === "shell" && "bg-shell",
-        tone === "paper" && "bg-paper",
+        tone === "sand" && "bg-sand",
+        tone === "white" && "bg-white",
         tone === "inverted" && "bg-inverted text-on-inverted",
         className,
       )}
@@ -66,33 +68,33 @@ Omit<ComponentProps<"section">, "ref"> & {
 }
 
 /**
- * The all-caps micro label with a gold rule, used above almost every section
- * heading. It is the one repeated brand mark on the site, so it lives here
- * rather than being re-typed with slightly different tracking each time.
+ * The kicker above a section heading.
+ *
+ * Was an all-caps label with a short gold rule beneath it — the old brand's
+ * signature. This design has no rule: the mockup's kicker is rose, semibold,
+ * lightly tracked, and that is the whole of it. The `rule` prop is gone
+ * rather than ignored, so nothing can ask for a mark that no longer exists.
  */
 export function Eyebrow({
   children,
-  rule = true,
   className,
   onDark = false,
 }: {
   children: ReactNode;
-  rule?: boolean;
   className?: string;
+  /** On the plum band, where rose-deep has too little contrast. */
   onDark?: boolean;
 }) {
   return (
-    <div className={cn("flex flex-col gap-3", className)}>
-      <span
-        className={cn(
-          "text-eyebrow font-medium uppercase",
-          onDark ? "text-gold-pale/80" : "text-ink-muted",
-        )}
-      >
-        {children}
-      </span>
-      {rule && <span className="gold-rule" aria-hidden />}
-    </div>
+    <span
+      className={cn(
+        "text-eyebrow font-semibold",
+        onDark ? "text-rose" : "text-rose-deep",
+        className,
+      )}
+    >
+      {children}
+    </span>
   );
 }
 
@@ -138,6 +140,7 @@ export function SectionHeader({
   eyebrow,
   title,
   lede,
+  action,
   as = "h2",
   size = "m",
   align = "start",
@@ -147,46 +150,62 @@ export function SectionHeader({
 }: {
   eyebrow?: ReactNode;
   title: ReactNode;
-  /** The paragraph under the heading. Kept narrow for a readable measure. */
+  /** The subtitle under the heading. */
   lede?: ReactNode;
+  /** A link or button pinned to the right, bottom-aligned with the heading. */
+  action?: ReactNode;
   as?: "h1" | "h2" | "h3";
   size?: "xl" | "l" | "m" | "s";
   align?: "start" | "center";
   onDark?: boolean;
   className?: string;
-  /** Anything extra below the lede — a link, a button row. */
   children?: ReactNode;
 }) {
   return (
     <div
       className={cn(
-        "flex max-w-xl flex-col",
-        align === "center" && "mx-auto items-center text-center",
+        /*
+         * The mockup's .sec-head: the heading block and its action sit on one
+         * row, bottom-aligned, and stack on a phone. `items-end` is what puts
+         * a "See all" link on the heading's baseline rather than floating it
+         * beside the block's centre.
+         */
+        "flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-5",
+        align === "center" && "sm:flex-col sm:items-center",
         className,
       )}
     >
-      {eyebrow && (
-        <Eyebrow
-          onDark={onDark}
-          className={cn("mb-5", align === "center" && "items-center")}
+      <div
+        className={cn(
+          "max-w-xl",
+          align === "center" && "mx-auto text-center",
+        )}
+      >
+        {eyebrow && (
+          <Eyebrow onDark={onDark} className="mb-3.5 block">
+            {eyebrow}
+          </Eyebrow>
+        )}
+        <SectionHeading
+          as={as}
+          size={size}
+          className={cn(onDark && "text-on-inverted")}
         >
-          {eyebrow}
-        </Eyebrow>
-      )}
-      <SectionHeading as={as} size={size} className={cn(onDark && "text-on-inverted")}>
-        {title}
-      </SectionHeading>
-      {lede && (
-        <p
-          className={cn(
-            "mt-5 text-copy",
-            onDark ? "text-on-inverted/70" : "text-ink-muted",
-          )}
-        >
-          {lede}
-        </p>
-      )}
-      {children}
+          {title}
+        </SectionHeading>
+        {lede && (
+          <p
+            className={cn(
+              "mt-2 text-copy",
+              onDark ? "text-on-inverted/80" : "text-stone",
+            )}
+          >
+            {lede}
+          </p>
+        )}
+        {children}
+      </div>
+      {action && <div className="shrink-0">{action}</div>}
     </div>
   );
 }

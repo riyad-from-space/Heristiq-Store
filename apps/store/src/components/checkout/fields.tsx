@@ -73,7 +73,7 @@ export function Field({
       >
         {label}
         {optional && (
-          <span className="text-ink-faint text-xs font-normal">Optional</span>
+          <span className="text-stone-soft text-xs font-normal">Optional</span>
         )}
       </label>
 
@@ -84,7 +84,7 @@ export function Field({
       </FieldContext.Provider>
 
       {hint && !error && (
-        <p id={htmlFor ? `${htmlFor}-hint` : undefined} className="text-ink-faint mt-2 text-copy-xs">
+        <p id={htmlFor ? `${htmlFor}-hint` : undefined} className="text-stone-soft mt-2 text-copy-xs">
           {hint}
         </p>
       )}
@@ -102,8 +102,8 @@ export function Field({
 }
 
 const control =
-  "w-full min-h-12 border border-control bg-paper px-3.5 text-base " +
-  "placeholder:text-ink-muted focus:border-ink focus:outline-none " +
+  "w-full min-h-12 border border-control bg-white px-3.5 text-base " +
+  "placeholder:text-stone focus:border-ink focus:outline-none " +
   "disabled:opacity-50 aria-invalid:border-danger";
 
 export function Input({ className, ...props }: ComponentProps<"input">) {
@@ -173,7 +173,7 @@ export function RadioCard({
       className={cn(
         "flex min-h-12 cursor-pointer items-center gap-3 border px-4 py-3 transition-colors",
         checked
-          ? "border-ink bg-paper"
+          ? "border-ink bg-white"
           : "border-line hover:border-control",
       )}
     >
@@ -189,7 +189,7 @@ export function RadioCard({
       <span className="min-w-0">
         <span className="block text-sm font-medium">{label}</span>
         {description && (
-          <span className="text-ink-muted mt-0.5 block text-copy-xs">
+          <span className="text-stone mt-0.5 block text-copy-xs">
             {description}
           </span>
         )}

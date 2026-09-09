@@ -52,8 +52,8 @@ export function CartView({ terms }: { terms: DeliveryTerms }) {
       </ul>
 
       <aside className="lg:sticky lg:top-28 lg:self-start">
-        <div className="border-line bg-paper border p-5 sm:p-6">
-          <h2 className="text-eyebrow text-ink-muted uppercase">Summary</h2>
+        <div className="border-line bg-white border p-5 sm:p-6">
+          <h2 className="text-eyebrow text-stone uppercase">Summary</h2>
 
           <dl className="mt-5 space-y-3 text-sm">
             <div className="flex items-baseline justify-between gap-4">
@@ -62,7 +62,7 @@ export function CartView({ terms }: { terms: DeliveryTerms }) {
             </div>
             <div className="flex items-baseline justify-between gap-4">
               <dt>Delivery</dt>
-              <dd className="text-ink-muted">
+              <dd className="text-stone">
                 {gap === null && terms.freeThreshold > 0
                   ? "Free"
                   : "At checkout"}
@@ -71,7 +71,7 @@ export function CartView({ terms }: { terms: DeliveryTerms }) {
           </dl>
 
           {gap !== null && (
-            <p className="bg-gold-wash text-gold-strong mt-5 px-3 py-2.5 text-copy-xs">
+            <p className="bg-rose-soft text-rose-deep mt-5 px-3 py-2.5 text-copy-xs">
               Add {taka(gap)} more for free delivery.
             </p>
           )}
@@ -96,7 +96,7 @@ export function CartView({ terms }: { terms: DeliveryTerms }) {
             )}
           </Button>
 
-          <p className="text-ink-muted mt-4 text-center text-copy-xs">
+          <p className="text-stone mt-4 text-center text-copy-xs">
             Cash on delivery · {terms.insideDays.min}–{terms.outsideDays.max}{" "}
             days
             {terms.freeThreshold > 0 && (
@@ -107,7 +107,7 @@ export function CartView({ terms }: { terms: DeliveryTerms }) {
 
         <Link
           href="/shop"
-          className="text-eyebrow text-ink-muted mt-6 block text-center uppercase underline decoration-1 underline-offset-8 hover:decoration-gold"
+          className="text-eyebrow text-stone mt-6 block text-center uppercase underline decoration-1 underline-offset-8 hover:decoration-rose"
         >
           Keep shopping
         </Link>
@@ -145,9 +145,9 @@ function CartLineRow({
                 {line.name}
               </Link>
             </h3>
-            <p className="text-ink-faint mt-1 text-xs">{line.sku}</p>
+            <p className="text-stone-soft mt-1 text-xs">{line.sku}</p>
             {line.isPreOrder && (
-              <Badge tone="sea" className="mt-2">
+              <Badge tone="inverted" className="mt-2">
                 Pre-order
               </Badge>
             )}
@@ -157,7 +157,7 @@ function CartLineRow({
             type="button"
             onClick={onRemove}
             aria-label={`Remove ${line.name}`}
-            className="text-ink-faint hover:text-danger -mt-2 -mr-2 grid size-10 shrink-0 place-items-center transition-colors"
+            className="text-stone-soft hover:text-danger -mt-2 -mr-2 grid size-10 shrink-0 place-items-center transition-colors"
           >
             <Trash2 size={16} />
           </button>
@@ -198,7 +198,7 @@ function CartLineRow({
               size="sm"
             />
             {line.qty > 1 && line.unitPrice !== null && (
-              <p className="text-ink-faint tnum mt-1 text-xs">
+              <p className="text-stone-soft tnum mt-1 text-xs">
                 {taka(line.unitPrice)} each
               </p>
             )}
@@ -212,9 +212,9 @@ function CartLineRow({
 function EmptyCart() {
   return (
     <div className="border-line flex flex-col items-center border border-dashed px-6 py-20 text-center">
-      <ShoppingBag size={24} className="text-ink-faint" strokeWidth={1.4} />
+      <ShoppingBag size={24} className="text-stone-soft" strokeWidth={1.4} />
       <p className="font-display mt-5 text-display-s">Your cart is empty</p>
-      <p className="text-ink-muted mt-2 max-w-xs text-copy-sm">
+      <p className="text-stone mt-2 max-w-xs text-copy-sm">
         Seven pieces in gold and silver, all of them cash on delivery.
       </p>
       <Button asChild size="lg" className="mt-8">

@@ -36,9 +36,9 @@ export function OrderSummary({
   const days = insideDhaka ? terms.insideDays : terms.outsideDays;
 
   return (
-    <div className="border-line bg-paper border">
+    <div className="border-line bg-white border">
       <div className="p-5 sm:p-6">
-        <h2 className="text-eyebrow text-ink-muted uppercase">Your order</h2>
+        <h2 className="text-eyebrow text-stone uppercase">Your order</h2>
 
         <ul className="mt-5 space-y-4">
           {cart.lines.map((line) => (
@@ -59,11 +59,11 @@ export function OrderSummary({
               <div className="flex min-w-0 flex-1 justify-between gap-3">
                 <div className="min-w-0">
                   <p className="text-sm leading-snug">{line.name}</p>
-                  <p className="text-ink-faint tnum mt-1 text-xs">
+                  <p className="text-stone-soft tnum mt-1 text-xs">
                     Qty {line.qty}
                   </p>
                   {line.isPreOrder && (
-                    <Badge tone="sea" className="mt-1.5">
+                    <Badge tone="inverted" className="mt-1.5">
                       Pre-order
                     </Badge>
                   )}
@@ -86,14 +86,14 @@ export function OrderSummary({
           <dt>
             Delivery
             {addressChosen && (
-              <span className="text-ink-faint ml-1.5 text-xs">
+              <span className="text-stone-soft ml-1.5 text-xs">
                 {insideDhaka ? "inside Dhaka" : "outside Dhaka"}
               </span>
             )}
           </dt>
           <dd className="tnum">
             {!addressChosen ? (
-              <span className="text-ink-muted text-xs">Pick a district</span>
+              <span className="text-stone text-xs">Pick a district</span>
             ) : deliveryFee === 0 ? (
               <span className="text-success">Free</span>
             ) : (
@@ -103,7 +103,7 @@ export function OrderSummary({
         </div>
 
         {gap !== null && (
-          <p className="bg-gold-wash text-gold-strong px-3 py-2 text-copy-xs">
+          <p className="bg-rose-soft text-rose-deep px-3 py-2 text-copy-xs">
             Add {taka(gap)} more and delivery is free.
           </p>
         )}
@@ -115,7 +115,7 @@ export function OrderSummary({
       </div>
 
       {addressChosen && (
-        <p className="text-ink-muted border-line border-t px-5 py-4 text-copy-xs sm:px-6">
+        <p className="text-stone border-line border-t px-5 py-4 text-copy-xs sm:px-6">
           Arrives in {dayRange(days.min, days.max)}. Pay the courier in cash
           when it reaches you.
         </p>

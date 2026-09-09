@@ -71,7 +71,7 @@ export default function AboutPage() {
               maxWidth={828}
               placeholderLabel="CELESTIAL"
             />
-            <p className="text-ink-faint mt-2 text-xs">Moons and stars</p>
+            <p className="text-stone-soft mt-2 text-xs">Moons and stars</p>
           </div>
           <div>
             <ProductImage
@@ -80,7 +80,7 @@ export default function AboutPage() {
               maxWidth={828}
               placeholderLabel="NAUTICAL"
             />
-            <p className="text-ink-faint mt-2 text-xs">Shells and the sea</p>
+            <p className="text-stone-soft mt-2 text-xs">Shells and the sea</p>
           </div>
         </div>
       </ProseSection>
@@ -115,7 +115,7 @@ export default function AboutPage() {
         <Button asChild size="lg" className="flex-1">
           <Link href="/shop">See the collection</Link>
         </Button>
-        <Button asChild size="lg" variant="secondary" className="flex-1">
+        <Button asChild size="lg" variant="ghost" className="flex-1">
           <Link href="/contact">Talk to us</Link>
         </Button>
       </div>

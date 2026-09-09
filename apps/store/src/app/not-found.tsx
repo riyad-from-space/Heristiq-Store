@@ -17,7 +17,7 @@ export default function NotFound() {
       <SectionHeading as="h1" size="l" className="mt-5">
         This page has wandered off
       </SectionHeading>
-      <p className="text-ink-muted mx-auto mt-4 max-w-sm text-copy-sm">
+      <p className="text-stone mx-auto mt-4 max-w-sm text-copy-sm">
         The link may be old, or the piece may have sold out and been retired.
         The collection is small — everything we make is one tap away.
       </p>
@@ -26,12 +26,12 @@ export default function NotFound() {
         <Button asChild size="lg">
           <Link href="/shop">See the collection</Link>
         </Button>
-        <Button asChild size="lg" variant="secondary">
+        <Button asChild size="lg" variant="ghost">
           <Link href="/">Back to the shop front</Link>
         </Button>
       </div>
 
-      <p className="text-ink-faint mt-10 text-xs">
+      <p className="text-stone-soft mt-10 text-xs">
         Looking for an order? <Link href="/track" className="underline underline-offset-4">Track it here</Link>
         {" · "}
         Need a hand? <Link href="/contact" className="underline underline-offset-4">Message us</Link>

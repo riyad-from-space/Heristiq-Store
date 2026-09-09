@@ -55,7 +55,7 @@ export function ProductImage({
   return (
     <div
       className={cn(
-        "bg-shell relative overflow-hidden",
+        "bg-sand relative overflow-hidden",
         RATIO[crop],
         className,
       )}
@@ -85,8 +85,8 @@ export function ProductImage({
          * currently every image on the site.
          */
         <PlaceholderTile
+          id={image?.id ?? placeholderLabel ?? ""}
           crop={crop}
-          label={placeholderLabel}
           alt={label || undefined}
           className={imgClassName}
         />

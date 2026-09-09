@@ -32,7 +32,7 @@ export async function BuyBox({ product, url }: { product: Product; url: string }
   return (
     <div className="mt-8">
       {!buyable && product.price === null && (
-        <p className="border-line bg-shell text-ink-muted mb-5 border px-4 py-3 text-sm">
+        <p className="border-line bg-sand text-stone mb-5 border px-4 py-3 text-sm">
           This piece is not priced yet. Message us and we will confirm the price
           and reserve one for you.
         </p>
@@ -41,7 +41,7 @@ export async function BuyBox({ product, url }: { product: Product; url: string }
       {preOrder && (
         <div className="border-info-line bg-info-wash mb-5 border px-4 py-3">
           <p className="text-sm font-medium">Sold out — available to pre-order</p>
-          <p className="text-ink-muted mt-1 text-copy-sm">
+          <p className="text-stone mt-1 text-copy-sm">
             Pay a small advance now and the balance to the courier on delivery.
             Restocks usually land within 2–3 weeks; we will confirm the date
             before taking anything.
@@ -54,7 +54,7 @@ export async function BuyBox({ product, url }: { product: Product; url: string }
           <AddToCart line={cartLineFor(product)} preOrder={preOrder} />
         )}
         {waHref && (
-          <Button asChild size="lg" variant="secondary">
+          <Button asChild size="lg" variant="ghost">
             <a href={waHref} target="_blank" rel="noopener noreferrer">
               <WhatsAppIcon size={18} />
               {buyable ? "Ask on WhatsApp" : "Message us about this piece"}
@@ -65,10 +65,10 @@ export async function BuyBox({ product, url }: { product: Product; url: string }
 
       <dl className="border-line mt-8 space-y-4 border-t pt-6 text-sm">
         <div className="flex gap-3">
-          <Truck size={17} className="text-gold mt-0.5 shrink-0" strokeWidth={1.6} />
+          <Truck size={17} className="text-rose mt-0.5 shrink-0" strokeWidth={1.6} />
           <div>
             <dt className="font-medium">Delivery</dt>
-            <dd className="text-ink-muted mt-1 leading-relaxed">
+            <dd className="text-stone mt-1 leading-relaxed">
               Inside Dhaka {dayRange(terms.insideDays.min, terms.insideDays.max)} ·{" "}
               {taka(terms.insideDhakaFee)}. Outside Dhaka{" "}
               {dayRange(terms.outsideDays.min, terms.outsideDays.max)} ·{" "}
@@ -83,12 +83,12 @@ export async function BuyBox({ product, url }: { product: Product; url: string }
         <div className="flex gap-3">
           <ShieldCheck
             size={17}
-            className="text-gold mt-0.5 shrink-0"
+            className="text-rose mt-0.5 shrink-0"
             strokeWidth={1.6}
           />
           <div>
             <dt className="font-medium">Cash on delivery</dt>
-            <dd className="text-ink-muted mt-1 leading-relaxed">
+            <dd className="text-stone mt-1 leading-relaxed">
               {preOrder
                 ? "Advance by bKash or Nagad, balance in cash to the courier."
                 : "Pay the courier in cash when it reaches you. No advance."}

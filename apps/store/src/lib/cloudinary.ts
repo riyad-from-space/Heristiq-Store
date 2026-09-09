@@ -187,7 +187,7 @@ export function ogImageUrl(id: string) {
  * in dark mode each tile would have rendered as a bright white rectangle.
  * With no photographs in the repo yet, that is every image on the site.
  *
- * The replacement is inline SVG carrying `fill-paper` / `stroke-line` classes,
+ * The replacement is inline SVG carrying `fill-white` / `stroke-line` classes,
  * which compile to `var(--color-*)` and therefore follow the active theme with
  * no second copy of the palette. ProductImage picks between a real <img> and
  * that tile.

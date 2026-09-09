@@ -57,14 +57,14 @@ export function ShareRow({
 
   return (
     <div className={cn("flex items-center gap-1", className)}>
-      <span className="text-eyebrow text-ink-faint mr-2 uppercase">Share</span>
+      <span className="text-eyebrow text-stone-soft mr-2 uppercase">Share</span>
 
       <a
         href={`https://wa.me/?text=${encodeURIComponent(text)}`}
         target="_blank"
         rel="noopener noreferrer"
         aria-label="Share on WhatsApp"
-        className="hover:bg-shell grid size-10 place-items-center rounded-sm transition"
+        className="hover:bg-sand grid size-10 place-items-center rounded-pill transition"
       >
         <WhatsAppIcon size={18} />
       </a>
@@ -79,7 +79,7 @@ export function ShareRow({
         target="_blank"
         rel="noopener noreferrer"
         aria-label="Share on Facebook or Messenger"
-        className="hover:bg-shell grid size-10 place-items-center rounded-sm transition"
+        className="hover:bg-sand grid size-10 place-items-center rounded-pill transition"
       >
         <MessengerIcon size={18} />
       </a>
@@ -88,7 +88,7 @@ export function ShareRow({
         type="button"
         onClick={copy}
         aria-label={copied ? "Link copied" : "Copy link"}
-        className="hover:bg-shell grid size-10 place-items-center rounded-sm transition"
+        className="hover:bg-sand grid size-10 place-items-center rounded-pill transition"
       >
         {copied ? (
           <Check size={17} className="text-success" />
@@ -101,7 +101,7 @@ export function ShareRow({
         type="button"
         onClick={share}
         aria-label="More sharing options"
-        className="hover:bg-shell grid size-10 place-items-center rounded-sm transition sm:hidden"
+        className="hover:bg-sand grid size-10 place-items-center rounded-pill transition sm:hidden"
       >
         <Share2 size={17} />
       </button>

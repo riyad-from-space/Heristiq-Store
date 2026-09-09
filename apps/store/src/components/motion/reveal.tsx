@@ -3,16 +3,20 @@
 import { motion, useReducedMotion } from "motion/react";
 import type { ReactNode } from "react";
 import {
-  DURATION,
-  EASE,
   revealVariants,
   riseVariants,
   staggerVariants,
-  VIEWPORT,
 } from "@/lib/motion";
 
 /*
- * Scroll reveals and stagger, as three small wrappers.
+ * The hero's entrance, as two small wrappers.
+ *
+ * This file used to export five: whole-section scroll reveals and staggered
+ * grids as well. The approved design deliberately removed them — one
+ * orchestrated moment on load, and interaction feedback everywhere else, on
+ * the grounds that fade-up-on-scroll applied to every section reads as
+ * generic. Only the hero animates now, so only the hero's two wrappers
+ * remain.
  *
  * These are the ONLY client components in the animation layer, and they take
  * their content as `children`. That matters: everything inside stays a server
@@ -45,43 +49,7 @@ import {
  * animation from running at all once hydration confirms the preference.
  */
 
-type RevealProps = {
-  children: ReactNode;
-  className?: string;
-  /** Seconds to wait before starting. Use sparingly. */
-  delay?: number;
-  /**
-   * Move without fading, for text that could be the LCP element. An element
-   * at opacity 0 is unpainted, so a fade defers the metric by its own
-   * duration. See riseVariants.
-   */
-  rise?: boolean;
-};
 
-/** A single block that fades and rises when it scrolls into view. */
-export function Reveal({
-  children,
-  className,
-  delay = 0,
-  rise = false,
-}: RevealProps) {
-  const reduced = useReducedMotion();
-  if (reduced) return <div className={className}>{children}</div>;
-
-  return (
-    <motion.div
-      data-reveal
-      className={className}
-      variants={rise ? riseVariants : revealVariants}
-      initial="hidden"
-      whileInView="shown"
-      viewport={VIEWPORT}
-      transition={{ delay }}
-    >
-      {children}
-    </motion.div>
-  );
-}
 
 /**
  * A parent whose direct <StaggerItem> children arrive in sequence.
@@ -94,13 +62,10 @@ export function Stagger({
   children,
   className,
   delay = 0,
-  /** Animate on mount instead of on scroll — for above-the-fold content. */
-  onMount = false,
 }: {
   children: ReactNode;
   className?: string;
   delay?: number;
-  onMount?: boolean;
 }) {
   const reduced = useReducedMotion();
   if (reduced) return <div className={className}>{children}</div>;
@@ -111,9 +76,11 @@ export function Stagger({
       className={className}
       variants={staggerVariants}
       initial="hidden"
-      {...(onMount
-        ? { animate: "shown" }
-        : { whileInView: "shown", viewport: VIEWPORT })}
+      /* Always on mount. The scroll-triggered branch this used to have is
+         gone with the section reveals — the hero is above the fold by
+         definition, and a whileInView trigger on the first screen is a race
+         between the observer and the reader. */
+      animate="shown"
       transition={{ delay }}
     >
       {children}
@@ -146,67 +113,4 @@ export function StaggerItem({
   );
 }
 
-/**
- * A grid or rail whose cells arrive in sequence.
- *
- * Separate from <Stagger> only because a product grid needs its own gap and
- * grid classes on the animating element itself — wrapping the grid in an
- * extra div would break `grid-cols-*` on the child.
- */
-export function StaggerGrid({
-  children,
-  className,
-}: {
-  children: ReactNode;
-  className?: string;
-}) {
-  const reduced = useReducedMotion();
-  if (reduced) return <div className={className}>{children}</div>;
 
-  return (
-    <motion.div
-      data-reveal
-      className={className}
-      variants={staggerVariants}
-      initial="hidden"
-      whileInView="shown"
-      viewport={VIEWPORT}
-    >
-      {children}
-    </motion.div>
-  );
-}
-
-/**
- * A cell inside <StaggerGrid>.
- *
- * Product cards fade only — no rise. A grid of cells each travelling 14px
- * upward reads as the layout settling rather than as content arriving, and on
- * a two-column phone grid it is enough movement to look like a bug.
- */
-export function StaggerCell({
-  children,
-  className,
-}: {
-  children: ReactNode;
-  className?: string;
-}) {
-  const reduced = useReducedMotion();
-  if (reduced) return <div className={className}>{children}</div>;
-
-  return (
-    <motion.div
-      data-reveal
-      className={className}
-      variants={{
-        hidden: { opacity: 0 },
-        shown: {
-          opacity: 1,
-          transition: { duration: DURATION.calm, ease: EASE },
-        },
-      }}
-    >
-      {children}
-    </motion.div>
-  );
-}

@@ -100,7 +100,7 @@ export function StickyBuyBar({
             animate={reduced ? { opacity: 1 } : { y: 0 }}
             exit={reduced ? { opacity: 1 } : { y: "100%" }}
             transition={{ duration: DURATION.calm, ease: EASE }}
-            className="border-line bg-paper/95 fixed inset-x-0 bottom-0 z-40 border-t backdrop-blur-md lg:hidden"
+            className="border-line bg-white/95 fixed inset-x-0 bottom-0 z-40 border-t backdrop-blur-md lg:hidden"
           >
             {/*
              * pb-[env(safe-area-inset-bottom)] keeps the button clear of the
@@ -122,7 +122,7 @@ export function StickyBuyBar({
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="Ask about this piece on WhatsApp"
-                  className="border-control text-ink hover:bg-shell grid size-12 shrink-0 place-items-center rounded-sm border transition-colors"
+                  className="border-control text-ink hover:bg-sand grid size-12 shrink-0 place-items-center rounded-pill border transition-colors"
                 >
                   <WhatsAppIcon size={19} />
                 </a>
@@ -132,7 +132,7 @@ export function StickyBuyBar({
                 <button
                   type="button"
                   onClick={onAdd}
-                  className="bg-ink text-bone hover:bg-ink-hover duration-quick ease-out-soft focus-visible:outline-gold inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-sm px-5 text-sm font-medium tracking-wide transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:active:scale-[0.98]"
+                  className="bg-ink text-blush hover:bg-plum-2 duration-quick ease-out-soft focus-visible:outline-rose inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-pill px-5 text-sm font-medium tracking-wide transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:active:scale-[0.98]"
                 >
                   {added ? (
                     <>

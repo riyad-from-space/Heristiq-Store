@@ -1,5 +1,4 @@
 import { Banknote, Truck, MapPin, RefreshCw } from "lucide-react";
-import { StaggerGrid, StaggerItem } from "@/components/motion/reveal";
 import { Container } from "@/components/ui/layout";
 
 /*
@@ -35,20 +34,20 @@ const points = [
 
 export function TrustStrip() {
   return (
-    <div className="border-line bg-paper border-b">
+    <div className="border-line bg-white border-b">
       <Container className="py-10 sm:py-12">
         {/* The grid moved off <Container> and onto the stagger parent: the
             animating element has to be the one that owns grid-cols, or the
             cells are no longer its direct children. */}
-        <StaggerGrid className="grid grid-cols-2 gap-x-6 gap-y-8 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-x-6 gap-y-8 lg:grid-cols-4">
           {points.map(({ icon: Icon, title, body }) => (
-            <StaggerItem key={title} className="flex flex-col gap-2">
-              <Icon size={20} className="text-gold" strokeWidth={1.5} />
+            <div key={title} className="flex flex-col gap-2">
+              <Icon size={20} className="text-rose" strokeWidth={1.5} />
               <h3 className="text-sm font-medium">{title}</h3>
-              <p className="text-ink-muted text-copy-xs">{body}</p>
-            </StaggerItem>
+              <p className="text-stone text-copy-xs">{body}</p>
+            </div>
           ))}
-        </StaggerGrid>
+        </div>
       </Container>
     </div>
   );

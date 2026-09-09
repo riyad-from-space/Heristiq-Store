@@ -74,14 +74,14 @@ export default async function OrderPage({
         <span className="bg-success-wash text-success grid size-10 shrink-0 place-items-center rounded-full">
           <Check size={20} strokeWidth={2.5} />
         </span>
-        <Eyebrow rule={false}>Order placed</Eyebrow>
+        <Eyebrow>Order placed</Eyebrow>
       </div>
 
       <SectionHeading as="h1" size="l" className="mt-5">
         Thank you, {order.customerName.split(" ")[0]}.
       </SectionHeading>
 
-      <p className="text-ink-muted mt-4 leading-relaxed">
+      <p className="text-stone mt-4 leading-relaxed">
         Your order is <strong className="text-ink font-medium">{order.reference}</strong>.
         We will call{" "}
         {/* A phone number broken across two lines is unreadable, and this one
@@ -95,7 +95,7 @@ export default async function OrderPage({
       {order.hasPreOrder && (
         <div className="border-info-line bg-info-wash mt-6 border px-4 py-3">
           <p className="text-sm font-medium">This order includes a pre-order</p>
-          <p className="text-ink-muted mt-1 text-copy-sm">
+          <p className="text-stone mt-1 text-copy-sm">
             One piece is being restocked. We will confirm the date when we call,
             and nothing is charged until it ships.
           </p>
@@ -109,7 +109,7 @@ export default async function OrderPage({
             <StatusRail status={shipment.status} />
           </div>
           {shipment.trackingCode && (
-            <p className="text-ink-muted mt-4 text-xs">
+            <p className="text-stone mt-4 text-xs">
               {COURIERS[shipment.courier]} tracking code{" "}
               <span className="tnum text-ink">{shipment.trackingCode}</span>
             </p>
@@ -118,7 +118,7 @@ export default async function OrderPage({
       )}
 
       {/* ---------------------------------------------------------- lines */}
-      <div className="border-line bg-paper mt-10 border">
+      <div className="border-line bg-white mt-10 border">
         <ul className="divide-line divide-y">
           {order.lines.map((line) => (
             <li
@@ -127,11 +127,11 @@ export default async function OrderPage({
             >
               <div className="min-w-0">
                 <p className="text-sm leading-snug">{line.name}</p>
-                <p className="text-ink-faint tnum mt-1 text-xs">
+                <p className="text-stone-soft tnum mt-1 text-xs">
                   {line.sku} · qty {line.qty}
                 </p>
                 {line.isPreOrder && (
-                  <Badge tone="sea" className="mt-2">
+                  <Badge tone="inverted" className="mt-2">
                     Pre-order
                   </Badge>
                 )}
@@ -177,7 +177,7 @@ export default async function OrderPage({
       {/* -------------------------------------------------------- details */}
       <dl className="mt-10 grid gap-6 sm:grid-cols-2">
         <div>
-          <dt className="text-eyebrow text-ink-faint uppercase">Delivering to</dt>
+          <dt className="text-eyebrow text-stone-soft uppercase">Delivering to</dt>
           <dd className="mt-2 text-copy-sm">
             {order.customerName}
             <br />
@@ -189,17 +189,17 @@ export default async function OrderPage({
           </dd>
         </div>
         <div>
-          <dt className="text-eyebrow text-ink-faint uppercase">Payment</dt>
+          <dt className="text-eyebrow text-stone-soft uppercase">Payment</dt>
           <dd className="mt-2 text-copy-sm">
             {PAYMENT_METHODS[order.paymentMethod]}
             <br />
-            <span className="text-ink-muted">
+            <span className="text-stone">
               {order.courierPreference
                 ? `By ${COURIERS[order.courierPreference]}`
                 : "By whichever courier is fastest"}
             </span>
             <br />
-            <span className="text-ink-faint text-xs">
+            <span className="text-stone-soft text-xs">
               Placed {dateTimeDhaka(order.placedAt)}
             </span>
           </dd>
@@ -212,12 +212,12 @@ export default async function OrderPage({
           {shipment ? "Following it" : "What happens now"}
         </h2>
         {shipment ? (
-          <p className="text-ink-muted mt-4 text-copy-sm">
+          <p className="text-stone mt-4 text-copy-sm">
             This page updates itself as the courier reports in, so keep the
             link. You can also{" "}
             <Link
               href={`/track?ref=${encodeURIComponent(order.reference)}`}
-              className="decoration-line-strong underline underline-offset-4 hover:decoration-gold"
+              className="decoration-line-strong underline underline-offset-4 hover:decoration-rose"
             >
               track it with your order number
             </Link>{" "}
@@ -238,7 +238,7 @@ export default async function OrderPage({
             this page starts showing where the parcel is. You can also{" "}
             <Link
               href={`/track?ref=${encodeURIComponent(order.reference)}`}
-              className="decoration-line-strong underline underline-offset-4 hover:decoration-gold"
+              className="decoration-line-strong underline underline-offset-4 hover:decoration-rose"
             >
               track it by order number
             </Link>
@@ -253,7 +253,7 @@ export default async function OrderPage({
 
       <div className="mt-10 flex flex-col gap-3 sm:flex-row">
         {waHref && (
-          <Button asChild size="lg" variant="secondary" className="flex-1">
+          <Button asChild size="lg" variant="ghost" className="flex-1">
             <a href={waHref} target="_blank" rel="noopener noreferrer">
               <WhatsAppIcon size={17} />
               Message us about this order
@@ -265,7 +265,7 @@ export default async function OrderPage({
         </Button>
       </div>
 
-      <p className="text-ink-faint mt-8 flex items-start gap-2 text-copy-xs">
+      <p className="text-stone-soft mt-8 flex items-start gap-2 text-copy-xs">
         <MessageCircle size={14} className="mt-0.5 shrink-0" />
         Keep this page — the link is the only way back to it. Order{" "}
         {order.reference} is also all we need to find you.
@@ -285,10 +285,10 @@ function Step({
 }) {
   return (
     <li className="flex gap-3">
-      <span className="text-gold mt-0.5 shrink-0">{icon}</span>
+      <span className="text-rose mt-0.5 shrink-0">{icon}</span>
       <div>
         <p className="font-medium">{title}</p>
-        <p className="text-ink-muted mt-1 leading-relaxed">{children}</p>
+        <p className="text-stone mt-1 leading-relaxed">{children}</p>
       </div>
     </li>
   );

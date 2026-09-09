@@ -28,7 +28,7 @@ export function Price({
   if (amount === null) {
     return (
       <span
-        className={cn("text-ink-muted italic", scale, className)}
+        className={cn("text-stone italic", scale, className)}
         /* The em dash-free wording is intentional: this is read aloud by
            screen readers as a sentence, not as a price. */
       >
@@ -43,7 +43,7 @@ export function Price({
     <span className={cn("tnum inline-flex items-baseline gap-2", scale, className)}>
       <span className={cn(marked && "text-danger")}>{taka(amount)}</span>
       {marked && (
-        <span className="text-ink-faint text-[0.8em] line-through">
+        <span className="text-stone-soft text-[0.8em] line-through">
           {taka(compareAt)}
         </span>
       )}

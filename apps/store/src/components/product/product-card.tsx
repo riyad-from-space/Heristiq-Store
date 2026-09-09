@@ -85,7 +85,7 @@ export function ProductCardTile({
          * indicator the ring exists to provide. Inset draws it inward, where
          * nothing can clip it.
          */}
-        <span className="ring-gold pointer-events-none absolute inset-0 transition group-focus-visible:ring-2 group-focus-visible:ring-inset" />
+        <span className="ring-rose pointer-events-none absolute inset-0 transition group-focus-visible:ring-2 group-focus-visible:ring-inset" />
 
         {/*
          * Quick add. On a mouse it slides up on hover; on a touch screen it
@@ -145,7 +145,7 @@ export function ProductCardTile({
             size="sm"
           />
           {finish && (
-            <span className="text-ink-muted flex items-center gap-1.5 text-xs">
+            <span className="text-stone flex items-center gap-1.5 text-xs">
               <span
                 aria-hidden
                 className="border-line-strong inline-block size-2.5 rounded-full border"

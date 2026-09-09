@@ -93,7 +93,7 @@ export function Gallery({
             priority
             placeholderLabel={sku}
           />
-          <span className="bg-paper/90 text-ink absolute right-3 bottom-3 grid size-9 place-items-center rounded-sm opacity-0 transition group-hover:opacity-100">
+          <span className="bg-white/90 text-ink absolute right-3 bottom-3 grid size-9 place-items-center rounded-pill opacity-0 transition group-hover:opacity-100">
             <ZoomIn size={16} />
           </span>
         </button>
@@ -130,7 +130,7 @@ export function Gallery({
 
       <Dialog.Root open={zoomOpen} onOpenChange={setZoomOpen}>
         <Dialog.Portal>
-          <Dialog.Overlay className="bg-sea/95 fixed inset-0 z-[60]" />
+          <Dialog.Overlay className="bg-plum/95 fixed inset-0 z-[60]" />
           <Dialog.Content className="fixed inset-0 z-[60] flex flex-col">
             <Dialog.Title className="sr-only">{name}</Dialog.Title>
 

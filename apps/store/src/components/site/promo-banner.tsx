@@ -21,7 +21,7 @@ export function PromoBanner({ promo }: { promo: PromoSetting }) {
       {promo.href ? (
         <Link
           href={promo.href}
-          className="decoration-gold-pale/50 underline-offset-4 hover:underline"
+          className="decoration-rose/50 underline-offset-4 hover:underline"
         >
           {content}
         </Link>

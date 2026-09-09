@@ -59,7 +59,7 @@ export function QuickAdd({
             : `Add ${line.name} to cart`
       }
       className={cn(
-        "bg-paper/95 text-ink border-line hover:border-ink z-20 inline-flex min-h-9 items-center gap-1.5 border px-3 text-xs backdrop-blur-sm transition-colors",
+        "bg-white/95 text-ink border-line hover:border-ink z-20 inline-flex min-h-9 items-center gap-1.5 border px-3 text-xs backdrop-blur-sm transition-colors",
         className,
       )}
     >

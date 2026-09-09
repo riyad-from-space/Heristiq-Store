@@ -109,7 +109,7 @@ export function CheckoutForm({
     return (
       <div className="border-line border border-dashed px-6 py-16 text-center">
         <p className="font-display text-display-s">There is nothing to check out</p>
-        <p className="text-ink-muted mt-2 text-sm">
+        <p className="text-stone mt-2 text-sm">
           Your cart is empty.
         </p>
         <Button asChild size="lg" className="mt-8">
@@ -123,14 +123,14 @@ export function CheckoutForm({
      rather than guessing. Say so here instead of at the last tap. */
   if (hasUnpricedLine(cart)) {
     return (
-      <div className="border-warn/40 bg-paper border px-6 py-10 text-center">
+      <div className="border-warn/40 bg-white border px-6 py-10 text-center">
         <AlertTriangle size={22} className="text-warn mx-auto" />
         <p className="font-display mt-4 text-display-s">One piece is not priced yet</p>
-        <p className="text-ink-muted mx-auto mt-2 max-w-sm text-copy-sm">
+        <p className="text-stone mx-auto mt-2 max-w-sm text-copy-sm">
           We cannot take payment for something without a price. Remove it from
           your cart and we will confirm the price over WhatsApp.
         </p>
-        <Button asChild size="lg" variant="secondary" className="mt-8">
+        <Button asChild size="lg" variant="ghost" className="mt-8">
           <Link href="/cart">Back to cart</Link>
         </Button>
       </div>
@@ -245,7 +245,7 @@ export function CheckoutForm({
           <h2 id="courier-heading" className="font-display text-display-s">
             Courier
           </h2>
-          <p className="text-ink-muted mt-2 text-sm">
+          <p className="text-stone mt-2 text-sm">
             No preference is usually fastest — we send it with whoever is
             covering your area that day.
           </p>
@@ -344,7 +344,7 @@ export function CheckoutForm({
           </Button>
 
           {!verified && (
-            <p className="text-ink-muted mt-3 text-center text-xs">
+            <p className="text-stone mt-3 text-center text-xs">
               Verify your mobile number to place the order.
             </p>
           )}

@@ -1,5 +1,4 @@
 import { InstagramIcon } from "@/components/ui/brand-icons";
-import { Reveal, StaggerCell, StaggerGrid } from "@/components/motion/reveal";
 import { Container, Eyebrow, Section } from "@/components/ui/layout";
 import { ProductImage } from "@/components/ui/product-image";
 import { site } from "@/config/site";
@@ -26,7 +25,7 @@ export function InstagramFeed() {
   return (
     <Section as="div">
       <Container>
-        <Reveal className="flex flex-wrap items-end justify-between gap-4">
+        <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <Eyebrow>Instagram</Eyebrow>
             <p className="font-display mt-4 text-display-s">@heristiq</p>
@@ -37,14 +36,14 @@ export function InstagramFeed() {
           >
             <InstagramIcon size={15} /> Follow
           </a>
-        </Reveal>
+        </div>
       </Container>
 
       {/* Full-bleed on purpose: an edge-to-edge band of squares is the visual
           break between the page and the footer. */}
-      <StaggerGrid className="mt-8 grid grid-cols-3 gap-1 sm:mt-10 sm:grid-cols-6">
+      <div className="mt-8 grid grid-cols-3 gap-1 sm:mt-10 sm:grid-cols-6">
         {tiles.map((tile) => (
-          <StaggerCell key={tile.id}>
+          <div key={tile.id}>
           <a
             href={site.social.instagram}
             aria-label="View on Instagram"
@@ -56,13 +55,13 @@ export function InstagramFeed() {
               sizes="(min-width: 640px) 17vw, 33vw"
               maxWidth={640}
             />
-            <span className="absolute inset-0 grid place-items-center bg-sea/0 text-on-inverted opacity-0 transition group-hover:bg-sea/40 group-hover:opacity-100">
+            <span className="absolute inset-0 grid place-items-center bg-plum/0 text-on-inverted opacity-0 transition group-hover:bg-plum/40 group-hover:opacity-100">
               <InstagramIcon size={18} />
             </span>
           </a>
-          </StaggerCell>
+          </div>
         ))}
-      </StaggerGrid>
+      </div>
     </Section>
   );
 }

@@ -2,10 +2,10 @@ import { cn } from "@/lib/utils";
 import { availabilityLabel, type Availability } from "@/lib/erp/types";
 
 const tones = {
-  neutral: "bg-paper/90 text-ink border-line",
-  gold: "bg-gold-wash text-gold-strong border-gold/30",
-  warn: "bg-paper/90 text-warn border-warn/30",
-  sea: "bg-inverted text-on-inverted border-transparent",
+  neutral: "bg-white/90 text-ink border-line",
+  accent: "bg-rose-soft text-rose-deep border-rose/30",
+  warn: "bg-white/90 text-warn border-warn/30",
+  inverted: "bg-inverted text-on-inverted border-transparent",
 } as const;
 
 export function Badge({
@@ -43,7 +43,7 @@ export function StockBadge({
 }) {
   if (availability.state === "in_stock") return null;
 
-  const tone = availability.state === "low_stock" ? "warn" : "sea";
+  const tone = availability.state === "low_stock" ? "warn" : "inverted";
   return (
     <Badge tone={tone} className={className}>
       {availabilityLabel(availability)}

@@ -38,8 +38,8 @@ export function StatusRail({ status }: { status: CourierStatus }) {
                   className={cn(
                     "grid size-7 shrink-0 place-items-center rounded-full border text-[0.625rem] transition-colors",
                     done && "border-success bg-success text-white",
-                    current && "border-ink bg-ink text-bone",
-                    !done && !current && "border-line-strong text-ink-faint",
+                    current && "border-ink bg-ink text-blush",
+                    !done && !current && "border-line-strong text-stone-soft",
                   )}
                 >
                   {done ? (
@@ -63,7 +63,7 @@ export function StatusRail({ status }: { status: CourierStatus }) {
               <span
                 className={cn(
                   "mt-2 max-w-16 text-center text-[0.625rem] leading-tight",
-                  current ? "text-ink font-medium" : "text-ink-faint",
+                  current ? "text-ink font-medium" : "text-stone-soft",
                   last && "max-w-14",
                 )}
               >
@@ -74,13 +74,13 @@ export function StatusRail({ status }: { status: CourierStatus }) {
         })}
       </ol>
 
-      <div className="border-line bg-paper mt-8 flex items-start gap-3 border px-4 py-4">
-        <span className="text-gold mt-0.5 shrink-0">
+      <div className="border-line bg-white mt-8 flex items-start gap-3 border px-4 py-4">
+        <span className="text-rose mt-0.5 shrink-0">
           {meta.step === 5 ? <Check size={18} /> : meta.step >= 4 ? <Truck size={18} /> : <Package size={18} />}
         </span>
         <div>
           <p className="text-sm font-medium">{meta.label}</p>
-          <p className="text-ink-muted mt-1 text-copy-sm">
+          <p className="text-stone mt-1 text-copy-sm">
             {meta.detail}
           </p>
         </div>
@@ -106,7 +106,7 @@ function ExceptionPanel({ status }: { status: CourierStatus }) {
       />
       <div>
         <p className="text-sm font-medium">{meta.label}</p>
-        <p className="text-ink-muted mt-1 text-copy-sm">{meta.detail}</p>
+        <p className="text-stone mt-1 text-copy-sm">{meta.detail}</p>
       </div>
     </div>
   );

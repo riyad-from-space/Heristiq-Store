@@ -11,13 +11,13 @@
  * Seconds, not milliseconds: that is what motion takes.
  */
 export const DURATION = {
-  quick: 0.18,
-  calm: 0.32,
-  slow: 0.7,
+  quick: 0.15,
+  calm: 0.25,
+  slow: 0.5,
 } as const;
 
-/** The decelerate curve. Fast out of the gate, long settle. */
-export const EASE = [0.22, 1, 0.36, 1] as const;
+/** The decelerate curve, matching the mockup's cubic-bezier(.2,.7,.2,1). */
+export const EASE = [0.2, 0.7, 0.2, 1] as const;
 
 /**
  * How far a revealing element travels. 14px — far enough to read as movement,
@@ -78,13 +78,3 @@ export const staggerVariants = {
     transition: { staggerChildren: STAGGER, delayChildren: 0.05 },
   },
 } as const;
-
-/**
- * When to trigger a scroll reveal.
- *
- * `once` because a section that re-animates every time it scrolls back into
- * view is the single most common way tasteful motion turns into a nuisance.
- * `amount: 0.15` fires when a sixth of the block is showing, which on a phone
- * means it has begun before the reader's eye arrives rather than after.
- */
-export const VIEWPORT = { once: true, amount: 0.15 } as const;

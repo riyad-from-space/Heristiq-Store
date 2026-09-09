@@ -78,7 +78,7 @@ export default async function ProductPage({ params }: PageProps<"/shop/[slug]">)
   return (
     <>
       <Container className="py-6 sm:py-10">
-        <nav aria-label="Breadcrumb" className="text-ink-muted mb-6 text-xs">
+        <nav aria-label="Breadcrumb" className="text-stone mb-6 text-xs">
           <ol className="flex items-center gap-2">
             <li>
               <Link href="/" className="hover:text-ink">
@@ -111,11 +111,11 @@ export default async function ProductPage({ params }: PageProps<"/shop/[slug]">)
 
           <div className="lg:pt-4">
             <div className="flex flex-wrap items-center gap-2">
-              {motif && <Eyebrow rule={false}>{motif.label}</Eyebrow>}
+              {motif && <Eyebrow>{motif.label}</Eyebrow>}
               {product.availability.state !== "in_stock" && (
                 <Badge
                   tone={
-                    product.availability.state === "low_stock" ? "warn" : "sea"
+                    product.availability.state === "low_stock" ? "warn" : "inverted"
                   }
                 >
                   {availabilityLabel(product.availability)}
@@ -128,7 +128,7 @@ export default async function ProductPage({ params }: PageProps<"/shop/[slug]">)
             </SectionHeading>
 
             {product.tagline && (
-              <p className="text-ink-muted mt-3 text-base">{product.tagline}</p>
+              <p className="text-stone mt-3 text-base">{product.tagline}</p>
             )}
 
             <div className="mt-6 flex items-center gap-4">
@@ -138,7 +138,7 @@ export default async function ProductPage({ params }: PageProps<"/shop/[slug]">)
                 size="lg"
               />
               {finish && (
-                <span className="text-ink-muted flex items-center gap-2 text-sm">
+                <span className="text-stone flex items-center gap-2 text-sm">
                   <span
                     aria-hidden
                     className="border-line-strong inline-block size-3 rounded-full border"
@@ -172,9 +172,9 @@ export default async function ProductPage({ params }: PageProps<"/shop/[slug]">)
                 <Panel value="details" title="Details">
                   <p className="leading-relaxed">{product.description}</p>
                   {product.materials && (
-                    <p className="text-ink-muted mt-4">{product.materials}</p>
+                    <p className="text-stone mt-4">{product.materials}</p>
                   )}
-                  <p className="text-ink-faint mt-4 text-xs">
+                  <p className="text-stone-soft mt-4 text-xs">
                     SKU {product.sku}
                   </p>
                 </Panel>
@@ -185,7 +185,7 @@ export default async function ProductPage({ params }: PageProps<"/shop/[slug]">)
               </Panel>
 
               <Panel value="care" title="Care">
-                <ul className="text-ink-muted list-disc space-y-2 pl-5 leading-relaxed">
+                <ul className="text-stone list-disc space-y-2 pl-5 leading-relaxed">
                   <li>Take it off before a shower, the pool or the sea.</li>
                   <li>
                     Perfume and lotion dull plating faster than anything else —
@@ -205,12 +205,12 @@ export default async function ProductPage({ params }: PageProps<"/shop/[slug]">)
                   within 3 days with a photo and we replace it — we cover the
                   courier both ways.
                 </p>
-                <p className="text-ink-muted mt-4 leading-relaxed">
+                <p className="text-stone mt-4 leading-relaxed">
                   For hygiene reasons we cannot take back body jewellery that
                   has been worn, unless it is faulty.{" "}
                   <Link
                     href="/shipping"
-                    className="decoration-line-strong underline underline-offset-4 hover:decoration-gold"
+                    className="decoration-line-strong underline underline-offset-4 hover:decoration-rose"
                   >
                     Full policy
                   </Link>
@@ -225,7 +225,7 @@ export default async function ProductPage({ params }: PageProps<"/shop/[slug]">)
       </Container>
 
       {related.length > 0 && (
-        <Section tone="shell" as="div" className="mt-8 sm:mt-16">
+        <Section tone="sand" as="div" className="mt-8 sm:mt-16">
           <Container>
             <Eyebrow>You might also like</Eyebrow>
             <div className="mt-8 grid grid-cols-2 gap-x-4 gap-y-10 sm:mt-10 sm:grid-cols-3 sm:gap-x-6">
@@ -308,7 +308,7 @@ function Panel({
           <ChevronDown
             size={16}
             aria-hidden
-            className="text-ink-muted shrink-0 transition-transform duration-300 group-data-[state=open]:rotate-180"
+            className="text-stone shrink-0 transition-transform duration-300 group-data-[state=open]:rotate-180"
           />
         </Accordion.Trigger>
       </Accordion.Header>

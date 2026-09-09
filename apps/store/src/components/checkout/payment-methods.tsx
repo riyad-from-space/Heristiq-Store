@@ -65,7 +65,7 @@ export function PaymentMethods({
         onSelect={() => onMethod("cod")}
         label="Cash on delivery"
         description="Pay the courier in cash when the parcel reaches you. Nothing now."
-        icon={<Banknote size={18} className="text-gold shrink-0" />}
+        icon={<Banknote size={18} className="text-rose shrink-0" />}
       />
 
       {wallets.map((wallet) => (
@@ -81,13 +81,13 @@ export function PaymentMethods({
               ? `Send ${taka(deposit)} now, the rest in cash on delivery.`
               : `Send ${taka(amountDue)} now.`
           }
-          icon={<Smartphone size={18} className="text-gold shrink-0" />}
+          icon={<Smartphone size={18} className="text-rose shrink-0" />}
         />
       ))}
 
       {chosen && (
-        <div className="border-line bg-paper mt-3 border p-4">
-          <ol className="text-ink-muted space-y-2 text-copy-sm">
+        <div className="border-line bg-white mt-3 border p-4">
+          <ol className="text-stone space-y-2 text-copy-sm">
             <li>
               1. Open your {chosen.label} app and <strong className="text-ink">Send Money</strong> to{" "}
               <strong className="text-ink tnum whitespace-nowrap">
@@ -136,7 +136,7 @@ export function PaymentMethods({
             </Field>
           </div>
 
-          <p className="text-ink-faint mt-4 text-copy-xs">
+          <p className="text-stone-soft mt-4 text-copy-xs">
             We check the payment in our {chosen.label} app before confirming
             your order — usually within an hour. If it has not arrived we will
             call you and you can pay the courier in cash instead. Nothing is

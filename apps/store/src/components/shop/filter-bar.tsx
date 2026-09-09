@@ -91,14 +91,14 @@ export function FilterBar({ count }: { count: number }) {
       </div>
 
       <div className="border-line mt-6 flex items-center justify-between gap-4 border-t pt-4">
-        <p className="text-ink-muted text-xs">
+        <p className="text-stone text-xs">
           {count} {count === 1 ? "piece" : "pieces"}
           {active > 0 && (
             <>
               {" · "}
               <Link
                 href={pathname}
-                className="decoration-line-strong underline underline-offset-4 hover:decoration-gold"
+                className="decoration-line-strong underline underline-offset-4 hover:decoration-rose"
               >
                 Clear filters
               </Link>
@@ -141,7 +141,7 @@ export function FilterBar({ count }: { count: number }) {
           <ChevronDown
             size={14}
             aria-hidden
-            className="text-ink-muted pointer-events-none absolute right-0"
+            className="text-stone pointer-events-none absolute right-0"
           />
           {/* The only thing JS removes is the need to press this. */}
           <noscript>
@@ -169,7 +169,7 @@ function FilterGroup({
    */
   return (
     <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-      <span className="text-eyebrow text-ink-faint uppercase">{label}</span>
+      <span className="text-eyebrow text-stone-soft uppercase">{label}</span>
       <div className="flex flex-wrap items-center gap-2">{children}</div>
     </div>
   );
@@ -190,10 +190,10 @@ function Chip({
       scroll={false}
       aria-current={active ? "true" : undefined}
       className={cn(
-        "inline-flex min-h-9 items-center rounded-sm border px-3 text-xs transition-colors",
+        "inline-flex min-h-9 items-center rounded-pill border px-3 text-xs transition-colors",
         active
-          ? "border-ink bg-ink text-bone"
-          : "border-line hover:border-control hover:bg-shell",
+          ? "border-ink bg-ink text-blush"
+          : "border-line hover:border-control hover:bg-sand",
       )}
     >
       {children}
@@ -206,14 +206,14 @@ export function EmptyResults() {
   const pathname = usePathname();
   return (
     <div className="border-line flex flex-col items-center border border-dashed px-6 py-20 text-center">
-      <X size={22} className="text-ink-faint" strokeWidth={1.5} />
+      <X size={22} className="text-stone-soft" strokeWidth={1.5} />
       <p className="font-display mt-4 text-display-s">Nothing matches that</p>
-      <p className="text-ink-muted mt-2 max-w-xs text-sm">
+      <p className="text-stone mt-2 max-w-xs text-sm">
         The collection is still small. Clear the filters to see everything.
       </p>
       <Link
         href={pathname}
-        className="text-eyebrow mt-6 uppercase underline decoration-1 underline-offset-8 hover:decoration-gold"
+        className="text-eyebrow mt-6 uppercase underline decoration-1 underline-offset-8 hover:decoration-rose"
       >
         Show all pieces
       </Link>

@@ -136,7 +136,7 @@ export function PhoneVerification({
               autoComplete="tel"
               placeholder="01XXXXXXXXX"
               readOnly={verified}
-              className={verified ? "bg-shell text-ink-muted" : undefined}
+              className={verified ? "bg-sand text-stone" : undefined}
               required
             />
             {verified ? (
@@ -146,14 +146,14 @@ export function PhoneVerification({
                   onVerified(false);
                   setSent(false);
                 }}
-                className="text-ink-muted shrink-0 px-3 text-xs underline underline-offset-4"
+                className="text-stone shrink-0 px-3 text-xs underline underline-offset-4"
               >
                 Change
               </button>
             ) : (
               <Button
                 type="button"
-                variant="secondary"
+                variant="ghost"
                 onClick={send}
                 disabled={!isValidPhone(phone) || pending || cooldown > 0}
                 className="shrink-0"
@@ -180,7 +180,7 @@ export function PhoneVerification({
         )}
 
         {sent && !verified && (
-          <div className="border-line bg-paper border p-4">
+          <div className="border-line bg-white border p-4">
             <Field label="6-digit code" htmlFor="otp">
               <div className="flex gap-2">
                 <Input
@@ -228,14 +228,14 @@ export function PhoneVerification({
         {message && (
           <p
             role="status"
-            className={`text-sm ${sent && !verified ? "text-ink-muted" : "text-danger"}`}
+            className={`text-sm ${sent && !verified ? "text-stone" : "text-danger"}`}
           >
             {message}
           </p>
         )}
 
         {!verified && (
-          <p className="text-ink-faint flex items-start gap-2 text-copy-xs">
+          <p className="text-stone-soft flex items-start gap-2 text-copy-xs">
             <ShieldCheck size={14} className="mt-0.5 shrink-0" />
             Verifying keeps cash-on-delivery working for everyone. We do not use
             your number for marketing.

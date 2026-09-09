@@ -37,7 +37,7 @@ export default async function ShippingPage() {
         <div className="not-prose overflow-x-auto">
           <table className="w-full min-w-[22rem] text-left text-sm">
             <thead>
-              <tr className="border-line text-eyebrow text-ink-faint border-b uppercase">
+              <tr className="border-line text-eyebrow text-stone-soft border-b uppercase">
                 <th scope="col" className="py-2 pr-4 font-medium">Where</th>
                 <th scope="col" className="py-2 pr-4 font-medium">Time</th>
                 <th scope="col" className="py-2 font-medium">Fee</th>
@@ -46,14 +46,14 @@ export default async function ShippingPage() {
             <tbody className="tnum">
               <tr className="border-line border-b">
                 <th scope="row" className="py-3 pr-4 font-medium">Inside Dhaka</th>
-                <td className="text-ink-muted py-3 pr-4">
+                <td className="text-stone py-3 pr-4">
                   {dayRange(terms.insideDays.min, terms.insideDays.max)}
                 </td>
                 <td className="py-3">{taka(terms.insideDhakaFee)}</td>
               </tr>
               <tr>
                 <th scope="row" className="py-3 pr-4 font-medium">Outside Dhaka</th>
-                <td className="text-ink-muted py-3 pr-4">
+                <td className="text-stone py-3 pr-4">
                   {dayRange(terms.outsideDays.min, terms.outsideDays.max)}
                 </td>
                 <td className="py-3">{taka(terms.outsideDhakaFee)}</td>
@@ -62,7 +62,7 @@ export default async function ShippingPage() {
           </table>
         </div>
         {terms.freeThreshold > 0 && (
-          <p className="not-prose bg-gold-wash text-gold-strong mt-5 px-4 py-3 text-sm">
+          <p className="not-prose bg-rose-soft text-rose-deep mt-5 px-4 py-3 text-sm">
             Delivery is free on orders over {taka(terms.freeThreshold)}.
           </p>
         )}

@@ -12,7 +12,7 @@ export function Skeleton({ className }: { className?: string }) {
   return (
     <div
       aria-hidden
-      className={cn("bg-shell animate-pulse rounded-xs", className)}
+      className={cn("bg-sand animate-pulse rounded-tile", className)}
     />
   );
 }

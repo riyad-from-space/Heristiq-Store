@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { ProductCardTile } from "@/components/product/product-card";
 import { EmptyResults, FilterBar } from "@/components/shop/filter-bar";
-import { StaggerCell, StaggerGrid } from "@/components/motion/reveal";
 import { Container, SectionHeader } from "@/components/ui/layout";
 import { finishes, motifs, site } from "@/config/site";
 import { erp } from "@/lib/erp";
@@ -97,18 +96,18 @@ export default async function ShopPage({ searchParams }: PageProps<"/shop">) {
           </Suspense>
         </div>
       ) : (
-        <StaggerGrid className="mt-10 grid grid-cols-2 gap-x-4 gap-y-10 sm:mt-12 sm:gap-x-6 sm:gap-y-14 lg:grid-cols-3">
+        <div className="mt-10 grid grid-cols-2 gap-x-4 gap-y-10 sm:mt-12 sm:gap-x-6 sm:gap-y-14 lg:grid-cols-3">
           {products.map((product, index) => (
-            <StaggerCell key={product.id}>
+            <div key={product.id}>
               <ProductCardTile
                 product={product}
                 /* The first row is above the fold on a phone; everything else
                    stays lazy so the grid does not fetch nine images at once. */
                 priority={index < 2}
               />
-            </StaggerCell>
+            </div>
           ))}
-        </StaggerGrid>
+        </div>
       )}
     </Container>
   );

@@ -33,7 +33,7 @@ export default function SizeGuidePage() {
           Send us your measurement on WhatsApp and we will tell you which length
           to take. It is faster than guessing and cheaper than a return.
         </p>
-        <Button asChild variant="secondary" className="mt-5">
+        <Button asChild variant="ghost" className="mt-5">
           <Link href="/contact">Ask us</Link>
         </Button>
       </div>

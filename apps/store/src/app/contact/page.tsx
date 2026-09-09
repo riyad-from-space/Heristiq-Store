@@ -40,7 +40,7 @@ export default async function ContactPage({
       aside={
         <div className="not-prose grid gap-3 sm:grid-cols-2">
           {wa && (
-            <Button asChild size="lg" variant="secondary">
+            <Button asChild size="lg" variant="ghost">
               <a
                 href={`https://wa.me/${wa}`}
                 target="_blank"
@@ -51,7 +51,7 @@ export default async function ContactPage({
               </a>
             </Button>
           )}
-          <Button asChild size="lg" variant="secondary">
+          <Button asChild size="lg" variant="ghost">
             <a href={`tel:+88${site.contact.phone}`}>
               <Phone size={17} />
               Call {displayPhone(site.contact.phone)}
@@ -62,19 +62,19 @@ export default async function ContactPage({
     >
       <dl className="not-prose border-line grid gap-5 border-y py-6 text-sm sm:grid-cols-3">
         <div className="flex gap-3">
-          <Clock size={17} className="text-gold mt-0.5 shrink-0" strokeWidth={1.6} />
+          <Clock size={17} className="text-rose mt-0.5 shrink-0" strokeWidth={1.6} />
           <div>
             <dt className="font-medium">Open</dt>
-            <dd className="text-ink-muted mt-1 leading-relaxed">
+            <dd className="text-stone mt-1 leading-relaxed">
               {site.contact.hours}
             </dd>
           </div>
         </div>
         <div className="flex gap-3">
-          <Mail size={17} className="text-gold mt-0.5 shrink-0" strokeWidth={1.6} />
+          <Mail size={17} className="text-rose mt-0.5 shrink-0" strokeWidth={1.6} />
           <div>
             <dt className="font-medium">Email</dt>
-            <dd className="text-ink-muted mt-1 leading-relaxed break-all">
+            <dd className="text-stone mt-1 leading-relaxed break-all">
               <a href={`mailto:${site.contact.email}`}>{site.contact.email}</a>
             </dd>
           </div>
@@ -82,12 +82,12 @@ export default async function ContactPage({
         <div className="flex gap-3">
           <MessageCircle
             size={17}
-            className="text-gold mt-0.5 shrink-0"
+            className="text-rose mt-0.5 shrink-0"
             strokeWidth={1.6}
           />
           <div>
             <dt className="font-medium">Social</dt>
-            <dd className="text-ink-muted mt-1 leading-relaxed">
+            <dd className="text-stone mt-1 leading-relaxed">
               <a href={site.social.instagram} target="_blank" rel="noopener noreferrer">
                 Instagram
               </a>{" "}
@@ -111,14 +111,14 @@ export default async function ContactPage({
 
       <div className="not-prose border-line mt-10 border-t pt-8">
         <h2 className="font-display text-display-s">Send us a message</h2>
-        <p className="text-ink-muted mt-2 mb-6 text-copy-sm">
+        <p className="text-stone mt-2 mb-6 text-copy-sm">
           Leave a phone number or an email and we will come back to you.
         </p>
         <ContactForm orderReference={reference} />
       </div>
 
       {business.address && (
-        <p className="text-ink-faint mt-10 text-copy-xs">
+        <p className="text-stone-soft mt-10 text-copy-xs">
           {business.legalName}, {business.address}
           {business.tradeLicence && ` · Trade licence ${business.tradeLicence}`}
         </p>

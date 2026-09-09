@@ -6,12 +6,12 @@ import { extendTailwindMerge } from "tailwind-merge";
  *
  * Without this, tailwind-merge silently deletes them. It resolves conflicts by
  * class GROUP, and it has no access to the stylesheet — so faced with
- * `text-display-m text-bone` it sees two classes beginning `text-`, cannot
+ * `text-display-m text-blush` it sees two classes beginning `text-`, cannot
  * know that one is a font size and the other a colour, files both under
  * text-color, and drops the earlier one as a conflict:
  *
- *   twMerge("text-display-m text-bone")          -> "text-bone"
- *   twMerge("mt-5 text-copy text-ink-muted")     -> "mt-5 text-ink-muted"
+ *   twMerge("text-display-m text-blush")          -> "text-blush"
+ *   twMerge("mt-5 text-copy text-stone")     -> "mt-5 text-stone"
  *
  * Which is exactly what a <SectionHeader> does when it colours a heading for
  * a dark background, and what every section lede does. The result was

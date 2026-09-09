@@ -100,11 +100,11 @@ export function TrackForm({
           <div className="border-line flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2 border-b pb-4">
             <div>
               <p className="font-display text-display-s">{result.reference}</p>
-              <p className="text-ink-faint mt-1 text-xs">
+              <p className="text-stone-soft mt-1 text-xs">
                 Placed {dateTimeDhaka(result.placedAt)}
               </p>
             </div>
-            {result.hasPreOrder && <Badge tone="sea">Includes a pre-order</Badge>}
+            {result.hasPreOrder && <Badge tone="inverted">Includes a pre-order</Badge>}
           </div>
 
           <div className="mt-8">
@@ -116,11 +116,11 @@ export function TrackForm({
                * frozen at step one — the parcel genuinely has not moved, and
                * saying so beats implying the courier has it.
                */
-              <div className="border-line bg-paper flex items-start gap-3 border px-4 py-4">
-                <PackageSearch size={18} className="text-gold mt-0.5 shrink-0" />
+              <div className="border-line bg-white flex items-start gap-3 border px-4 py-4">
+                <PackageSearch size={18} className="text-rose mt-0.5 shrink-0" />
                 <div>
                   <p className="text-sm font-medium">Being packed</p>
-                  <p className="text-ink-muted mt-1 text-copy-sm">
+                  <p className="text-stone mt-1 text-copy-sm">
                     Not with a courier yet. We call to confirm before it ships,
                     and tracking appears here the moment it is collected.
                   </p>
@@ -131,7 +131,7 @@ export function TrackForm({
 
           <dl className="mt-8 grid gap-6 text-sm sm:grid-cols-3">
             <div>
-              <dt className="text-eyebrow text-ink-faint uppercase">In the parcel</dt>
+              <dt className="text-eyebrow text-stone-soft uppercase">In the parcel</dt>
               <dd className="mt-2 leading-relaxed">
                 {result.lines.map((line) => (
                   <span key={line.name} className="block">
@@ -142,19 +142,19 @@ export function TrackForm({
               </dd>
             </div>
             <div>
-              <dt className="text-eyebrow text-ink-faint uppercase">To pay</dt>
+              <dt className="text-eyebrow text-stone-soft uppercase">To pay</dt>
               <dd className="tnum mt-2">
                 {result.amountDue > 0 ? `${taka(result.amountDue)} in cash` : "Paid"}
               </dd>
             </div>
             <div>
-              <dt className="text-eyebrow text-ink-faint uppercase">Courier</dt>
+              <dt className="text-eyebrow text-stone-soft uppercase">Courier</dt>
               <dd className="mt-2 leading-relaxed">
                 {result.courierLabel ?? "Not assigned yet"}
                 {result.trackingCode && (
                   <>
                     <br />
-                    <span className="text-ink-muted tnum text-xs">
+                    <span className="text-stone tnum text-xs">
                       {result.trackingCode}
                     </span>
                   </>
@@ -162,7 +162,7 @@ export function TrackForm({
                 {result.lastUpdatedAt && (
                   <>
                     <br />
-                    <span className="text-ink-faint text-xs">
+                    <span className="text-stone-soft text-xs">
                       Updated {dateTimeDhaka(result.lastUpdatedAt)}
                     </span>
                   </>
@@ -172,7 +172,7 @@ export function TrackForm({
           </dl>
 
           {wa && (
-            <Button asChild variant="secondary" size="lg" className="mt-10 w-full sm:w-auto">
+            <Button asChild variant="ghost" size="lg" className="mt-10 w-full sm:w-auto">
               <a
                 href={`https://wa.me/${wa}?text=${encodeURIComponent(`Hi Heristiq, about order ${result.reference}:`)}`}
                 target="_blank"
@@ -187,7 +187,7 @@ export function TrackForm({
       )}
 
       {!result && (
-        <p className="text-ink-faint mt-8 text-copy-xs">
+        <p className="text-stone-soft mt-8 text-copy-xs">
           Your order number is in the confirmation we showed you after checkout
           — it looks like HQ-01042. Lost it?{" "}
           <Link href="/contact" className="underline underline-offset-4">

@@ -1,11 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Menu, Search, ShoppingBag, X } from "lucide-react";
 import { useCart } from "@/components/cart/cart-provider";
-import { ThemeToggle } from "@/components/site/theme-toggle";
 import { WhatsAppIcon } from "@/components/ui/brand-icons";
 import { Button } from "@/components/ui/button";
 import { Container } from "@/components/ui/layout";
@@ -16,20 +14,20 @@ import { cn } from "@/lib/utils";
 /*
  * Sticky header.
  *
- * Two states, and the transition between them is the point: over the home hero
- * it is transparent with white text; everywhere else, and as soon as the page
- * scrolls, it is bone with a hairline. That keeps the hero photograph
- * full-bleed without losing the nav.
+ * ONE ground now, not two. It used to render transparent with white text over
+ * the home hero, because that hero was a full-bleed dark photograph — and it
+ * had to, or the nav would have sat invisibly on navy. The approved design
+ * replaces that with a light, boxed hero, so the transparent state has no
+ * dark surface left to sit on: keeping it made the entire header white on
+ * blush, which is to say gone.
  *
+ * What remains is the blush-with-blur ground, gaining a hairline and a soft
+ * shadow once the page has scrolled past ~8px, exactly as the mockup does.
  */
 export function SiteHeader({ hasPromo = false }: { hasPromo?: boolean }) {
-  const pathname = usePathname();
   const { count, ready } = useCart();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-
-  /* Only the home page has a hero the header can sit over. */
-  const overHero = pathname === "/";
 
   /*
    * The promo strip is above the header and scrolls away with the page, so a
@@ -61,7 +59,6 @@ export function SiteHeader({ hasPromo = false }: { hasPromo?: boolean }) {
     };
   }, [menuOpen]);
 
-  const inverted = overHero && !scrolled && !menuOpen;
   const wa = whatsappNumber(site.contact.phone);
 
   return (
@@ -80,17 +77,16 @@ export function SiteHeader({ hasPromo = false }: { hasPromo?: boolean }) {
           "fixed inset-x-0 z-50 ease-out-soft",
           "transition-[background-color,border-color,color,top,box-shadow] duration-calm",
           offset,
-          inverted
-            ? "border-b border-transparent text-white"
-            : "border-line bg-bone/90 border-b text-ink backdrop-blur-md",
+          "bg-blush/85 text-ink border-b backdrop-blur-[10px] backdrop-saturate-150",
+          /* The hairline only appears once scrolled, so the header reads as
+             part of the page at rest and as a floating bar in motion. */
+          scrolled ? "border-line" : "border-transparent",
           /* A whisper of lift once it is floating over content, so the
              hairline is not the only thing separating it from the page — but
              only in light mode. A dark shadow does nothing on a dark page, so
              there the separation comes from the hairline alone, which the
              token layer has already made visible against the ground. */
-          scrolled &&
-            !inverted &&
-            "shadow-[0_1px_12px_-6px_rgba(23,21,15,0.25)] dark:shadow-none",
+          scrolled && "shadow-[0_8px_30px_-22px_rgba(42,33,38,.5)]",
         )}
       >
         {/*
@@ -144,23 +140,6 @@ export function SiteHeader({ hasPromo = false }: { hasPromo?: boolean }) {
           </Link>
 
           <div className="flex items-center justify-end gap-1">
-            {/*
-             * Desktop only. On a phone the header has four controls in 390px
-             * and a fifth would push the wordmark off centre, so the phone
-             * gets the labelled version in the menu instead — which is also
-             * the more discoverable of the two.
-             *
-             * `inverted` is threaded in because over the hero the header is
-             * transparent with white text, and the toggle's own hairline and
-             * faint-ink colours vanish against a photograph.
-             */}
-            <ThemeToggle
-              className={cn(
-                "mr-1 hidden lg:inline-flex",
-                inverted && "border-white/25",
-              )}
-              inverted={inverted}
-            />
             <Link
               href="/shop"
               aria-label="Search the shop"
@@ -183,7 +162,7 @@ export function SiteHeader({ hasPromo = false }: { hasPromo?: boolean }) {
                 <span
                   className={cn(
                     "tnum absolute top-1.5 right-1 grid min-w-4 place-items-center rounded-full px-1 text-[0.625rem] leading-4 font-medium",
-                    inverted ? "bg-white text-sea" : "bg-ink text-bone",
+                    "bg-rose-deep text-white",
                   )}
                 >
                   {count}
@@ -212,7 +191,7 @@ export function SiteHeader({ hasPromo = false }: { hasPromo?: boolean }) {
        */}
       <div
         className={cn(
-          "bg-bone fixed inset-0 z-40 transition-opacity duration-calm lg:hidden",
+          "bg-blush fixed inset-0 z-40 transition-opacity duration-calm lg:hidden",
           menuOpen
             ? "pointer-events-auto visible opacity-100"
             : "pointer-events-none invisible opacity-0",
@@ -257,14 +236,8 @@ export function SiteHeader({ hasPromo = false }: { hasPromo?: boolean }) {
            * fastest path to a human should not be two taps and an inference.
            */}
           <div className="mt-auto flex flex-col gap-4 pt-8">
-            <div>
-              <p className="text-eyebrow text-ink-muted mb-2 uppercase">
-                Theme
-              </p>
-              <ThemeToggle variant="full" />
-            </div>
             {wa && (
-              <Button asChild size="lg" variant="secondary" onClick={closeMenu}>
+              <Button asChild size="lg" variant="ghost" onClick={closeMenu}>
                 <a
                   href={`https://wa.me/${wa}`}
                   target="_blank"
@@ -275,7 +248,7 @@ export function SiteHeader({ hasPromo = false }: { hasPromo?: boolean }) {
                 </a>
               </Button>
             )}
-            <p className="text-ink-muted text-copy-sm">
+            <p className="text-stone text-copy-sm">
               Cash on delivery across Bangladesh.
               <br />
               {site.contact.hours}

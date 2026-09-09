@@ -78,7 +78,7 @@ export function AddToCart({
         </div>
 
         {added ? (
-          <Button asChild size="lg" variant="secondary" className="flex-1">
+          <Button asChild size="lg" variant="ghost" className="flex-1">
             <Link href="/cart">
               <Check size={17} className="text-success" />
               Added — view cart
@@ -89,7 +89,7 @@ export function AddToCart({
             type="button"
             size="lg"
             onClick={onAdd}
-            variant={preOrder ? "secondary" : "primary"}
+            variant={preOrder ? "ghost" : "primary"}
             className="flex-1"
           >
             <ShoppingBag size={17} />

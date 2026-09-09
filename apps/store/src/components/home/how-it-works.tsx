@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Reveal, StaggerGrid, StaggerItem } from "@/components/motion/reveal";
 import { Button } from "@/components/ui/button";
 import { WhatsAppIcon } from "@/components/ui/brand-icons";
 import { Container, Section, SectionHeader } from "@/components/ui/layout";
@@ -66,21 +65,21 @@ export async function HowItWorks() {
   return (
     <Section tone="inverted" as="div">
       <Container>
-        <Reveal>
+        <div>
           <SectionHeader
             onDark
             eyebrow="Ordering"
             title="No advance, no card, no account"
             lede="You have probably been asked to send bKash to a page you had never heard of. We do not work that way for anything we have in stock."
           />
-        </Reveal>
+        </div>
 
-        <StaggerGrid className="mt-12 grid gap-10 sm:mt-16 sm:grid-cols-3 sm:gap-8">
+        <div className="mt-12 grid gap-10 sm:mt-16 sm:grid-cols-3 sm:gap-8">
           {steps.map((step) => (
-            <StaggerItem key={step.n} className="flex flex-col">
+            <div key={step.n} className="flex flex-col">
               <span
                 aria-hidden
-                className="font-display text-gold/70 text-2xl"
+                className="font-display text-rose/70 text-2xl"
                 /* Decorative: the step order is already carried by the list
                    order and the headings, so a screen reader gains nothing
                    from hearing "zero one". */
@@ -91,11 +90,11 @@ export async function HowItWorks() {
                 {step.title}
               </h3>
               <p className="text-copy-sm text-on-inverted/70 mt-2">{step.body}</p>
-            </StaggerItem>
+            </div>
           ))}
-        </StaggerGrid>
+        </div>
 
-        <Reveal className="border-on-inverted/10 mt-12 flex flex-col gap-6 border-t pt-8 sm:mt-16 sm:flex-row sm:items-center sm:justify-between">
+        <div className="border-on-inverted/10 mt-12 flex flex-col gap-6 border-t pt-8 sm:mt-16 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-copy-sm text-on-inverted/70 max-w-md">
             Delivery is {taka(terms.insideDhakaFee)} inside Dhaka and{" "}
             {taka(terms.outsideDhakaFee)} outside
@@ -107,14 +106,14 @@ export async function HowItWorks() {
           </p>
 
           <div className="flex flex-wrap gap-3">
-            <Button asChild variant="gold">
+            <Button asChild variant="primary">
               <Link href="/shop">Start shopping</Link>
             </Button>
             {/* WhatsApp as the alternative, because a good share of this
                 market would rather ask a person than fill in a form — and
                 they are buying either way. */}
             {wa && (
-              <Button asChild variant="onDark">
+              <Button asChild variant="ghostLight">
                 <a
                   href={`https://wa.me/${wa}`}
                   target="_blank"
@@ -126,7 +125,7 @@ export async function HowItWorks() {
               </Button>
             )}
           </div>
-        </Reveal>
+        </div>
       </Container>
     </Section>
   );

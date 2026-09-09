@@ -3,59 +3,51 @@ import type { ComponentProps } from "react";
 import { cn } from "@/lib/utils";
 
 /*
- * Five variants, in two groups. The comment used to say "three roles, and no
- * more" while the object below defined five — `gold` and `onDark` were added
- * for the hero and never written down. Reconciled rather than removed: both
- * are load-bearing, and an accurate list is worth more than a tidy claim.
+ * Four button roles, matching the approved mockup.
  *
- * On light ground:
- *   primary   — the one action on the screen (add to cart, place order)
- *   secondary — an outlined alternative next to it
- *   quiet     — text with a rule under it; for "see all" and inline links
+ *   primary     — the one action on the screen. Solid rose-deep, white text.
+ *   ghost       — the outlined alternative beside it, on a light ground.
+ *   ghostLight  — the same role on the plum band, where `ghost`'s ink border
+ *                 and ink text have no contrast. Keeps literal light values
+ *                 because the surface it sits on is dark by brand, not by
+ *                 theme.
+ *   quiet       — text with a rule under it, for "see all" and inline links.
  *
- * On a PERMANENTLY dark surface — the hero photograph and the inverted
- * bands — where the three above have no contrast:
- *   gold      — the primary action over a photograph
- *   onDark    — the outlined alternative beside it
- *
- * `onDark` keeps literal whites rather than tokens, and that is correct now
- * that the palette themes: the surfaces it sits on are dark in BOTH themes
- * (a photograph's brightness does not follow the theme), so theming it would
- * make it drift off its own ground. It is not interchangeable with
- * `secondary`, which is token-driven and follows the page.
+ * The fill is `rose-deep` and NOT the brighter `rose`, and this is the single
+ * easiest mistake to make with this palette: white on rose measures 3.46:1
+ * and fails AA as a button background. Rose is for accents, links, icons,
+ * badges and hover — never behind white text. Hover moves TO rose because at
+ * that point the text has already been read.
  *
  * min-h-11 (44px) everywhere. Apple's touch minimum, and this is a phone site.
  *
- * The press: a 2% squash on pointer-down, which is the whole of the button's
- * motion. It is behind `motion-safe:` rather than relying on the global
- * reduced-motion rule, because that rule only shortens the duration — the
- * scale would still happen, just instantly. Someone who asked for no motion
- * should get none.
+ * The press is a 1px nudge downward rather than a scale, matching the mockup,
+ * and it sits behind `motion-safe:` — the global reduced-motion rule only
+ * shortens durations, so the translate would still fire, just instantly.
+ * Someone who asked for no motion should get none.
  */
 const base =
-  "inline-flex items-center justify-center gap-2 font-medium " +
-  "transition-[color,background-color,border-color,text-decoration-color,scale,opacity] " +
-  "duration-quick ease-out-soft motion-safe:active:scale-[0.98] " +
-  "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold " +
+  "inline-flex items-center justify-center gap-2 rounded-pill font-semibold " +
+  "border-[1.5px] border-transparent " +
+  "transition-[color,background-color,border-color,text-decoration-color,translate] " +
+  "duration-quick ease-out-soft motion-safe:active:translate-y-px " +
+  "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[3px] focus-visible:outline-rose " +
   "disabled:pointer-events-none disabled:opacity-40";
 
 const variants = {
-  primary: "bg-ink text-bone hover:bg-ink-hover rounded-sm",
-  secondary:
-    "border border-control bg-transparent text-ink hover:border-ink hover:bg-shell rounded-sm",
-  gold: "bg-gold text-white hover:bg-gold-strong rounded-sm",
+  primary: "bg-rose-deep text-white hover:bg-rose",
+  ghost: "border-ink text-ink bg-transparent hover:bg-ink hover:text-blush",
+  ghostLight:
+    "border-blush/50 text-blush bg-transparent hover:border-blush hover:bg-blush hover:text-plum",
   quiet:
-    "text-ink underline decoration-line-strong decoration-1 underline-offset-4 hover:decoration-gold px-0",
-  onDark:
-    "border border-white/25 bg-transparent text-white hover:bg-white hover:text-sea rounded-sm",
+    "text-rose-deep decoration-rose-soft hover:decoration-rose-deep rounded-none border-0 px-0 underline decoration-[1.5px] underline-offset-4",
 } as const;
 
 const sizes = {
-  sm: "min-h-9 px-4 text-xs tracking-wide",
-  md: "min-h-11 px-6 text-sm tracking-wide",
-  lg: "min-h-13 px-8 text-sm tracking-wide",
+  sm: "min-h-9 px-4 text-[0.85rem]",
+  md: "min-h-11 px-6 text-[0.95rem]",
+  lg: "min-h-12 px-[26px] text-[0.95rem]",
 } as const;
-
 export type ButtonProps = ComponentProps<"button"> & {
   variant?: keyof typeof variants;
   size?: keyof typeof sizes;

@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Reveal, StaggerCell, StaggerGrid } from "@/components/motion/reveal";
 import { Container, Section, SectionHeader } from "@/components/ui/layout";
 import { ProductImage } from "@/components/ui/product-image";
 
@@ -30,19 +29,19 @@ const threads = [
 
 export function MotifStory() {
   return (
-    <Section tone="shell" as="div">
+    <Section tone="sand" as="div">
       <Container>
-        <Reveal>
+        <div>
           <SectionHeader
             eyebrow="Where it comes from"
             title="Two threads, sky and sea"
             lede="Everything we make comes from one of two places. Nothing is gold, and nothing pretends to be — these are pieces to wear on a Tuesday, not to keep in a box for a wedding."
           />
-        </Reveal>
+        </div>
 
-        <StaggerGrid className="mt-12 grid gap-8 sm:mt-16 sm:grid-cols-2 sm:gap-6">
+        <div className="mt-12 grid gap-8 sm:mt-16 sm:grid-cols-2 sm:gap-6">
           {threads.map((thread) => (
-            <StaggerCell key={thread.label}>
+            <div key={thread.label}>
             <Link href={thread.href} className="group block">
               <ProductImage
                 image={thread.image}
@@ -52,20 +51,20 @@ export function MotifStory() {
                 className="transition-transform duration-700 ease-out group-hover:scale-[1.02]"
               />
               <div className="mt-5">
-                <span className="text-eyebrow text-gold uppercase">
+                <span className="text-eyebrow text-rose uppercase">
                   {thread.label}
                 </span>
                 <h3 className="font-display mt-2 text-display-s decoration-line-strong underline-offset-4 group-hover:underline">
                   {thread.title}
                 </h3>
-                <p className="text-ink-muted mt-3 max-w-sm text-copy-sm">
+                <p className="text-stone mt-3 max-w-sm text-copy-sm">
                   {thread.body}
                 </p>
               </div>
             </Link>
-            </StaggerCell>
+            </div>
           ))}
-        </StaggerGrid>
+        </div>
       </Container>
     </Section>
   );

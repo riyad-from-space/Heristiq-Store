@@ -34,7 +34,7 @@ export function SiteFooter() {
           <div className="grid gap-10 sm:grid-cols-3">
             {footerNav.map((group) => (
               <nav key={group.title}>
-                <h2 className="text-eyebrow text-gold-pale/80 uppercase">
+                <h2 className="text-eyebrow text-rose/80 uppercase">
                   {group.title}
                 </h2>
                 <ul className="mt-4 space-y-3">

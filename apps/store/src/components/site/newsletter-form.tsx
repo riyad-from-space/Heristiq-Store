@@ -51,7 +51,7 @@ export function NewsletterForm({ className }: { className?: string }) {
         });
       }}
     >
-      <div className="flex items-center border-b border-white/25 focus-within:border-gold-pale">
+      <div className="flex items-center border-b border-white/25 focus-within:border-rose">
         <label htmlFor="newsletter-email" className="sr-only">
           Email address
         </label>
@@ -86,7 +86,7 @@ export function NewsletterForm({ className }: { className?: string }) {
 
       <p aria-live="polite" className="min-h-5 text-xs">
         {state === "invalid" && (
-          <span className="text-gold-pale">
+          <span className="text-rose">
             That does not look like an email address.
           </span>
         )}
@@ -102,7 +102,7 @@ export function NewsletterForm({ className }: { className?: string }) {
           </span>
         )}
         {state === "failed" && (
-          <span className="text-gold-pale">
+          <span className="text-rose">
             That did not save. Please try again in a moment.
           </span>
         )}
