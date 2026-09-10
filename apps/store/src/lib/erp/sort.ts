@@ -12,10 +12,22 @@ import type { Product, ProductCard, ProductQuery } from "@/lib/erp/types";
  */
 export function sortProducts(
   products: Product[],
-  { finish, motif, collection, q, sort = "featured", includeOutOfStock = true }: ProductQuery,
+  {
+    category,
+    finish,
+    motif,
+    collection,
+    q,
+    sort = "featured",
+    includeOutOfStock = true,
+  }: ProductQuery,
 ): ProductCard[] {
   let rows = products;
 
+  /* Compared on the slug, which the DATABASE derives — never re-slugified
+     here. Two slugify implementations that disagree by one character would
+     empty a category page with no error anywhere. */
+  if (category) rows = rows.filter((p) => p.category?.slug === category);
   if (finish) rows = rows.filter((p) => p.finish === finish);
   if (motif) rows = rows.filter((p) => p.motif === motif);
   if (collection) {
@@ -97,6 +109,7 @@ export function toCard(p: Product): ProductCard {
     name: p.name,
     price: p.price,
     compareAtPrice: p.compareAtPrice,
+    category: p.category,
     finish: p.finish,
     motif: p.motif,
     collections: p.collections,

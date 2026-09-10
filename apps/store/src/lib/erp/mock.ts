@@ -9,6 +9,7 @@ import type {
 import { MERCHANDISING } from "@/lib/erp/merchandising";
 import type {
   Availability,
+  Category,
   Product,
   ProductCard,
   ProductQuery,
@@ -38,17 +39,44 @@ type MockRow = {
   price: number | null;
   onHand: number;
   reserved: number;
+  /** Category slug, matching MOCK_CATEGORIES. null = uncategorised. */
+  category: string | null;
 };
 
+/*
+ * The taxonomy, mirroring what migration 1008 seeds into Supabase.
+ *
+ * All five, even though the mock only has waist chains — and that is the
+ * point rather than an oversight. It reproduces the shop's real state: a
+ * catalogue where most categories are announced but not yet stocked. Seeding
+ * only the populated one would mean the empty-category page, the empty tile
+ * and the empty filter chip could not be seen without credentials, which is
+ * exactly the state they need to be designed against.
+ */
+const MOCK_CATEGORIES: Category[] = [
+  { slug: "waist-chains", name: "Waist chains", position: 10,
+    blurb: "The pieces Heristiq started with. Worn low, made to move." },
+  { slug: "bracelets", name: "Bracelets", position: 20,
+    blurb: "For the wrist, and for stacking with everything else." },
+  { slug: "finger-rings", name: "Finger rings", position: 30,
+    blurb: "Single bands and stacked sets, in both finishes." },
+  { slug: "earrings", name: "Earrings", position: 40,
+    blurb: "From everyday studs to something with more weight." },
+  { slug: "pendants", name: "Pendants", position: 50,
+    blurb: "A chain and one thing worth looking at." },
+];
+
+const CATEGORY_BY_SLUG = new Map(MOCK_CATEGORIES.map((c) => [c.slug, c]));
+
 const ROWS: MockRow[] = [
-  { id: "mock-wc-001", sku: "WC-001", name: "Large and small oval waist chain", price: 290, onHand: 2, reserved: 0 },
-  { id: "mock-wc-002", sku: "WC-002", name: "Gold large and small oval waist chain", price: 310, onHand: 32, reserved: 2 },
-  { id: "mock-wc-003", sku: "WC-003", name: "Long oval waist chain", price: 240, onHand: 2, reserved: 0 },
-  { id: "mock-wc-004", sku: "WC-004", name: "Gold long oval waist chain", price: 260, onHand: 7, reserved: 1 },
-  { id: "mock-wc-005", sku: "WC-005", name: "Silver moon waist chain", price: 250, onHand: 7, reserved: 0 },
-  { id: "mock-wc-006", sku: "WC-006", name: "Golden starfish waist chain", price: 340, onHand: 17, reserved: 0 },
+  { id: "mock-wc-001", sku: "WC-001", name: "Large and small oval waist chain", price: 290, onHand: 2, reserved: 0, category: "waist-chains" },
+  { id: "mock-wc-002", sku: "WC-002", name: "Gold large and small oval waist chain", price: 310, onHand: 32, reserved: 2, category: "waist-chains" },
+  { id: "mock-wc-003", sku: "WC-003", name: "Long oval waist chain", price: 240, onHand: 2, reserved: 0, category: "waist-chains" },
+  { id: "mock-wc-004", sku: "WC-004", name: "Gold long oval waist chain", price: 260, onHand: 7, reserved: 1, category: "waist-chains" },
+  { id: "mock-wc-005", sku: "WC-005", name: "Silver moon waist chain", price: 250, onHand: 7, reserved: 0, category: "waist-chains" },
+  { id: "mock-wc-006", sku: "WC-006", name: "Golden starfish waist chain", price: 340, onHand: 17, reserved: 0, category: "waist-chains" },
   /* Sold out AND unpriced — exercises pre-order and "price on request" together. */
-  { id: "mock-wc-007", sku: "WC-007", name: "Golden shell conch waist chain", price: null, onHand: 0, reserved: 0 },
+  { id: "mock-wc-007", sku: "WC-007", name: "Golden shell conch waist chain", price: null, onHand: 0, reserved: 0, category: "waist-chains" },
 ];
 
 export function availabilityFrom(available: number): Availability {
@@ -72,6 +100,12 @@ function toProduct(row: MockRow): Product {
     description: m.description || null,
     price: row.price,
     compareAtPrice: null,
+    category: row.category
+      ? (() => {
+          const c = CATEGORY_BY_SLUG.get(row.category!);
+          return c ? { slug: c.slug, name: c.name } : null;
+        })()
+      : null,
     finish: m.finish,
     motif: m.motif,
     collections: m.collections,
@@ -96,6 +130,10 @@ const MOCK_ORDERS = devStore("mock:orders", () => new Map<string, StoreOrder>())
 
 export class MockErpClient implements ErpClient {
   readonly source = "mock" as const;
+
+  async getCategories(): Promise<Category[]> {
+    return MOCK_CATEGORIES;
+  }
 
   async getProducts(query: ProductQuery = {}): Promise<ProductCard[]> {
     return sortProducts(ROWS.map(toProduct), query);

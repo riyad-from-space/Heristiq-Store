@@ -17,7 +17,12 @@ import {
 } from "@/lib/erp/merchandising";
 import { availabilityFrom } from "@/lib/erp/mock";
 import { sortProducts, toCard } from "@/lib/erp/sort";
-import type { Product, ProductCard, ProductQuery } from "@/lib/erp/types";
+import type {
+  Category,
+  Product,
+  ProductCard,
+  ProductQuery,
+} from "@/lib/erp/types";
 import { slugify } from "@/lib/utils";
 
 /*
@@ -32,8 +37,11 @@ import { slugify } from "@/lib/utils";
  * stock_value, unit_margin, margin_pct and supplier. None of those may reach a
  * customer, so they are not selected. Do not replace this with select("*").
  */
+/* ONE string literal, not a concatenation: supabase-js parses this at the
+   TYPE level to work out the row shape, and `"a" + "b"` widens to `string`,
+   at which point every read below infers GenericStringError[] instead. */
 const CATALOGUE_COLUMNS =
-  "id, sku, name, selling_price, is_active, on_hand, reserved, available";
+  "id, sku, name, selling_price, is_active, on_hand, reserved, available, category, category_slug";
 
 type CatalogueRow = {
   id: string;
@@ -44,6 +52,11 @@ type CatalogueRow = {
   on_hand: number;
   reserved: number;
   available: number;
+  /* Both null until the owner picks a category in the ERP. The view left-joins
+     categories, so an unassigned product is a row with nulls, not a missing
+     row — it still appears in the shop, just not under any category. */
+  category: string | null;
+  category_slug: string | null;
 };
 
 /**
@@ -77,6 +90,13 @@ function toProduct(row: CatalogueRow): Product {
     description: m.description || null,
     price: priceOf(row.selling_price),
     compareAtPrice: null,
+    /* Both columns or neither — a slug with no name (or the reverse) would
+       mean the view changed underneath us, and half a category is worse on a
+       page than none. */
+    category:
+      row.category && row.category_slug
+        ? { slug: row.category_slug, name: row.category }
+        : null,
     finish: m.finish,
     motif: m.motif,
     collections: m.collections,
@@ -169,6 +189,32 @@ async function fetchCatalogue(): Promise<Product[]> {
 
 export class SupabaseErpClient implements ErpClient {
   readonly source = "erp" as const;
+
+  async getCategories(): Promise<Category[]> {
+    /*
+     * storefront_categories, not `categories` — the view is already filtered
+     * to active rows, ordered, and exposes no org_id. Same reasoning as
+     * v_product_stock being the window onto products.
+     *
+     * A failed read returns [] rather than throwing, and that is deliberate:
+     * the taxonomy decorates the site — a nav menu, a row of tiles, a filter
+     * — while the catalogue IS the site. A shop that renders without its
+     * category menu is degraded; a shop that 500s because the menu could not
+     * load is broken. fetchCatalogue() throws for the opposite reason.
+     */
+    const { data, error } = await erpDb()
+      .from("storefront_categories")
+      .select("slug, name, blurb, position");
+
+    if (error) {
+      console.error(`[erp] category read failed: ${error.message}`);
+      return [];
+    }
+
+    return (data as Category[]).sort(
+      (a, b) => a.position - b.position || a.name.localeCompare(b.name),
+    );
+  }
 
   async getProducts(query: ProductQuery = {}): Promise<ProductCard[]> {
     return sortProducts(await fetchCatalogue(), query);

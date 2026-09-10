@@ -3,7 +3,12 @@ import type {
   OrderDraft,
   StoreOrder,
 } from "@/lib/orders/types";
-import type { Product, ProductCard, ProductQuery } from "@/lib/erp/types";
+import type {
+  Category,
+  Product,
+  ProductCard,
+  ProductQuery,
+} from "@/lib/erp/types";
 
 /*
  * The seam between the storefront and the ERP.
@@ -29,6 +34,20 @@ export type StockLevel = {
 };
 
 export interface ErpClient {
+  /**
+   * The browsable taxonomy, in display order.
+   *
+   * Categories come from the DATABASE rather than a config file, unlike
+   * finishes and motifs, because the owner creates them in the ERP when a new
+   * kind of product starts selling. A config file would mean a deploy to add
+   * a category, and a deploy the owner cannot do is a category that never
+   * gets added.
+   *
+   * Only active ones, so hiding a category in the ERP hides it from the shop
+   * without unassigning any product.
+   */
+  getCategories(): Promise<Category[]>;
+
   /** The shop grid. Sorted and filtered server-side. */
   getProducts(query?: ProductQuery): Promise<ProductCard[]>;
 

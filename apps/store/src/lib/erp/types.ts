@@ -32,6 +32,29 @@ export type ProductImage = {
   alt: string;
 };
 
+/**
+ * A browsable category — the ERP's own taxonomy, not a storefront invention.
+ *
+ * This is deliberately the ONE classification that lives in the database.
+ * Finish, motif and collection are merchandising: they live in
+ * merchandising.ts because inventory has no opinion about whether a piece is
+ * "celestial". Category is different — it is what the owner picks from a
+ * dropdown when adding a product, so it has to be the same list in both apps
+ * or the two disagree about what a product is.
+ *
+ * Read from the `storefront_categories` view, which exposes exactly these
+ * four columns and hides org_id.
+ */
+export type Category = {
+  /** URL segment. The database derives it from the name; never slugify here. */
+  slug: string;
+  name: string;
+  /** One line under the heading on the category page. */
+  blurb: string | null;
+  /** Display order, low first. */
+  position: number;
+};
+
 export type Product = {
   /** ERP products.id (uuid). The join key back to inventory. */
   id: string;
@@ -46,6 +69,14 @@ export type Product = {
   price: number | null;
   /** Was-price for a markdown, if any. Always > price when present. */
   compareAtPrice: number | null;
+  /**
+   * The ERP category, or null while the owner has not chosen one.
+   *
+   * Slim rather than the whole Category: a card needs the name to show and
+   * the slug to link, and carrying the blurb on every product in a grid of
+   * thirty would be thirty copies of a string only the category page renders.
+   */
+  category: { slug: string; name: string } | null;
   finish: FinishKey | null;
   motif: MotifKey | null;
   collections: readonly CollectionKey[];
@@ -68,6 +99,7 @@ export type ProductCard = Pick<
   | "name"
   | "price"
   | "compareAtPrice"
+  | "category"
   | "finish"
   | "motif"
   | "collections"
@@ -77,6 +109,13 @@ export type ProductCard = Pick<
 >;
 
 export type ProductQuery = {
+  /**
+   * Category SLUG, not a key. Unlike finish/motif/collection — which are
+   * closed unions this repo defines — categories are rows the owner creates
+   * in the ERP, so there is no union to check against and validation means
+   * asking the database whether the slug exists.
+   */
+  category?: string;
   finish?: FinishKey;
   motif?: MotifKey;
   collection?: CollectionKey;
