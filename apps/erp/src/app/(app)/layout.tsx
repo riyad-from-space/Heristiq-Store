@@ -4,7 +4,6 @@ import { SessionKeeper } from "@/components/session-keeper";
 import { adminState } from "@/lib/admin";
 import { signOut } from "../login/actions";
 import { NoAccess } from "./no-access";
-import { BootstrapBanner } from "./bootstrap-banner";
 
 export default async function AppLayout({ children }: LayoutProps<"/">) {
   /*
@@ -18,12 +17,12 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
    */
   const admin = await adminState();
   if (!admin) redirect("/login");
-  if (!admin.isAdmin) return <NoAccess email={admin.email} />;
+  if (!admin.isAdmin)
+    return <NoAccess email={admin.email} bootstrap={admin.bootstrap} />;
 
   return (
     <div className="flex flex-1 flex-col">
       <SessionKeeper />
-      {admin.bootstrap && <BootstrapBanner email={admin.email} />}
       <header className="border-b border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
         <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-3 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center justify-between gap-4">

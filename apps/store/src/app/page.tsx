@@ -7,6 +7,7 @@ import { NewsletterSection } from "@/components/home/newsletter-section";
 import { InstagramFeed } from "@/components/home/instagram-feed";
 import { erp } from "@/lib/erp";
 import { site } from "@/config/site";
+import { jsonLd } from "@/lib/json-ld";
 
 /*
  * Home.
@@ -66,7 +67,7 @@ export default async function HomePage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
+          __html: jsonLd({
             "@context": "https://schema.org",
             "@type": "Organization",
             name: site.name,

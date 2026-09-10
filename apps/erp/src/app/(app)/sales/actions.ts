@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { requireAdmin } from "@/lib/admin";
 import type { SaleStatus, SalesChannel } from "@/lib/types";
 
 export type SaleLine = { product_id: string; qty: number; unit_price: number };
@@ -32,6 +33,10 @@ function firstDuplicate(lines: SaleLine[]): string | null {
 }
 
 export async function createSale(input: SaleInput): Promise<string | null> {
+  /* A Server Action is a public POST endpoint; the page gate does not
+     protect it. See requireAdmin(). */
+  await requireAdmin();
+
   const lines = input.lines.filter((l) => l.product_id && l.qty > 0);
   if (lines.length === 0) return "Add at least one product line.";
   if (firstDuplicate(lines))
@@ -85,6 +90,10 @@ export async function updateSale(
   id: string,
   input: SaleInput,
 ): Promise<string | null> {
+  /* A Server Action is a public POST endpoint; the page gate does not
+     protect it. See requireAdmin(). */
+  await requireAdmin();
+
   const lines = input.lines.filter((l) => l.product_id && l.qty > 0);
   if (lines.length === 0) return "Add at least one product line.";
   if (firstDuplicate(lines))
@@ -121,6 +130,10 @@ export async function updateSale(
 }
 
 export async function voidSale(formData: FormData): Promise<string | null> {
+  /* A Server Action is a public POST endpoint; the page gate does not
+     protect it. See requireAdmin(). */
+  await requireAdmin();
+
   const supabase = await createClient();
 
   // A Server Action is a public endpoint and its FormData is client-supplied, so

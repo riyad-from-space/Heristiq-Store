@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { requireAdmin } from "@/lib/admin";
 import { normalisePhone } from "@/lib/phone";
 import type { PreOrderStatus } from "@/lib/types";
 
@@ -83,6 +84,10 @@ export async function savePreOrder(
   id: string | null,
   input: PreOrderPayload,
 ): Promise<string | null> {
+  /* A Server Action is a public POST endpoint; the page gate does not
+     protect it. See requireAdmin(). */
+  await requireAdmin();
+
   const checked = validate(input);
   if ("error" in checked) return checked.error;
   const v = checked.value;
@@ -111,6 +116,10 @@ export async function savePreOrder(
 }
 
 export async function deletePreOrder(formData: FormData): Promise<string | null> {
+  /* A Server Action is a public POST endpoint; the page gate does not
+     protect it. See requireAdmin(). */
+  await requireAdmin();
+
   const id = String(formData.get("id"));
   const supabase = await createClient();
   const { error } = await supabase.from("pre_orders").delete().eq("id", id);
@@ -136,6 +145,10 @@ export async function deliverPreOrder(
   deliveryCharge = 0,
   deliveryCost = 0,
 ): Promise<{ error: string } | { saleId: string }> {
+  /* A Server Action is a public POST endpoint; the page gate does not
+     protect it. See requireAdmin(). */
+  await requireAdmin();
+
   if (deliveryCharge < 0 || deliveryCost < 0) {
     return { error: "Delivery amounts cannot be negative." };
   }

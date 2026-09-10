@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { requireAdmin } from "@/lib/admin";
 
 function text(fd: FormData, key: string) {
   const v = String(fd.get(key) ?? "").trim();
@@ -26,6 +27,10 @@ function count(fd: FormData, key: string, fallback: number) {
 }
 
 export async function createProduct(_prev: string | null, fd: FormData) {
+  /* A Server Action is a public POST endpoint; the page gate does not
+     protect it. See requireAdmin(). */
+  await requireAdmin();
+
   const supabase = await createClient();
 
   const sku = text(fd, "sku");
@@ -52,6 +57,10 @@ export async function createProduct(_prev: string | null, fd: FormData) {
 }
 
 export async function updateProduct(_prev: string | null, fd: FormData) {
+  /* A Server Action is a public POST endpoint; the page gate does not
+     protect it. See requireAdmin(). */
+  await requireAdmin();
+
   const supabase = await createClient();
   const id = String(fd.get("id"));
 
@@ -115,6 +124,10 @@ export async function updateProduct(_prev: string | null, fd: FormData) {
 }
 
 export async function createCategory(_prev: string | null, fd: FormData) {
+  /* A Server Action is a public POST endpoint; the page gate does not
+     protect it. See requireAdmin(). */
+  await requireAdmin();
+
   const supabase = await createClient();
   const name = text(fd, "name");
   if (!name) return "Name is required.";

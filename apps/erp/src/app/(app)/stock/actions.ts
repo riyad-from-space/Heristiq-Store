@@ -2,8 +2,13 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { requireAdmin } from "@/lib/admin";
 
 export async function adjustStock(_prev: string | null, fd: FormData) {
+  /* A Server Action is a public POST endpoint; the page gate does not
+     protect it. See requireAdmin(). */
+  await requireAdmin();
+
   const productId = String(fd.get("product_id") ?? "");
   if (!productId) return "Choose a product.";
 

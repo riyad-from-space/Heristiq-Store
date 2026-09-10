@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { requireAdmin } from "@/lib/admin";
 
 export type PurchaseLine = { product_id: string; qty: number; unit_cost: number };
 
@@ -17,6 +18,10 @@ export type PurchaseInput = {
 };
 
 export async function createPurchase(input: PurchaseInput): Promise<string | null> {
+  /* A Server Action is a public POST endpoint; the page gate does not
+     protect it. See requireAdmin(). */
+  await requireAdmin();
+
   const lines = input.lines.filter(
     (l) => l.product_id && l.qty > 0 && l.unit_cost >= 0,
   );

@@ -19,6 +19,7 @@ import { ogImageUrl } from "@/lib/cloudinary";
 import { cartLineFor } from "@/lib/cart/line";
 import { productEnquiryHref } from "@/lib/whatsapp";
 import { isBuyable, isPreOrder } from "@/lib/erp/types";
+import { jsonLd } from "@/lib/json-ld";
 
 /*
  * Product detail.
@@ -261,7 +262,7 @@ export default async function ProductPage({ params }: PageProps<"/shop/[slug]">)
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
+          __html: jsonLd({
             "@context": "https://schema.org",
             "@type": "Product",
             name: product.name,
