@@ -19,6 +19,7 @@ import { ogImageUrl } from "@/lib/cloudinary";
 import { cartLineFor } from "@/lib/cart/line";
 import { productEnquiryHref } from "@/lib/whatsapp";
 import { isBuyable, isPreOrder } from "@/lib/erp/types";
+import { headers } from "next/headers";
 import { jsonLd } from "@/lib/json-ld";
 
 /*
@@ -60,6 +61,22 @@ export async function generateMetadata({
 
 export default async function ProductPage({ params }: PageProps<"/shop/[slug]">) {
   const { slug } = await params;
+
+  /*
+   * The nonce minted by src/proxy.ts for this request.
+   *
+   * Next applies the nonce to its OWN scripts automatically, but not to a
+   * hand-written <script> like the JSON-LD below — that one has to carry it
+   * or the strict script-src drops it, and the product loses its rich
+   * result in Google.
+   *
+   * Reading headers() forces dynamic rendering, which costs nothing here:
+   * this route is already dynamic (see the build output and the note in
+   * proxy.ts). It would NOT be free on the home page, which is why the home
+   * page is outside the proxy's matcher and its JSON-LD needs no nonce.
+   */
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
+
   const client = erp();
   const product = await client.getProduct(slug);
   if (!product) notFound();
@@ -261,6 +278,7 @@ export default async function ProductPage({ params }: PageProps<"/shop/[slug]">)
 
       <script
         type="application/ld+json"
+        nonce={nonce}
         dangerouslySetInnerHTML={{
           __html: jsonLd({
             "@context": "https://schema.org",

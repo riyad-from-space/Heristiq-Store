@@ -18,40 +18,47 @@ import type { NextConfig } from "next";
 const basePath = process.env.ERP_BASE_PATH ?? "/admin";
 
 /*
- * Security headers.
+ * Security headers — the baseline. The real policy is in src/proxy.ts.
  *
- * Neither app sent any before this, which meant no clickjacking protection on
- * the checkout or the admin panel, no MIME-sniffing protection, and full
- * referrer leakage to every outbound link.
+ * Unlike the storefront, the ERP has no split to reason about: every page
+ * here is behind authentication and therefore already dynamic, so the
+ * nonce-based Content-Security-Policy in src/proxy.ts covers the entire app
+ * at no cost. There is no cached page to protect and no anonymous page to
+ * leave behind.
  *
- * WHAT IS DELIBERATELY ABSENT: a script-src Content-Security-Policy.
+ * What remains here applies alongside it, and matters most for the requests
+ * the proxy matcher deliberately skips (Next's own static output):
  *
- * A real script-src needs a per-request nonce, and Next's own guide is
- * explicit that nonces "must use dynamic rendering" — every page, every
- * request. That would destroy the revalidate=300 edge cache on the home page
- * and the prerendering of the policy pages, which is the wrong trade for a
- * shop whose traffic is phones on slow connections arriving from Instagram.
- *
- * So this ships the directives that are strong AND cache-safe:
  *   frame-ancestors 'none'  — the modern, stronger X-Frame-Options; nothing
- *                             can iframe the shop or the ERP, so an attacker
- *                             cannot overlay an invisible checkout or admin
- *                             panel and harvest clicks
+ *                             can iframe the admin panel, so an attacker
+ *                             cannot overlay it and harvest an owner's clicks
  *   object-src 'none'       — no Flash/applet/embed vector
  *   base-uri 'self'         — stops an injected <base> silently repointing
  *                             every relative URL on the page
- *   form-action 'self'      — an injected form cannot post the checkout
+ *   form-action 'self'      — an injected form cannot post admin input
  *                             somewhere else
  *   upgrade-insecure-requests — no mixed content
- *
- * If a nonce-based script-src is wanted later, the cost is stated above and
- * the recipe is in node_modules/next/dist/docs/01-app/02-guides/content-security-policy.md
  */
 const SECURITY_HEADERS = [
   {
     key: "Content-Security-Policy",
+    /*
+     * NOTE the absence of default-src HERE, and do not "tidy" it back in.
+     *
+     * `default-src 'self'` looks like the safe baseline and is the opposite
+     * of it in this position: script-src and style-src INHERIT from it, so on
+     * a response with no script-src of its own it silently bans every inline
+     * script and inline style. Next's hydration bootstrap is an inline
+     * script, so React never mounts. Measured on the storefront: 205
+     * violations and a dead page, while the header itself looked perfectly
+     * correct in curl — reading the header is what fooled me; only loading
+     * the page in a browser catches it.
+     *
+     * src/proxy.ts DOES send default-src 'self', and that is safe there
+     * because it also sends an explicit script-src and style-src, so nothing
+     * is left to inherit the ban.
+     */
     value: [
-      "default-src 'self'",
       "frame-ancestors 'none'",
       "object-src 'none'",
       "base-uri 'self'",

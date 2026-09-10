@@ -21,7 +21,11 @@ import { mkdirSync } from "node:fs";
 
 const CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 const OUT = process.env.SHOOT_DIR ?? "./.shots";
-const BASE = "http://localhost:3000";
+/* Defaults to the dev server. Point it at a production build to exercise the
+   real Content-Security-Policy — development relaxes script-src with
+   'unsafe-eval', so a policy that would break the live checkout still passes
+   against `next dev`:  BASE_URL=http://localhost:3100 node scripts/checkout-e2e.mjs */
+const BASE = process.env.BASE_URL ?? "http://localhost:3000";
 mkdirSync(OUT, { recursive: true });
 
 const browser = await chromium.launch({ executablePath: CHROME });
@@ -74,16 +78,33 @@ step("checkout: contact + OTP");
 await page.goto(`${BASE}/checkout`, { waitUntil: "networkidle" });
 await page.fill("#name", "Nusrat Jahan");
 await page.fill("#phone", "01712345678");
-await page.getByRole("button", { name: /send code/i }).click();
-await page.locator("#otp").waitFor({ timeout: 8000 });
-const devText = await page.locator("text=Dev mode").innerText();
-const code = devText.match(/(\d{6})/)?.[1];
-console.log(`   dev code: ${code}`);
-if (!code) throw new Error("no dev code shown");
-await page.fill("#otp", code);
-await page.getByRole("button", { name: /^Verify$/ }).click();
-await page.locator("text=verified").waitFor({ timeout: 8000 });
-console.log("   phone verified ✓");
+
+/*
+ * The OTP step is conditional, so this walks whichever checkout is actually
+ * configured rather than assuming one.
+ *
+ * phoneVerificationEnabled() is false until an SMS gateway is paid for, and
+ * the checkout then renders no "Send code" button at all — orders go through
+ * on the phone number as typed and are confirmed over WhatsApp. Hard-coding
+ * the OTP path made this script fail on the free configuration the shop is
+ * actually launching with, which is precisely the configuration that most
+ * needs a passing end-to-end test.
+ */
+const otpStep = page.getByRole("button", { name: /send code/i });
+if (await otpStep.count()) {
+  await otpStep.click();
+  await page.locator("#otp").waitFor({ timeout: 8000 });
+  const devText = await page.locator("text=Dev mode").innerText();
+  const code = devText.match(/(\d{6})/)?.[1];
+  console.log(`   dev code: ${code}`);
+  if (!code) throw new Error("no dev code shown");
+  await page.fill("#otp", code);
+  await page.getByRole("button", { name: /^Verify$/ }).click();
+  await page.locator("text=verified").waitFor({ timeout: 8000 });
+  console.log("   phone verified ✓");
+} else {
+  console.log("   no SMS gateway configured — OTP step absent, as designed");
+}
 
 step("checkout: address cascade");
 await page.selectOption("#division", "dhaka");

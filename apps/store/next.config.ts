@@ -2,25 +2,38 @@ import path from "node:path";
 import type { NextConfig } from "next";
 
 /*
- * Security headers.
+ * Security headers — the BASELINE, for pages src/proxy.ts does not cover.
  *
- * Neither app sent any before this, which meant no clickjacking protection on
- * the checkout or the admin panel, no MIME-sniffing protection, and full
- * referrer leakage to every outbound link.
+ * Read src/proxy.ts first. That is where the real Content-Security-Policy
+ * lives: a per-request nonce with 'strict-dynamic', applied to every route
+ * that takes user input or handles money. What is left here is the weaker
+ * policy the static marketing and policy pages fall back to.
  *
- * WHAT IS DELIBERATELY ABSENT: a script-src Content-Security-Policy.
+ * WHY THE SPLIT, since a nonce everywhere would plainly be better: a nonce is
+ * per-request, so a page that carries one cannot be prerendered — Next's own
+ * CSP guide says as much. Applying it site-wide would throw away the
+ * revalidate=300 edge cache on the home page, which is the page that decides
+ * whether a phone arriving from Instagram on a slow connection stays.
  *
- * A real script-src needs a per-request nonce, and Next's own guide is
- * explicit that nonces "must use dynamic rendering" — every page, every
- * request. That would destroy the revalidate=300 edge cache on the home page
- * and the prerendering of the policy pages, which is the wrong trade for a
- * shop whose traffic is phones on slow connections arriving from Instagram.
+ * That trade turned out to be free, because the split falls exactly where the
+ * risk does. Every page that touches a customer — /shop, the PDP, /cart,
+ * /checkout, /track, /wishlist, /contact, /order/[token] — is ALREADY dynamic
+ * for its own reasons, so nonces cost it nothing. What stays static is /,
+ * /about, /size-guide and /policies/*: marketing and legal copy with no user
+ * input, nothing echoed back, and no form.
  *
- * So this ships the directives that are strong AND cache-safe:
+ * So the honest statement of coverage is: script-src protects 100% of the
+ * pages where an injection could reach a customer, and 0% of the pages where
+ * there is nothing to inject. If a static page ever grows a form or renders
+ * anything a stranger typed, ADD IT TO THE MATCHER IN src/proxy.ts — that is
+ * the whole maintenance burden of this design.
+ *
+ * The directives below need no nonce and are cache-safe, so they apply
+ * everywhere, including under the strict policy:
+ *
  *   frame-ancestors 'none'  — the modern, stronger X-Frame-Options; nothing
- *                             can iframe the shop or the ERP, so an attacker
- *                             cannot overlay an invisible checkout or admin
- *                             panel and harvest clicks
+ *                             can iframe the shop, so an attacker cannot
+ *                             overlay an invisible checkout and harvest clicks
  *   object-src 'none'       — no Flash/applet/embed vector
  *   base-uri 'self'         — stops an injected <base> silently repointing
  *                             every relative URL on the page
@@ -28,14 +41,36 @@ import type { NextConfig } from "next";
  *                             somewhere else
  *   upgrade-insecure-requests — no mixed content
  *
- * If a nonce-based script-src is wanted later, the cost is stated above and
- * the recipe is in node_modules/next/dist/docs/01-app/02-guides/content-security-policy.md
+ * Proof both halves work: apps/store/scripts/csp-test.mjs asserts the strict
+ * pages block an injected inline handler, the static ones are honestly
+ * unprotected, and — the part that matters most — that nothing is broken by
+ * either policy.
  */
 const SECURITY_HEADERS = [
   {
     key: "Content-Security-Policy",
+    /*
+     * NOTE the absence of default-src HERE, and do not "tidy" it back in.
+     *
+     * `default-src 'self'` looks like the safe baseline and is the opposite
+     * of it in this position: script-src and style-src INHERIT from it, so on
+     * a page with no script-src of its own it silently bans every inline
+     * script and inline style. Next's hydration bootstrap is an inline
+     * script, so React never mounts — no cart, no wishlist, no search — and
+     * every style={{...}} is dropped. Measured: 205 violations and a dead
+     * page, while the header itself looked perfectly correct in curl. It
+     * shipped once, exactly like that, and reading the header is what fooled
+     * me; only loading the page in a browser catches it.
+     *
+     * src/proxy.ts DOES send default-src 'self', and that is safe there for
+     * the one reason that matters: it also sends an explicit script-src and
+     * style-src, so nothing is left to inherit the ban.
+     *
+     * Weakening this to 'unsafe-inline' instead would leave a script-src that
+     * stops nothing, which is worse than honest silence — it reads as
+     * protection in an audit and provides none.
+     */
     value: [
-      "default-src 'self'",
       "frame-ancestors 'none'",
       "object-src 'none'",
       "base-uri 'self'",
