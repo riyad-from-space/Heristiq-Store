@@ -34,7 +34,20 @@ export type Merchandising = {
   materials: string;
   featured: boolean;
   position: number;
-  /** Cloudinary public IDs, first is the hero. Empty renders the placeholder. */
+  /**
+   * Cloudinary public IDs, first is the hero. Empty renders the placeholder.
+   *
+   * ONLY LIST PHOTOGRAPHS THAT HAVE ACTUALLY BEEN UPLOADED. An id here that
+   * is not in Cloudinary is not a placeholder — the placeholder only appears
+   * when the list is empty. A missing id produces a real request that 404s,
+   * so the customer gets a broken image instead of the designed stand-in.
+   *
+   * Each piece currently has one photograph, its front. The `worn` and
+   * `detail` shots the layout supports are commented out per product rather
+   * than deleted, so restoring one after a shoot is uncommenting a line:
+   * upload `wc-005--worn.jpg`, uncomment, done. `npm run images:check`
+   * verifies the two lists agree.
+   */
   images: { id: string; alt: string }[];
 };
 
@@ -55,8 +68,11 @@ export const MERCHANDISING: Record<string, Merchandising> = {
     featured: false,
     position: 30,
     images: [
-      { id: "wc-001/front", alt: "Silver oval-link waist chain laid flat" },
-      { id: "wc-001/worn", alt: "Silver oval-link waist chain worn at the hip" },
+      {
+        id: "wc-001/front",
+        alt: "Silver oval-link waist chain draped over the back pocket of dark denim jeans",
+      },
+      // { id: "wc-001/worn", alt: "Silver oval-link waist chain worn at the hip" },
     ],
   },
   "WC-002": {
@@ -72,8 +88,11 @@ export const MERCHANDISING: Record<string, Merchandising> = {
     featured: true,
     position: 10,
     images: [
-      { id: "wc-002/front", alt: "Gold oval-link waist chain laid flat" },
-      { id: "wc-002/worn", alt: "Gold oval-link waist chain worn at the hip" },
+      {
+        id: "wc-002/front",
+        alt: "Gold oval-link waist chain curving across the waistband and back pocket of dark denim jeans",
+      },
+      // { id: "wc-002/worn", alt: "Gold oval-link waist chain worn at the hip" },
     ],
   },
   "WC-003": {
@@ -89,7 +108,10 @@ export const MERCHANDISING: Record<string, Merchandising> = {
     featured: false,
     position: 40,
     images: [
-      { id: "wc-003/front", alt: "Silver long-oval waist chain laid flat" },
+      {
+        id: "wc-003/front",
+        alt: "Silver long-oval waist chain laid across the waistband of dark denim jeans on cream cloth",
+      },
     ],
   },
   "WC-004": {
@@ -105,8 +127,11 @@ export const MERCHANDISING: Record<string, Merchandising> = {
     featured: true,
     position: 20,
     images: [
-      { id: "wc-004/front", alt: "Gold long-oval waist chain laid flat" },
-      { id: "wc-004/worn", alt: "Gold long-oval waist chain worn at the hip" },
+      {
+        id: "wc-004/front",
+        alt: "Gold long-oval waist chain curved over the back pocket of dark denim jeans",
+      },
+      // { id: "wc-004/worn", alt: "Gold long-oval waist chain worn at the hip" },
     ],
   },
   "WC-005": {
@@ -122,9 +147,12 @@ export const MERCHANDISING: Record<string, Merchandising> = {
     featured: true,
     position: 1,
     images: [
-      { id: "wc-005/front", alt: "Silver moon waist chain laid flat" },
-      { id: "wc-005/detail", alt: "Close detail of the crescent moon charm" },
-      { id: "wc-005/worn", alt: "Silver moon waist chain worn at the hip" },
+      {
+        id: "wc-005/front",
+        alt: "Silver crescent-moon and star waist chain over the back pocket of dark denim jeans",
+      },
+      // { id: "wc-005/detail", alt: "Close detail of the crescent moon charm" },
+      // { id: "wc-005/worn", alt: "Silver moon waist chain worn at the hip" },
     ],
   },
   "WC-006": {
@@ -140,8 +168,11 @@ export const MERCHANDISING: Record<string, Merchandising> = {
     featured: true,
     position: 2,
     images: [
-      { id: "wc-006/front", alt: "Golden starfish waist chain laid flat" },
-      { id: "wc-006/detail", alt: "Close detail of the textured starfish charm" },
+      {
+        id: "wc-006/front",
+        alt: "Gold starfish waist chain curving across cream cloth and dark denim jeans",
+      },
+      // { id: "wc-006/detail", alt: "Close detail of the textured starfish charm" },
     ],
   },
   "WC-007": {
@@ -157,8 +188,11 @@ export const MERCHANDISING: Record<string, Merchandising> = {
     featured: false,
     position: 3,
     images: [
-      { id: "wc-007/front", alt: "Golden conch shell waist chain laid flat" },
-      { id: "wc-007/detail", alt: "Close detail of the ridged conch charm" },
+      {
+        id: "wc-007/front",
+        alt: "Gold scallop-shell and conch waist chain draped down the front of dark denim jeans",
+      },
+      // { id: "wc-007/detail", alt: "Close detail of the ridged conch charm" },
     ],
   },
 };

@@ -56,3 +56,19 @@ cloudflare-env.d.ts
 # apps/store/scripts/image-manifest.mjs. The ORIGINALS in public/products/ are
 # committed — they are the source of truth for the site's photography.
 apps/store/public/products/_r/
+
+# Camera masters staged for upload (npm run images:upload, from apps/store).
+#
+# Deliberately NOT committed. These are full-resolution phone originals — 33MB
+# for ten photographs, and a shop that reshoots will add more. Git keeps every
+# version of a binary forever and cannot be made to forget one without
+# rewriting history, so committing them taxes every future clone permanently
+# for files the site never serves: Cloudinary holds the master it delivers
+# from, and public/products/ holds the committed fallback copies.
+#
+# THIS IS NOT A BACKUP. Ignoring them means the only copies are this Mac and
+# Cloudinary. Keep the originals somewhere that survives a lost laptop.
+cloudinary_images/
+
+# Supabase CLI scratch state (project ref, temp files) — machine-local.
+supabase/.temp/

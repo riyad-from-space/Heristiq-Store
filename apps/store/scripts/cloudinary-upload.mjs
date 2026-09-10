@@ -27,11 +27,21 @@
  * Uploads are signed here rather than unsigned-with-a-preset, so no
  * publicly-writable upload preset has to exist on the account.
  */
+import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { readFileSync, readdirSync, statSync } from "node:fs";
+import { mkdtempSync, readFileSync, readdirSync, rmSync, statSync } from "node:fs";
+import { tmpdir } from "node:os";
 import path from "node:path";
 
-const EXT = new Set([".jpg", ".jpeg", ".png", ".webp", ".avif"]);
+/*
+ * .heic is here because that is what an iPhone actually produces, and the
+ * photographs for this shop come off a phone. Cloudinary does accept HEIC,
+ * but it is transcoded to a JPEG first (see toUploadable) so the master asset
+ * is a format anything can open — including the local public/products/
+ * fallback path, which has no transcoder.
+ */
+const EXT = new Set([".jpg", ".jpeg", ".png", ".webp", ".avif", ".heic", ".heif"]);
+const NEEDS_TRANSCODE = new Set([".heic", ".heif"]);
 
 /* The seventeen the site actually renders. Kept here so the script can report
    what is still missing rather than only what was handed to it. */
@@ -94,13 +104,35 @@ function collect(root, base = root) {
     }
     if (!EXT.has(path.extname(entry.name).toLowerCase())) continue;
 
-    /* A nested path becomes the id directly; a flat name has its -- expanded.
-       Both end up as "wc-005/front". */
+    /*
+     * Work out the catalogue id from the filename. Three accepted shapes,
+     * all ending up as something like "wc-005/front":
+     *
+     *   wc-005/front.jpg   a real subfolder
+     *   wc-005--front.jpg  the -- stands in for the slash
+     *   WC-005.HEIC        just the SKU — means that product's FRONT shot
+     *
+     * The third is there because it is what comes out of the stockroom: the
+     * photographs arrive named after the product code, one per piece, which
+     * is the sensible thing for a person to do and used to be reported as
+     * "unrecognised". A bare code is unambiguous — a product's first
+     * photograph is its front — so it is now simply understood.
+     *
+     * Lowercased throughout: Cloudinary public IDs are case-sensitive and the
+     * catalogue spells them lowercase, so WC-005 and wc-005 must not become
+     * two different assets.
+     */
     const relative = path.relative(base, full).replace(/\\/g, "/");
-    const withoutExt = relative.slice(0, -path.extname(relative).length);
+    const withoutExt = relative
+      .slice(0, -path.extname(relative).length)
+      .toLowerCase();
     const id = withoutExt.includes("/")
       ? withoutExt
-      : withoutExt.replace(/--/g, "/");
+      : withoutExt.includes("--")
+        ? withoutExt.replace(/--/g, "/")
+        : /^wc-\d+$/.test(withoutExt)
+          ? `${withoutExt}/front`
+          : withoutExt;
 
     out.push({ file: full, id, kb: Math.round(statSync(full).size / 1024) });
   }
@@ -190,6 +222,54 @@ function sign(params) {
   return createHash("sha1").update(canonical + apiSecret).digest("hex");
 }
 
+/*
+ * HEIC in, JPEG up.
+ *
+ * Cloudinary would accept the HEIC, but the stored master would then be a
+ * format that nothing else in this repo can read — including the
+ * public/products/ fallback, whose resizer is `sips` reading whatever the
+ * master happens to be. Transcoding here keeps one predictable master.
+ *
+ * Quality 92 rather than the default: this is the ONLY generation loss the
+ * photograph will suffer, because every delivered size is derived by
+ * Cloudinary from this master with q_auto. Being stingy here would be a
+ * permanent tax on every rendition.
+ *
+ * `sips` ships with macOS. On a machine without it the HEIC is uploaded
+ * as-is, which Cloudinary handles — the warning says what was skipped.
+ */
+let scratch = null;
+let warnedNoSips = false;
+
+function haveSips() {
+  try {
+    execFileSync("which", ["sips"], { stdio: "ignore" });
+    return true;
+  } catch {
+    return false;
+  }
+}
+const SIPS = haveSips();
+
+function toUploadable(file) {
+  if (!NEEDS_TRANSCODE.has(path.extname(file).toLowerCase())) return file;
+  if (!SIPS) {
+    if (!warnedNoSips) {
+      console.log("  (no sips on this machine — uploading HEIC unconverted)");
+      warnedNoSips = true;
+    }
+    return file;
+  }
+  scratch ??= mkdtempSync(path.join(tmpdir(), "heristiq-upload-"));
+  const out = path.join(scratch, `${path.basename(file, path.extname(file))}.jpg`);
+  execFileSync(
+    "sips",
+    ["-s", "format", "jpeg", "-s", "formatOptions", "92", file, "--out", out],
+    { stdio: "ignore" },
+  );
+  return out;
+}
+
 let uploaded = 0;
 let failed = 0;
 
@@ -207,8 +287,10 @@ for (const image of recognised) {
     invalidate: "true",
   };
 
+  const payload = toUploadable(image.file);
+
   const form = new FormData();
-  form.set("file", new Blob([readFileSync(image.file)]), path.basename(image.file));
+  form.set("file", new Blob([readFileSync(payload)]), path.basename(payload));
   form.set("api_key", apiKey);
   for (const [key, value] of Object.entries(signed)) form.set(key, String(value));
   form.set("signature", sign(signed));
@@ -235,6 +317,8 @@ for (const image of recognised) {
     failed += 1;
   }
 }
+
+if (scratch) rmSync(scratch, { recursive: true, force: true });
 
 console.log(`\n${uploaded} uploaded, ${failed} failed.`);
 if (uploaded > 0) {
