@@ -19,9 +19,15 @@
  *      the hour. (That is not hypothetical: a `default-src 'self'` shipped
  *      here once and silently killed hydration on every page.)
  *
- * NOT treated as a bypass: document.createElement('script') from code that
- * is already running. 'strict-dynamic' permits that by design, and an
- * attacker who can already execute JavaScript has by definition already won.
+ * NOT treated as a bypass: document.createElement('script') from code that is
+ * already running. A same-origin src is permitted by 'self', and an attacker
+ * who can already execute JavaScript has by definition already won.
+ *
+ * The policy is 'self' + nonce with NO 'strict-dynamic' — see src/proxy.ts.
+ * The short version: Next emits app/template.tsx's chunk as a <script src>
+ * carrying no nonce, and 'strict-dynamic' disables the host allowlist that
+ * would otherwise cover it, so the route-transition animation was being
+ * refused in production while the page still looked fine.
  */
 import { chromium } from "playwright-core";
 

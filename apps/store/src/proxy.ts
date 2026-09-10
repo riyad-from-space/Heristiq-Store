@@ -50,12 +50,39 @@ export function proxy(request: NextRequest) {
   const csp = [
     "default-src 'self'",
     /*
-     * 'strict-dynamic' means: trust what this nonce'd script loads, and
-     * ignore the host allowlist. It is what makes the policy resistant to a
-     * bypass via some permitted CDN. React needs 'unsafe-eval' in
-     * development only, to rebuild server stack traces in the browser.
+     * 'self' AND a nonce, deliberately WITHOUT 'strict-dynamic'.
+     *
+     * 'strict-dynamic' was here first and had to go, because it breaks the
+     * page-transition animation in production. Next renders app/template.tsx
+     * by emitting a plain <script src> for its chunk through
+     * createComponentStylesAndScripts, which calls
+     *   createElement('script', { src, async, key })
+     * and passes NO nonce — verified in
+     * node_modules/next/dist/server/app-render/create-component-styles-and-scripts.js.
+     * Every other script tag on the page carries one; that single tag cannot.
+     *
+     * 'strict-dynamic' disables host allowlisting outright ("Note that
+     * 'strict-dynamic' is present, so host-based allowlisting is disabled"),
+     * so 'self' could not cover for it and the chunk was refused. The visible
+     * symptom was mild — the route fade stopped running, the page stayed
+     * usable — which is exactly why it needs a comment: it looked fine.
+     *
+     * WHAT IS LOST: with plain 'self', an injected <script src> pointing at
+     * our OWN origin would be allowed. That requires a same-origin URL that
+     * returns attacker-controlled JavaScript. There is none — the API routes
+     * return JSON and X-Content-Type-Options: nosniff stops a browser
+     * executing those as script, and everything else on the origin is build
+     * output.
+     *
+     * WHAT IS KEPT, and it is the part that matters: no 'unsafe-inline', so
+     * an inline <script> without the nonce will not run and neither will an
+     * inline event handler — the two shapes a stored XSS actually takes here.
+     * scripts/csp-test.mjs asserts both, on a production build.
+     *
+     * React needs 'unsafe-eval' in development only, to rebuild server stack
+     * traces in the browser.
      */
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${isDev ? " 'unsafe-eval'" : ""}`,
+    `script-src 'self' 'nonce-${nonce}'${isDev ? " 'unsafe-eval'" : ""}`,
     /*
      * 'unsafe-inline' for STYLES, and it is not laziness.
      *

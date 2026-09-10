@@ -19,7 +19,12 @@ export function proxy(request: NextRequest) {
 
   const csp = [
     "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${isDev ? " 'unsafe-eval'" : ""}`,
+    /* 'self' plus a nonce, no 'strict-dynamic' — see the storefront's proxy
+       for why. Next emits app/template.tsx's chunk as a <script src> with no
+       nonce, and 'strict-dynamic' disables the host allowlist that would
+       otherwise cover it. Kept identical in both apps so the two policies do
+       not quietly diverge. */
+    `script-src 'self' 'nonce-${nonce}'${isDev ? " 'unsafe-eval'" : ""}`,
     /* See the storefront's proxy: a nonce cannot cover a style attribute. */
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob:",
