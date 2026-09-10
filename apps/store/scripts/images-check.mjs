@@ -25,13 +25,30 @@ import path from "node:path";
 const ROOT = path.join(import.meta.dirname, "..");
 const DROP = process.argv[2] ?? path.join(ROOT, "../../cloudinary_images");
 
-/* Every source file that names an image id. */
-const SOURCES = [
-  "src/lib/erp/merchandising.ts",
-  "src/components/home/hero.tsx",
-  "src/components/home/story-band.tsx",
-  "src/app/about/page.tsx",
-];
+/*
+ * ALL of src/, walked — not a list of files that name images.
+ *
+ * It was a list of four, and that is precisely how six broken tiles reached
+ * the home page: the Instagram row built its ids as `social/${n}` in a file
+ * the list did not include, so nothing checked them, and they 404'd the day
+ * Cloudinary was configured. A hardcoded list only ever verifies the places
+ * someone remembered, which is the wrong set by construction.
+ */
+function sources(dir, base = dir, out = []) {
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    if (entry.name.startsWith(".") || entry.name === "node_modules") continue;
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      sources(full, base, out);
+      continue;
+    }
+    if (/\.(ts|tsx)$/.test(entry.name)) out.push(path.relative(base, full));
+  }
+  return out;
+}
+
+const SRC = path.join(ROOT, "src");
+const SOURCES = sources(SRC).map((f) => path.join("src", f));
 
 const EXT = new Set([".jpg", ".jpeg", ".png", ".webp", ".avif", ".heic", ".heif"]);
 
@@ -78,6 +95,8 @@ function available(root, base = root) {
  * ... }` so restoring one after a shoot is uncommenting a line. A commented
  * id is a plan, not a request, and must not be reported as missing.
  */
+const generated = [];
+
 function referenced() {
   const found = new Map();
   for (const file of SOURCES) {
@@ -91,6 +110,22 @@ function referenced() {
     }
     text.split("\n").forEach((line, index) => {
       if (/^\s*(\/\/|\*)/.test(line)) return;
+
+      /*
+       * An id built by interpolation can never be checked from here, so it is
+       * reported rather than ignored — silence would recreate the exact bug
+       * this script exists to catch. Put the ids in a config array instead;
+       * a literal is verifiable, `social/${n}` is not.
+       *
+       * The `/` requirement is what keeps this from crying wolf: an image id
+       * is always a path, so `mock-order-${seq}` is an order and none of this
+       * script's business, while `${sku}/front` is a photograph.
+       */
+      if (/\bid:\s*`[^`]*\$\{/.test(line) && /\bid:\s*`[^`]*\//.test(line)) {
+        generated.push(`${file}:${index + 1}  ${line.trim().slice(0, 60)}`);
+        return;
+      }
+
       for (const match of line.matchAll(/\bid:\s*"([a-z0-9][a-z0-9/-]*)"/g)) {
         const id = match[1];
         /* An id is a path with a slash. Anything else on an `id:` key is a
@@ -133,6 +168,12 @@ if (missing.length > 0) {
 if (unused.length > 0) {
   console.log(`\nPresent but unused — uploaded, and nothing renders it:`);
   for (const id of unused) console.log(`  note  ${id}`);
+}
+
+if (generated.length > 0) {
+  console.log(`\nUNVERIFIABLE — id built by interpolation, so nothing can check it:`);
+  for (const where of generated) console.log(`  WARN  ${where}`);
+  console.log(`        move the ids into a config array so they are literals`);
 }
 
 console.log(

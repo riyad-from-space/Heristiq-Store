@@ -105,12 +105,30 @@ export function Hero() {
            * The overlapping swatch. Hidden below lg: on a phone the media is
            * already edge-to-edge and a block hanging off its corner would
            * either clip or force a horizontal scrollbar.
+           *
+           * It carried `image={undefined}` — the designed gradient placeholder
+           * — which was right while the whole site was placeholders and wrong
+           * the moment real photography landed beside it: one pink gradient
+           * against a real photograph reads as a picture that failed to load,
+           * not as decoration.
+           *
+           * A SILVER piece deliberately, because the hero image is gold. The
+           * swatch's job is to hint that the range has more than one finish,
+           * and it cannot do that showing the same metal as the photograph it
+           * overlaps. Still aria-hidden: it is decoration, and a screen
+           * reader announcing a second product here would imply the hero is
+           * about two pieces.
            */}
           <div
             aria-hidden
             className="border-blush rounded-card absolute -bottom-5 -left-5 hidden w-[130px] overflow-hidden border-6 shadow-[0_20px_40px_-24px_rgba(42,33,38,.55)] lg:block"
           >
-            <ProductImage image={undefined} sizes="130px" crop="square" />
+            <ProductImage
+              image={{ id: "wc-005/front", alt: "" }}
+              sizes="130px"
+              crop="square"
+              maxWidth={320}
+            />
           </div>
         </div>
       </Container>

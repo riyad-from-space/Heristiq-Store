@@ -1,7 +1,7 @@
 import { InstagramIcon } from "@/components/ui/brand-icons";
 import { Container, Section, SectionHeader } from "@/components/ui/layout";
 import { ProductImage } from "@/components/ui/product-image";
-import { site } from "@/config/site";
+import { site, socialTiles } from "@/config/site";
 
 /*
  * The Instagram row — "As worn by you".
@@ -11,17 +11,28 @@ import { site } from "@/config/site";
  * schedule — real ongoing work for a strip of six pictures, and a strip that
  * breaks silently the day the token lapses.
  *
- * So this is six tiles the owner uploads alongside the product shots, each
+ * So this is tiles the owner uploads alongside the product shots, each
  * linking to the profile. It looks the same, never breaks, and costs nothing
- * to run. If a live feed is wanted later the seam is this component's `tiles`
- * array: fetch them in a cached server component and pass them in.
+ * to run. If a live feed is wanted later the seam is `socialTiles`: fetch them
+ * in a cached server component and pass them in.
+ *
+ * The ids come from config rather than being generated as social/1…social/6,
+ * because generated ids cannot be verified. `npm run images:check` reads the
+ * literal ids out of the source; a template string is invisible to it, and
+ * these six were the one set of images nothing was checking. They 404'd on
+ * the home page as soon as Cloudinary was configured.
  */
-const tiles = [1, 2, 3, 4, 5, 6].map((n) => ({
-  id: `social/${n}`,
-  alt: `Heristiq on Instagram, photo ${n}`,
+const tiles = socialTiles.map((id, index) => ({
+  id,
+  alt: `Heristiq on Instagram, photo ${index + 1}`,
 }));
 
 export function InstagramFeed() {
+  /* Nothing to show until customers have tagged the shop. Returning null
+     rather than rendering an empty grid keeps the two neighbouring sections'
+     spacing correct — the same thing ProductGrid does with no products. */
+  if (tiles.length === 0) return null;
+
   return (
     <Section as="div">
       <Container>

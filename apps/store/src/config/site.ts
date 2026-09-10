@@ -28,6 +28,27 @@ export const site = {
 } as const;
 
 /**
+ * The Instagram row's tiles — Cloudinary ids, in the order they appear.
+ *
+ * EMPTY ON PURPOSE, and the row hides itself until this list has something in
+ * it. These are customer photographs ("As worn by you"), so unlike the product
+ * shots there is nothing to upload until people have actually worn the pieces
+ * and tagged the shop.
+ *
+ * That is not merely tidiness. An id with no photograph behind it does NOT
+ * fall back to the designed placeholder — it produces a request that 404s and
+ * a browser's broken-image icon. This row asked for social/1…social/6
+ * unconditionally, which stayed invisible for as long as Cloudinary was
+ * unconfigured (no cloud name meant no URL, so the placeholder showed) and
+ * turned into six broken tiles on the home page the moment real credentials
+ * were added.
+ *
+ * To fill it: upload `social--1.jpg`, then add "social/1" here. Six is what
+ * the six-column desktop layout expects; three fills the phone's grid.
+ */
+export const socialTiles: readonly string[] = [];
+
+/**
  * Where the ERP lives, from the storefront's point of view.
  *
  * Default `/admin`, because both apps are served from one domain: Cloudflare
