@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Heart, Menu, ShoppingBag, X } from "lucide-react";
+import { ChevronDown, Heart, Menu, ShoppingBag, X } from "lucide-react";
 import { useCart } from "@/components/cart/cart-provider";
 import { useWishlist } from "@/components/wishlist/wishlist-provider";
 import { SearchField } from "@/components/site/search-field";
@@ -10,6 +10,7 @@ import { WhatsAppIcon } from "@/components/ui/brand-icons";
 import { Button } from "@/components/ui/button";
 import { Container } from "@/components/ui/layout";
 import { nav, site } from "@/config/site";
+import type { Category } from "@/lib/erp/types";
 import { whatsappNumber } from "@/lib/phone";
 import { cn } from "@/lib/utils";
 
@@ -26,11 +27,19 @@ import { cn } from "@/lib/utils";
  * What remains is the blush-with-blur ground, gaining a hairline and a soft
  * shadow once the page has scrolled past ~8px, exactly as the mockup does.
  */
-export function SiteHeader({ hasPromo = false }: { hasPromo?: boolean }) {
+export function SiteHeader({
+  hasPromo = false,
+  categories = [],
+}: {
+  hasPromo?: boolean;
+  /** From the layout. Empty falls back to a plain "Shop" link. */
+  categories?: Category[];
+}) {
   const { count, ready } = useCart();
   const { count: saved, ready: savedReady } = useWishlist();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [shopOpen, setShopOpen] = useState(false);
 
   /*
    * The promo strip is above the header and scrolls away with the page, so a
@@ -51,6 +60,23 @@ export function SiteHeader({ hasPromo = false }: { hasPromo?: boolean }) {
      `pathname`: an effect that sets state on every route change re-renders the
      whole header for the many navigations that did not come from the menu. */
   const closeMenu = () => setMenuOpen(false);
+
+  /*
+   * Escape closes the category menu.
+   *
+   * A dropdown that only closes by clicking elsewhere is a trap for a
+   * keyboard user: they can open it, tab through it, and have no way to
+   * dismiss it without navigating. Bound on the document rather than the
+   * panel so it works wherever focus has landed.
+   */
+  useEffect(() => {
+    if (!shopOpen) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setShopOpen(false);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [shopOpen]);
 
   /* Lock the page behind the open menu, and restore whatever was there. */
   useEffect(() => {
@@ -116,15 +142,96 @@ export function SiteHeader({ hasPromo = false }: { hasPromo?: boolean }) {
           </button>
 
           <nav className="hidden items-center gap-8 lg:flex">
-            {nav.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="nav-wipe text-[0.94rem] font-medium"
-              >
-                {item.label}
-              </Link>
-            ))}
+            {nav.map((item) =>
+              /*
+               * "Shop" grows a category menu; everything else stays a plain
+               * link. Special-cased on the href rather than adding a `children`
+               * field to the nav config, because the categories are database
+               * rows and the config is a static file — putting them in the
+               * config would mean a deploy to add a category.
+               *
+               * With no categories (a failed read, or a fresh install) this
+               * falls through to the ordinary link, so the header degrades to
+               * exactly what it was before.
+               */
+              item.href === "/shop" && categories.length > 0 ? (
+                <div
+                  key={item.href}
+                  className="relative"
+                  onMouseEnter={() => setShopOpen(true)}
+                  onMouseLeave={() => setShopOpen(false)}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setShopOpen((open) => !open)}
+                    aria-expanded={shopOpen}
+                    aria-haspopup="true"
+                    className="nav-wipe inline-flex items-center gap-1 text-[0.94rem] font-medium"
+                  >
+                    {item.label}
+                    <ChevronDown
+                      size={14}
+                      className={cn(
+                        "duration-quick transition-transform",
+                        shopOpen && "rotate-180",
+                      )}
+                    />
+                  </button>
+
+                  {/*
+                   * `invisible` when closed, not merely opacity-0 — same
+                   * reasoning as the mobile panel further down: a transparent
+                   * menu still holds its links in the tab order, so a keyboard
+                   * user would fall into six invisible category links.
+                   *
+                   * pt-2 on the wrapper keeps a hoverable bridge between the
+                   * button and the panel; without it the menu closes in the
+                   * gap while the pointer is travelling to it.
+                   */}
+                  <div
+                    className={cn(
+                      "absolute top-full left-0 pt-3",
+                      "duration-quick transition-opacity",
+                      shopOpen
+                        ? "pointer-events-auto visible opacity-100"
+                        : "pointer-events-none invisible opacity-0",
+                    )}
+                  >
+                    <div className="border-line bg-blush rounded-card min-w-[210px] border p-2 shadow-[0_18px_40px_-26px_rgba(42,33,38,.5)]">
+                      <Link
+                        href="/shop"
+                        onClick={() => setShopOpen(false)}
+                        className="hover:bg-sand duration-quick block rounded-[10px] px-3 py-2 text-[0.92rem] font-medium transition-colors"
+                      >
+                        Everything
+                      </Link>
+                      <span
+                        aria-hidden
+                        className="bg-line mx-3 my-1.5 block h-px"
+                      />
+                      {categories.map((category) => (
+                        <Link
+                          key={category.slug}
+                          href={`/shop/${category.slug}`}
+                          onClick={() => setShopOpen(false)}
+                          className="hover:bg-sand duration-quick block rounded-[10px] px-3 py-2 text-[0.92rem] transition-colors"
+                        >
+                          {category.name}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="nav-wipe text-[0.94rem] font-medium"
+                >
+                  {item.label}
+                </Link>
+              ),
+            )}
           </nav>
 
           {/* Optically centred on desktop and left-of-centre on a phone,
@@ -227,6 +334,36 @@ export function SiteHeader({ hasPromo = false }: { hasPromo?: boolean }) {
                 {item.label}
               </Link>
             ))}
+
+            {/*
+             * Categories, as a flat labelled block rather than a nested
+             * accordion under "Shop".
+             *
+             * The phone menu is a full-height panel with room to spare — six
+             * more rows cost nothing, while a collapsible section costs a tap
+             * before the customer can see what the shop even sells. Etsy nests
+             * because it has hundreds of categories; five fit on the screen.
+             *
+             * Smaller type than the main nav so the hierarchy still reads:
+             * these are children of Shop, not siblings of "Our story".
+             */}
+            {categories.length > 0 && (
+              <>
+                <span className="text-eyebrow text-stone-soft mt-7 mb-1 uppercase">
+                  Categories
+                </span>
+                {categories.map((category) => (
+                  <Link
+                    key={category.slug}
+                    href={`/shop/${category.slug}`}
+                    onClick={closeMenu}
+                    className="border-line border-b py-3.5 text-[1.05rem]"
+                  >
+                    {category.name}
+                  </Link>
+                ))}
+              </>
+            )}
             <Link
               href="/track"
               onClick={closeMenu}

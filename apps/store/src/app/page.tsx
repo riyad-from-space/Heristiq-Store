@@ -1,6 +1,7 @@
 import { Hero } from "@/components/home/hero";
 import { TrustStrip } from "@/components/home/trust-strip";
 import { ProductGrid } from "@/components/home/featured";
+import { CategoryTiles } from "@/components/home/category-tiles";
 import { Collections } from "@/components/home/collections";
 import { StoryBand } from "@/components/home/story-band";
 import { NewsletterSection } from "@/components/home/newsletter-section";
@@ -21,7 +22,11 @@ import { jsonLd } from "@/lib/json-ld";
 export const revalidate = 300;
 
 export default async function HomePage() {
-  const products = await erp().getProducts({ sort: "featured" });
+  const client = erp();
+  const [products, categories] = await Promise.all([
+    client.getProducts({ sort: "featured" }),
+    client.getCategories(),
+  ]);
   /*
    * The two grids split the catalogue rather than sharing it, so no piece
    * appears twice on one page.
@@ -41,6 +46,9 @@ export default async function HomePage() {
   return (
     <>
       <Hero />
+      {/* Structure before mood: a first-time visitor needs to know WHAT is
+          sold before being asked which feeling they are shopping for. */}
+      <CategoryTiles categories={categories} products={products} />
       <Collections products={products} />
       <ProductGrid
         products={fresh}

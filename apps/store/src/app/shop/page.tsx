@@ -5,7 +5,7 @@ import { EmptyResults, FilterBar } from "@/components/shop/filter-bar";
 import { Container, SectionHeader } from "@/components/ui/layout";
 import { collections, finishes, motifs, site } from "@/config/site";
 import { erp } from "@/lib/erp";
-import { SORTS, type ProductQuery, type SortKey } from "@/lib/erp/types";
+import { parseQuery } from "@/lib/erp/query";
 
 /*
  * The shop.
@@ -18,33 +18,8 @@ import { SORTS, type ProductQuery, type SortKey } from "@/lib/erp/types";
  */
 export const dynamic = "force-dynamic";
 
-/** Only accept values we know, so a hand-typed ?finish=foo cannot 500. */
-function parseQuery(raw: Record<string, string | string[] | undefined>): ProductQuery {
-  const one = (key: string) => {
-    const value = raw[key];
-    return Array.isArray(value) ? value[0] : value;
-  };
-
-  const finish = one("finish");
-  const motif = one("motif");
-  const collection = one("collection");
-  const sort = one("sort");
-  const q = one("q");
-
-  return {
-    finish: finish && finish in finishes ? (finish as ProductQuery["finish"]) : undefined,
-    motif: motif && motif in motifs ? (motif as ProductQuery["motif"]) : undefined,
-    collection:
-      collection && collection in collections
-        ? (collection as ProductQuery["collection"])
-        : undefined,
-    /* Trimmed and length-capped. Everything else here is validated against a
-       known key set; a free-text field cannot be, so the only guards
-       available are "not blank" and "not absurd". */
-    q: q?.trim().slice(0, 60) || undefined,
-    sort: sort && sort in SORTS ? (sort as SortKey) : "featured",
-  };
-}
+/* parseQuery moved to lib/erp/query.ts — the category pages parse the same
+   params, and two copies would drift. */
 
 export async function generateMetadata({
   searchParams,
@@ -80,8 +55,16 @@ export async function generateMetadata({
 
 export default async function ShopPage({ searchParams }: PageProps<"/shop">) {
   const query = parseQuery(await searchParams);
-  const products = await erp().getProducts(query);
+  const client = erp();
+  const [products, categories] = await Promise.all([
+    client.getProducts(query),
+    client.getCategories(),
+  ]);
 
+  /* "Everything", not "Waist chains". This page has shown every product since
+     it was built; the old default was accurate only while waist chains were
+     the only category, and it would now be the wrong heading over a grid
+     containing bracelets. */
   const heading = query.q
     ? `“${query.q}”`
     : query.collection
@@ -90,7 +73,7 @@ export default async function ShopPage({ searchParams }: PageProps<"/shop">) {
         ? `${finishes[query.finish].label}`
         : query.motif
           ? motifs[query.motif].label
-          : "Waist chains";
+          : "Everything";
 
   const blurb = query.q
     ? `${products.length} ${products.length === 1 ? "piece" : "pieces"} match your search.`
@@ -107,16 +90,19 @@ export default async function ShopPage({ searchParams }: PageProps<"/shop">) {
         size="l"
         eyebrow="The collection"
         title={heading}
+        /* "sized to sit at the hip" was true of waist chains and is not true
+           of earrings, so the shop-wide copy no longer describes one kind of
+           piece. The per-category blurbs say the specific thing. */
         lede={
           blurb ??
-          "Gold and silver finishes on fine chain, sized to sit at the hip. Everything is in stock unless it says otherwise — sold-out pieces can be pre-ordered."
+          "Gold and silver finishes, made for everyday wear. Everything is in stock unless it says otherwise — sold-out pieces can be pre-ordered."
         }
       />
 
       <div className="mt-10 sm:mt-12">
         {/* useSearchParams needs a Suspense boundary above it. */}
         <Suspense fallback={<div className="h-24" />}>
-          <FilterBar count={products.length} />
+          <FilterBar count={products.length} categories={categories} />
         </Suspense>
       </div>
 

@@ -5,7 +5,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useTransition } from "react";
 import { ChevronDown, X } from "lucide-react";
 import { finishes, motifs } from "@/config/site";
-import { SORTS, type SortKey } from "@/lib/erp/types";
+import { SORTS, type Category, type SortKey } from "@/lib/erp/types";
 import { cn } from "@/lib/utils";
 
 /*
@@ -33,7 +33,14 @@ function buildHref(
   return query ? `${pathname}?${query}` : pathname;
 }
 
-export function FilterBar({ count }: { count: number }) {
+export function FilterBar({
+  count,
+  categories = [],
+}: {
+  count: number;
+  /** Empty hides the row entirely — a shop with one category needs no picker. */
+  categories?: Category[];
+}) {
   const pathname = usePathname();
   const params = useSearchParams();
   const router = useRouter();
@@ -52,6 +59,43 @@ export function FilterBar({ count }: { count: number }) {
       )}
     >
       <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-2 sm:gap-y-3">
+        {/*
+         * Category chips NAVIGATE rather than filter, and that is the whole
+         * reason they are here instead of in the query string.
+         *
+         * Every other control on this bar sets a search param, so /shop
+         * accumulates ?finish=gold&motif=celestial and stays one page. A
+         * category doing the same would give every category two addresses —
+         * /shop?category=bracelets and /shop/bracelets — showing identical
+         * products. That is a duplicate-content problem for search engines
+         * and an ambiguity for anyone sharing a link.
+         *
+         * So there is exactly one URL per category, and these are the way in.
+         * The finish and motif params deliberately do NOT survive the jump:
+         * carrying ?finish=gold onto a category with no gold pieces would
+         * land the customer on an empty page they did not ask for.
+         */}
+        {categories.length > 0 && (
+          <>
+            <FilterGroup label="Category">
+              <Chip href="/shop" active={pathname === "/shop"}>
+                All
+              </Chip>
+              {categories.map((category) => (
+                <Chip
+                  key={category.slug}
+                  href={`/shop/${category.slug}`}
+                  active={pathname === `/shop/${category.slug}`}
+                >
+                  {category.name}
+                </Chip>
+              ))}
+            </FilterGroup>
+
+            <span aria-hidden className="bg-line mx-1 hidden h-5 w-px sm:block" />
+          </>
+        )}
+
         <FilterGroup label="Finish">
           <Chip href={buildHref(pathname, params, "finish", null)} active={!finish}>
             All

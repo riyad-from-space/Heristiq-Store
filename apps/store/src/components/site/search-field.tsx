@@ -77,7 +77,10 @@ export function SearchField({
         type="search"
         name="q"
         autoFocus={autoFocus}
-        placeholder="Search waist chains, styles…"
+        /* Not "waist chains": the shop sells five categories now, and a
+           placeholder naming one of them tells a customer looking for
+           earrings that they are in the wrong place. */
+        placeholder="Search rings, chains, earrings…"
         value={value}
         onChange={(event) => setValue(event.target.value)}
         /* text-base so iOS Safari does not zoom the page on focus. The visual

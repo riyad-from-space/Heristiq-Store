@@ -7,6 +7,7 @@ import { SiteHeader } from "@/components/site/site-header";
 import { SiteFooter } from "@/components/site/site-footer";
 import { site } from "@/config/site";
 import { promoSettings } from "@/lib/settings";
+import { erp } from "@/lib/erp";
 import { fraunces, hanken } from "./fonts";
 import "./globals.css";
 
@@ -42,7 +43,18 @@ export const viewport: Viewport = {
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
-  const promo = await promoSettings();
+  /*
+   * The category menu is fetched HERE, in the layout, rather than per page.
+   *
+   * It appears in the header on every route, so fetching it in each page
+   * would be the same read repeated by /shop, every category, every product
+   * and the cart. getCategories() returns [] on failure by design, so a
+   * taxonomy read that fails degrades the menu instead of the layout.
+   */
+  const [promo, categories] = await Promise.all([
+    promoSettings(),
+    erp().getCategories(),
+  ]);
 
   return (
     /*
@@ -102,7 +114,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
 
           {/* Above the header, and the header's own offset accounts for it. */}
           <PromoBanner promo={promo} />
-          <SiteHeader hasPromo={promo.enabled} />
+          <SiteHeader hasPromo={promo.enabled} categories={categories} />
           {/* pt-16/20 clears the fixed header. The home hero opts out of this
               by pulling itself back up, so it can sit under a transparent
               header. */}
