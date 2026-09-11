@@ -267,9 +267,25 @@ export default async function ShopSlugPage({
                 </Panel>
               )}
 
-              <Panel value="size" title="Length & fit">
-                <SizeGuideContent lengthInches={product.lengthInches} />
-              </Panel>
+              {/*
+               * Only for pieces that HAVE a length.
+               *
+               * This panel rendered unconditionally, which was harmless while
+               * the shop sold nothing but waist chains and became nonsense the
+               * moment it could sell a ring: the content explains where to
+               * hold a tape measure "on the hip bone, a few inches below the
+               * natural waist", under a heading promising the fit of whatever
+               * the customer is looking at.
+               *
+               * lengthInches is the honest test — it is set in the
+               * merchandising overlay for pieces that adjust, and null for
+               * pieces where "length" means nothing.
+               */}
+              {product.lengthInches && (
+                <Panel value="size" title="Length & fit">
+                  <SizeGuideContent lengthInches={product.lengthInches} />
+                </Panel>
+              )}
 
               <Panel value="care" title="Care">
                 <ul className="text-stone list-disc space-y-2 pl-5 leading-relaxed">

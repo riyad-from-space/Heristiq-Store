@@ -62,9 +62,9 @@ export default async function HomePage() {
       <StoryBand />
       <ProductGrid
         products={edit}
-        title="The waist chain edit"
+        title="The edit"
         lede="The pieces we keep restocking — and the ones you keep asking for."
-        linkLabel="Shop all chains"
+        linkLabel="Shop everything"
       />
       <TrustStrip />
       <InstagramFeed />

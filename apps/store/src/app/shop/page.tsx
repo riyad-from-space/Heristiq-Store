@@ -28,15 +28,19 @@ export async function generateMetadata({
 
   /* A filtered view gets its own title, but is canonicalised back to /shop so
      the same seven products are not indexed as six near-duplicate pages. */
+  /* "jewellery", not "waist chains". These become the <title> — what Google
+     lists and what a shared link previews as — and /shop?finish=gold now
+     covers gold rings and earrings too, so "Gold waist chains" would be the
+     wrong promise in a search result. */
   const facet = query.q
     ? `Search: ${query.q}`
     : query.collection
-      ? `${collections[query.collection].label} waist chains`
+      ? `${collections[query.collection].label} jewellery`
       : query.finish
-        ? `${finishes[query.finish].label} waist chains`
+        ? `${finishes[query.finish].label} jewellery`
         : query.motif
-          ? `${motifs[query.motif].label} waist chains`
-          : "Waist chains";
+          ? `${motifs[query.motif].label} jewellery`
+          : "Everything";
 
   return {
     title: facet,

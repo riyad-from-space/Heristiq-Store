@@ -33,7 +33,7 @@ export function StoryBand() {
           <ProductImage
             image={{
               id: "story/celestial",
-              alt: "A Heristiq waist chain, finished by hand",
+              alt: "A Heristiq piece, finished by hand",
             }}
             sizes="(min-width: 1024px) 46vw, 100vw"
             crop="wide"

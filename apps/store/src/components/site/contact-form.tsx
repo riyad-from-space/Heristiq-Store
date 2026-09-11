@@ -151,7 +151,7 @@ export function ContactForm({ orderReference = "" }: { orderReference?: string }
           onChange={(e) => patch({ message: e.target.value })}
           rows={5}
           maxLength={2000}
-          placeholder="Which length should I take for a 30 inch waist?"
+          placeholder="Do you have this in gold, and when will rings be back?"
           required
         />
       </Field>

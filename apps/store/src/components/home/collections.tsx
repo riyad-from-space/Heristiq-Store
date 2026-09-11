@@ -35,7 +35,7 @@ export function Collections({ products }: { products: ProductCard[] }) {
       <Container>
         <SectionHeader
           title="Shop by mood"
-          lede="Four ways to wear the chain, from a quiet everyday to the night out."
+          lede="Four ways to wear Heristiq, from a quiet everyday to the night out."
           action={
             <Link
               href="/shop"

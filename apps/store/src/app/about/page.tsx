@@ -33,7 +33,7 @@ export const revalidate = 3600;
 export const metadata: Metadata = {
   title: "Our story",
   description:
-    "Heristiq makes modern, non-gold body jewellery in Bangladesh — waist chains in gold and silver finishes, made for everyday wear.",
+    "Heristiq makes modern, non-gold body jewellery in Bangladesh — waist chains, bracelets, rings, earrings and pendants in gold and silver finishes, made for everyday wear.",
   alternates: { canonical: "/about" },
   openGraph: {
     title: `Our story — ${site.name}`,
@@ -50,7 +50,7 @@ export default function AboutPage() {
       title="Jewellery you actually wear"
       lede={`${business.name} makes body jewellery for everyday wear — not the kind that lives in a box and comes out twice a year.`}
     >
-      <ProseSection title="Why waist chains">
+      <ProseSection title="Why we make what we make">
         <p>
           Body jewellery in Bangladesh has long meant one of two things: heavy
           gold kept for weddings, or something bought in a hurry that turns your
@@ -61,9 +61,11 @@ export default function AboutPage() {
         </p>
         <p>
           We started with waist chains because they are the piece people ask
-          about most and find hardest to buy well. Everything we make is
-          non-gold by design: gold-plated and silver-plated brass, which is what
-          lets us price a piece at a few hundred taka instead of a few thousand.
+          about most and find hardest to buy well. Bracelets, rings, earrings
+          and pendants follow the same rule, and arrive as we photograph them.
+          Everything we make is non-gold by design: gold-plated and
+          silver-plated brass, which is what lets us price a piece at a few
+          hundred taka instead of a few thousand.
         </p>
       </ProseSection>
 
@@ -74,10 +76,11 @@ export default function AboutPage() {
           nautical, things that keep turning up in the same jewellery box.
         </p>
         <p>
-          Each piece comes in a gold or silver finish on fine chain, sized to
-          sit at the hip, with an extender so one length fits more than one
-          person. That is the whole idea: a small collection where every piece
-          belongs with the others.
+          Every piece comes in a gold or silver finish, and the ones that need
+          to fit — the waist chains — carry an extender so one length works for
+          more than one person. That is the whole idea: a small collection
+          where every piece belongs with the others, whichever part of you it
+          is made for.
         </p>
         <div className="not-prose mt-8 grid grid-cols-2 gap-4">
           <div>

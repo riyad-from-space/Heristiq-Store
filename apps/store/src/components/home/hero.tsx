@@ -63,8 +63,8 @@ export function Hero() {
 
           <StaggerItem className="mt-5">
             <p className="text-copy-lg text-stone max-w-[46ch]">
-              Contemporary waist chains for every mood. Handmade in Bangladesh,
-              styled for the everyday and the occasion.
+              Contemporary body jewellery for every mood. Handmade in
+              Bangladesh, styled for the everyday and the occasion.
             </p>
           </StaggerItem>
 
@@ -89,7 +89,7 @@ export function Hero() {
          */}
         <div className="relative order-first lg:order-none">
           <ProductImage
-            image={{ id: "hero/home", alt: "Heristiq waist chain, autumn 2026" }}
+            image={{ id: "hero/home", alt: "Heristiq jewellery, autumn 2026" }}
             sizes="(min-width: 1024px) 52vw, 100vw"
             crop="wide"
             priority

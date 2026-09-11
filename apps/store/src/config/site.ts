@@ -9,8 +9,13 @@ export const site = {
   name: "Heristiq",
   /* Used as the <title> suffix and in structured data. */
   tagline: "Modern body jewellery",
+  /* Names the CATEGORIES rather than one of them. This read "Waist chains in
+     gold and silver finishes" while that was all there was; it is the site's
+     meta description, so it is what Google shows under the name and what gets
+     pasted into a WhatsApp link preview — telling someone looking for
+     earrings that this shop sells something else. */
   description:
-    "Waist chains in gold and silver finishes, made for everyday wear. Cash on delivery across Bangladesh.",
+    "Waist chains, bracelets, rings, earrings and pendants in gold and silver finishes, made for everyday wear. Cash on delivery across Bangladesh.",
   url: "https://heristiq.com",
   locale: "en_BD",
   /* Placeholders until the real accounts are confirmed. */
@@ -72,7 +77,7 @@ export const footerNav = [
   {
     title: "Shop",
     links: [
-      { href: "/shop", label: "All waist chains" },
+      { href: "/shop", label: "Everything" },
       { href: "/shop?finish=gold", label: "Gold finish" },
       { href: "/shop?finish=silver", label: "Silver finish" },
       { href: "/shop?motif=celestial", label: "Celestial" },
@@ -149,7 +154,7 @@ export type FinishKey = keyof typeof finishes;
 export const collections = {
   everyday: {
     label: "Everyday",
-    blurb: "Light, layer-friendly chains",
+    blurb: "Light pieces, made to layer",
     lede: "The pieces that go on in the morning and are forgotten about until someone asks.",
   },
   occasion: {
@@ -164,8 +169,8 @@ export const collections = {
   },
   layered: {
     label: "Layers",
-    blurb: "Fine chains made to stack",
-    lede: "Slim chains that sit together without tangling. Wear two, or wear four.",
+    blurb: "Fine pieces made to stack",
+    lede: "Slim pieces that sit together without crowding. Wear two, or wear four.",
   },
 } as const;
 

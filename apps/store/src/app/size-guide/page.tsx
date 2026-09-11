@@ -30,7 +30,7 @@ export const revalidate = 3600;
 export const metadata: Metadata = {
   title: "Size guide",
   description:
-    "How to measure for a waist chain, and which length to choose. Measurements in inches and centimetres.",
+    "How to measure for a waist chain and choose a length, in inches and centimetres. Fit notes for bracelets, rings, earrings and pendants arrive with those pieces.",
   alternates: { canonical: "/size-guide" },
 };
 
@@ -41,6 +41,26 @@ export default function SizeGuidePage() {
       title="Finding your length"
       lede="A waist chain is the one piece where the wrong length means sending it back, so it is worth two minutes with a tape measure — or a phone charging cable, which is what most people have."
     >
+      {/*
+       * WAIST CHAINS ONLY, and it says so rather than quietly implying the
+       * numbers cover everything.
+       *
+       * The shop now lists five categories, but this page teaches one thing:
+       * where to hold a tape measure on your hip. Writing a ring chart or an
+       * earring guide for pieces nobody has photographed yet would be
+       * inventing sizing for products that do not exist — and a wrong ring
+       * size is a return, which is the exact cost this page is here to avoid.
+       *
+       * So the scope is stated, and the other categories get their section
+       * when there is something real to measure.
+       */}
+      <p className="text-stone text-copy-sm">
+        This page covers <strong className="text-ink font-medium">waist
+        chains</strong>. Bracelets, rings, earrings and pendants have their own
+        fit notes, which arrive on each piece as we photograph it — and until
+        then, ask us and we will measure one by hand.
+      </p>
+
       <SizeGuideContent />
 
       <div className="border-line mt-12 border-t pt-8">
