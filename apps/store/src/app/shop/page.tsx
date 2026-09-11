@@ -122,6 +122,7 @@ export default async function ShopPage({ searchParams }: PageProps<"/shop">) {
             <div key={product.id}>
               <ProductCardTile
                 product={product}
+                sizes={"(min-width: 1024px) 30vw, 45vw"}
                 /* The first row is above the fold on a phone; everything else
                    stays lazy so the grid does not fetch nine images at once. */
                 priority={index < 2}

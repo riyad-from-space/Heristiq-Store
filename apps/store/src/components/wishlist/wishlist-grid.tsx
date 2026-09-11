@@ -74,7 +74,12 @@ export function WishlistGrid({ products }: { products: ProductCard[] }) {
     <>
       <div className="mt-9 grid grid-cols-2 gap-x-4 gap-y-9 sm:gap-x-5 lg:grid-cols-4">
         {saved.map((product) => (
-          <ProductCardTile key={product.id} product={product} />
+          <ProductCardTile
+            key={product.id}
+            product={product}
+            /* 2 columns on a phone, 4 from lg. */
+            sizes="(min-width: 1024px) 23vw, 45vw"
+          />
         ))}
       </div>
       {missing > 0 && (

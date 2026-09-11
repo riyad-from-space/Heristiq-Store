@@ -336,6 +336,8 @@ export default async function ShopSlugPage({
                 <ProductCardTile
                   key={item.id}
                   product={item}
+                  /* 2 columns on a phone, 3 from sm. */
+                  sizes="(min-width: 640px) 30vw, 45vw"
                   /* Two columns on a phone, three from sm up — so the third
                      card would sit alone on a half-empty row. Hide it there
                      rather than ending the page on an orphan. */

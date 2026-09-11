@@ -75,6 +75,8 @@ export function ProductGrid({
             <div key={product.id} className="w-[74vw] shrink-0 snap-start">
               <ProductCardTile
                 product={product}
+                /* The rail's own card width, not the grid's. */
+                sizes="74vw"
                 priority={priority && index === 0}
               />
             </div>
@@ -92,6 +94,13 @@ export function ProductGrid({
               >
                 <ProductCardTile
                   product={product}
+                  /* 2 columns from sm, 4 from lg — and the feature card spans
+                     two of those four, so it is twice as wide. */
+                  sizes={
+                    feature && index === 0
+                      ? "(min-width: 1024px) 47vw, 46vw"
+                      : "(min-width: 1024px) 23vw, 46vw"
+                  }
                   feature={feature && index === 0}
                   priority={priority && index === 0}
                 />

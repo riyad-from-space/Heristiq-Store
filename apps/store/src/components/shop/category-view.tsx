@@ -71,7 +71,11 @@ export function CategoryView({
         <div className="mt-10 grid grid-cols-2 gap-x-4 gap-y-10 sm:mt-12 sm:gap-x-6 sm:gap-y-14 lg:grid-cols-3">
           {products.map((product, index) => (
             <div key={product.id}>
-              <ProductCardTile product={product} priority={index < 2} />
+              <ProductCardTile
+                product={product}
+                sizes={"(min-width: 1024px) 30vw, 45vw"}
+                priority={index < 2}
+              />
             </div>
           ))}
         </div>

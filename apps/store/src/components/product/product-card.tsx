@@ -26,10 +26,33 @@ export function ProductCardTile({
   product,
   priority = false,
   feature = false,
+  sizes,
   className,
 }: {
   product: ProductCardType;
   priority?: boolean;
+  /**
+   * How wide this card renders, per breakpoint — the caller's job, because
+   * only the caller knows its own grid.
+   *
+   * This used to be hardcoded here as
+   *   (min-width: 1024px) 23vw, (min-width: 640px) 45vw, 92vw
+   * and that single string had to serve three different layouts: the home
+   * page's phone rail (74vw), the home page's desktop grid (2 then 4
+   * columns), and the shop's grid (2 then 3). It was wrong for most of them.
+   *
+   * Measured on the live site before this changed: a shop card renders at
+   * 43vw on a 390px phone, but `sizes` promised 92vw — so the browser, at
+   * DPR 2, asked for w_828 when w_390 would do. Eight cards, 1,758 KB
+   * instead of about 320 KB, on the page a customer from Instagram lands on
+   * with the slowest connection.
+   *
+   * `sizes` is a PROMISE to the browser, and it picks from srcset before
+   * layout exists, so it cannot check. An over-promise wastes bandwidth
+   * silently; an under-promise ships a blurry image. Neither shows up in any
+   * test that only asks whether the image loaded.
+   */
+  sizes: string;
   /**
    * The mockup's first card, spanning two columns and running taller.
    *
@@ -61,11 +84,7 @@ export function ProductCardTile({
         <div className="ease-out-soft transition-transform duration-slow motion-safe:group-hover:scale-[1.04]">
           <ProductImage
             image={hero}
-            sizes={
-              feature
-                ? "(min-width: 1024px) 46vw, (min-width: 640px) 92vw, 92vw"
-                : "(min-width: 1024px) 23vw, (min-width: 640px) 45vw, 92vw"
-            }
+            sizes={sizes}
             priority={priority}
             maxWidth={feature ? 1080 : 828}
             placeholderLabel={product.sku}
@@ -78,11 +97,7 @@ export function ProductCardTile({
           {second && (
             <ProductImage
               image={second}
-              sizes={
-                feature
-                  ? "(min-width: 1024px) 46vw, 92vw"
-                  : "(min-width: 1024px) 23vw, (min-width: 640px) 45vw, 92vw"
-              }
+              sizes={sizes}
               maxWidth={feature ? 1080 : 828}
               className="duration-calm absolute inset-0 h-full opacity-0 transition-opacity group-hover:opacity-100"
             />
