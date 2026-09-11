@@ -5,6 +5,22 @@ import { SizeGuideContent } from "@/components/product/size-guide";
 import { Button } from "@/components/ui/button";
 
 /*
+ * Prerendered, but not frozen.
+ *
+ * This page's own content is static — it changes when someone edits the file.
+ * Its HEADER is not: the layout reads the category menu from the database, so
+ * without a revalidate this page would keep serving the menu that existed the
+ * day it was built, and a category the owner adds in the ERP would be missing
+ * here while appearing everywhere else.
+ *
+ * An hour is the trade: still one cached render served from the edge to
+ * effectively every visitor, and a new category shows up on its own rather
+ * than waiting for the next deploy.
+ */
+export const revalidate = 3600;
+
+
+/*
  * The size guide, as its own page.
  *
  * The table itself is the same component the PDP accordion renders — which is

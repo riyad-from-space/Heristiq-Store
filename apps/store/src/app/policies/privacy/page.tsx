@@ -6,6 +6,22 @@ import { business } from "@/config/business";
 import { site } from "@/config/site";
 
 /*
+ * Prerendered, but not frozen.
+ *
+ * This page's own content is static — it changes when someone edits the file.
+ * Its HEADER is not: the layout reads the category menu from the database, so
+ * without a revalidate this page would keep serving the menu that existed the
+ * day it was built, and a category the owner adds in the ERP would be missing
+ * here while appearing everywhere else.
+ *
+ * An hour is the trade: still one cached render served from the edge to
+ * effectively every visitor, and a new category shows up on its own rather
+ * than waiting for the next deploy.
+ */
+export const revalidate = 3600;
+
+
+/*
  * Privacy.
  *
  * Written from what the code ACTUALLY does, which is the only way a privacy
