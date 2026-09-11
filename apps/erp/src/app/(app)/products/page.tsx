@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { money, num } from "@/lib/format";
-import { Badge, Card, Empty, Table, Td } from "@/components/ui";
+import { Card, Empty, Table, Td } from "@/components/ui";
 import type { ProductStockRow } from "@/lib/types";
 import { createProduct } from "./actions";
 import { ProductForm } from "./product-form";
-import { CategoryForm } from "./category-form";
+import { CategoryForm, CategoryEditor } from "./category-form";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +14,13 @@ export default async function ProductsPage() {
 
   const [productsRes, catsRes, supsRes] = await Promise.all([
     supabase.from("v_product_stock").select("*").order("name"),
-    supabase.from("categories").select("id, name").order("name"),
+    /* Ordered the way the SHOP orders them, so this list is what the
+       customer's menu looks like rather than an alphabetical coincidence. */
+    supabase
+      .from("categories")
+      .select("id, name, slug, blurb, position, is_active")
+      .order("position")
+      .order("name"),
     supabase.from("suppliers").select("id, name").order("name"),
   ]);
 
@@ -40,10 +46,13 @@ export default async function ProductsPage() {
         </Card>
         <Card title="Categories">
           <CategoryForm />
-          <ul className="mt-3 flex flex-wrap gap-1.5">
+          {/* A column, not a row of badges: each one now carries its web
+              address, its menu position and whether the shop shows it, and
+              that does not fit in a pill. */}
+          <ul className="mt-3 space-y-1.5">
             {categories.map((c) => (
               <li key={c.id}>
-                <Badge>{c.name}</Badge>
+                <CategoryEditor category={c} />
               </li>
             ))}
             {categories.length === 0 && (

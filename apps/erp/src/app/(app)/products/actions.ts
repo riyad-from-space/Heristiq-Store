@@ -123,6 +123,16 @@ export async function updateProduct(_prev: string | null, fd: FormData) {
   redirect("/products");
 }
 
+/*
+ * Categories are the STOREFRONT's browse structure, not just an inventory
+ * label — each one is a page at /shop/<slug> with a heading and a line of
+ * copy under it. So the fields the shop renders are editable here, or the
+ * owner would need SQL to reorder a menu.
+ *
+ * The slug is deliberately NOT one of them. It is derived from the name by a
+ * trigger (migration 1008), because a hand-edited slug is a broken link the
+ * day someone changes it, and nothing in this admin would warn them.
+ */
 export async function createCategory(_prev: string | null, fd: FormData) {
   /* A Server Action is a public POST endpoint; the page gate does not
      protect it. See requireAdmin(). */
@@ -132,11 +142,62 @@ export async function createCategory(_prev: string | null, fd: FormData) {
   const name = text(fd, "name");
   if (!name) return "Name is required.";
 
-  const { error } = await supabase.from("categories").insert({ name });
-  if (error) {
-    return error.code === "23505" ? `"${name}" already exists.` : error.message;
-  }
+  const { error } = await supabase.from("categories").insert({
+    name,
+    blurb: text(fd, "blurb"),
+    /* Default 100, so a category added without a position sorts after the
+       five that have one rather than jumping to the front of the menu. */
+    position: count(fd, "position", 100),
+  });
+  if (error) return categoryError(error, name);
 
   revalidatePath("/products");
   return null;
+}
+
+export async function updateCategory(_prev: string | null, fd: FormData) {
+  await requireAdmin();
+
+  const supabase = await createClient();
+  const id = String(fd.get("id"));
+  const name = text(fd, "name");
+  if (!id) return "Missing category.";
+  if (!name) return "Name is required.";
+
+  const { error } = await supabase
+    .from("categories")
+    .update({
+      name,
+      blurb: text(fd, "blurb"),
+      position: count(fd, "position", 100),
+      /* Unchecked hides the category from the shop. Products keep their
+         category, so ticking it back restores the page exactly. */
+      is_active: fd.get("is_active") === "on",
+    })
+    .eq("id", id);
+  if (error) return categoryError(error, name);
+
+  revalidatePath("/products");
+  return null;
+}
+
+/*
+ * Both database guards from 1008 surface as errors here, and both need
+ * translating — a raw Postgres message is not something the owner can act on.
+ */
+function categoryError(
+  error: { code?: string; message: string },
+  name: string,
+) {
+  if (error.code === "23505") {
+    /* unique(org_id, name) or unique(org_id, slug). The slug case is the
+       confusing one: "Finger Rings" and "Finger rings" are different names
+       that produce the same URL. */
+    return `"${name}" clashes with an existing category — check for one with the same name or that would make the same web address.`;
+  }
+  if (error.code === "23514") {
+    /* categories_slug_not_reserved */
+    return `"${name}" would take a web address the shop already uses (cart, checkout, about and so on). Pick another name.`;
+  }
+  return error.message;
 }
