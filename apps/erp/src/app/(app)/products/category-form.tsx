@@ -9,10 +9,14 @@ import { createCategory, updateCategory } from "./actions";
  * a name: each one is a page at /shop/<slug> with a heading, a line of copy
  * beneath it, and a place in the menu.
  *
- * What is NOT editable is the slug. The database derives it from the name
- * (migration 1008), because a hand-typed slug is a link that breaks silently
- * the day someone tidies it — and nothing here would warn them. The shop
- * shows the resulting address next to each name so it is never a surprise.
+ * What is NOT editable is the web address. The database derives it from the
+ * name when the category is CREATED and then leaves it alone — renaming
+ * "Pendants" to "Pendants & Charms" keeps /shop/pendants, so a rename never
+ * 404s links already shared on WhatsApp or Instagram.
+ *
+ * The consequence is that an address can drift from its name, so it is shown
+ * beside every category rather than hidden: this is the only place the owner
+ * can see what their page's URL actually is.
  */
 export function CategoryForm() {
   const formRef = useRef<HTMLFormElement>(null);
@@ -122,7 +126,15 @@ export function CategoryEditor({
         />
       </div>
 
-      <Field label="Line under the heading on /shop/{slug}">
+      {/* Spelled out because it is the one non-obvious rule here, and the
+          alternative is the owner renaming a category and later wondering
+          why the address no longer matches. */}
+      <p className="text-[11px] text-neutral-500">
+        Web address stays <span className="font-mono">/shop/{category.slug}</span>{" "}
+        even if you change the name, so links already shared keep working.
+      </p>
+
+      <Field label="Line shown under the heading on the shop page">
         <Textarea name="blurb" rows={2} defaultValue={category.blurb ?? ""} />
       </Field>
 

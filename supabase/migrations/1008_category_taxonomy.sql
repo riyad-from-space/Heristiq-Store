@@ -20,8 +20,9 @@ alter table categories
   add column if not exists is_active boolean not null default true;
 
 comment on column categories.slug is
-  'URL segment, e.g. "waist-chains". Derived from name by categories_slugify() '
-  'when not given, so the ERP can keep creating categories by name alone.';
+  'URL segment, e.g. "waist-chains". Derived from the name ON INSERT and then '
+  'STABLE — renaming the category does not move its URL. Set it to an empty '
+  'string to re-derive from the current name.';
 comment on column categories.blurb is
   'One line under the category heading on its page. Optional.';
 comment on column categories.position is
@@ -68,6 +69,26 @@ as $$
     regexp_replace(lower(unaccent_fallback(p)), '[^a-z0-9]+', '-', 'g'));
 $$;
 
+/*
+ * Derive on INSERT; leave alone on RENAME.
+ *
+ * The branch below is what produces that, and it is deliberate rather than a
+ * side effect. On an update that changes only the name, `new.slug` still
+ * holds the existing non-empty slug, so it takes the else branch and
+ * re-slugifies itself — unchanged.
+ *
+ * A URL that followed the name would mean renaming "Pendants" to "Pendants &
+ * Charms" silently 404s /shop/pendants: every link already shared on
+ * WhatsApp, every Instagram bio link, every search result. Renaming a
+ * category is a copy edit, and a copy edit should not break the internet's
+ * memory of the page.
+ *
+ * The cost is that a renamed category can end up with a slug that no longer
+ * matches its name — /shop/pendants titled "Charms". That is cosmetic, it is
+ * visible in the ERP next to the name, and it is recoverable: set slug to an
+ * empty string and this re-derives it from the current name, accepting the
+ * broken links as a deliberate choice rather than a surprise.
+ */
 create or replace function categories_set_slug()
 returns trigger
 language plpgsql
