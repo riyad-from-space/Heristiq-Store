@@ -31,6 +31,27 @@ comment on column categories.is_active is
 
 -- ─────────────────────────────────────────────────────────────── slugify ──
 --
+-- `unaccent` lives in an extension that may not be installed, and installing
+-- one for five category names is not a trade worth making. This covers the
+-- characters a Bangladeshi jewellery catalogue would realistically contain and
+-- leaves everything else alone.
+--
+-- DEFINED FIRST, and the order is not cosmetic: a `language sql` function body
+-- is parsed and resolved when the function is created, not when it is called,
+-- so slugify() below fails with "function unaccent_fallback(text) does not
+-- exist" if this comes after it. (plpgsql would defer the lookup to runtime
+-- and hide the mistake until something called it.)
+create or replace function unaccent_fallback(p text)
+returns text
+language sql
+immutable
+strict
+as $$
+  select translate(p,
+    'àáâãäåèéêëìíîïòóôõöùúûüñçÀÁÂÃÄÅÈÉÊËÌÍÎÏÒÓÔÕÖÙÚÛÜÑÇ',
+    'aaaaaaeeeeiiiiooooouuuuncAAAAAAEEEEIIIIOOOOOUUUUNC');
+$$;
+
 -- Unaccented, lowercase, non-alphanumerics collapsed to a single dash. Kept
 -- deliberately simple: these are English category names typed by one person,
 -- not arbitrary user input, and a clever implementation here would be a
@@ -45,21 +66,6 @@ strict
 as $$
   select trim(both '-' from
     regexp_replace(lower(unaccent_fallback(p)), '[^a-z0-9]+', '-', 'g'));
-$$;
-
--- `unaccent` lives in an extension that may not be installed, and installing
--- one for five category names is not a trade worth making. This covers the
--- characters a Bangladeshi jewellery catalogue would realistically contain and
--- leaves everything else alone.
-create or replace function unaccent_fallback(p text)
-returns text
-language sql
-immutable
-strict
-as $$
-  select translate(p,
-    'àáâãäåèéêëìíîïòóôõöùúûüñçÀÁÂÃÄÅÈÉÊËÌÍÎÏÒÓÔÕÖÙÚÛÜÑÇ',
-    'aaaaaaeeeeiiiiooooouuuuncAAAAAAEEEEIIIIOOOOOUUUUNC');
 $$;
 
 create or replace function categories_set_slug()
@@ -125,8 +131,6 @@ create or replace view v_product_stock with (security_invoker = on) as
 select
   p.id, p.sku, p.name, p.is_active, p.selling_price, p.reorder_level,
   c.name as category, s.name as supplier,
-  c.slug     as category_slug,
-  c.position as category_position,
   coalesce(ps.on_hand, 0)  as on_hand,
   coalesce(ps.avg_cost, 0) as avg_cost,
   round(coalesce(ps.on_hand, 0) * coalesce(ps.avg_cost, 0), 2) as stock_value,
@@ -136,7 +140,21 @@ select
   end as margin_pct,
   ps.last_movement_at,
   coalesce(r.reserved, 0) as reserved,
-  coalesce(ps.on_hand, 0) - coalesce(r.reserved, 0) as available
+  coalesce(ps.on_hand, 0) - coalesce(r.reserved, 0) as available,
+  /*
+   * APPENDED, not slotted in beside `category` where they belong logically.
+   *
+   * `create or replace view` may only ADD columns at the end of the select
+   * list — it matches the existing columns positionally, so inserting these
+   * after `supplier` made Postgres think on_hand was being renamed to
+   * category_slug and refused: "cannot change name of view column".
+   *
+   * Putting them in their natural place would need a DROP and CREATE, which
+   * would cascade to v_low_stock and every other view built on this one. Two
+   * columns in an odd position is the cheaper price.
+   */
+  c.slug     as category_slug,
+  c.position as category_position
 from products p
 left join product_stock   ps on ps.product_id = p.id
 left join categories      c  on c.id = p.category_id
