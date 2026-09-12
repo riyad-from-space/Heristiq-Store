@@ -27,10 +27,16 @@ import type { ProductImage as ImageRef } from "@/lib/erp/types";
  * which is slow enough to read as the picture coming to rest rather than as a
  * zoom.
  *
- * Seven seconds, not three. Long enough to look at a piece of jewellery, and
- * infrequent enough that a reader working down the copy is not being
- * interrupted from the corner of their eye. Motion in a hero competes with the
- * headline beside it; the way to stop it winning is to let it move rarely.
+ * THREE seconds, at the owner's direction — it was seven. Six frames at three
+ * seconds is an eighteen-second loop, so a visitor who reads the headline and
+ * the paragraph beneath it now sees most of the range rather than two pictures
+ * of it.
+ *
+ * The trade is real and worth stating: motion beside a headline competes with
+ * it, and three seconds competes harder than seven. What keeps it tolerable is
+ * that the transition itself is slow — the incoming frame takes most of a
+ * second to settle — so the eye reads a dissolve rather than a cut, and a cut
+ * every three seconds is what would actually pull attention off the copy.
  *
  * ACCESSIBILITY AND THE FIRST PAINT. The first image is rendered plainly, not
  * through AnimatePresence, and carries `priority` — it is the LCP element on
@@ -67,7 +73,7 @@ export function HeroGallery({ images }: { images: readonly ImageRef[] }) {
         current: (f.current + 1) % images.length,
         previous: f.current,
       }));
-    }, 7000);
+    }, 3000);
     return () => clearInterval(id);
   }, [cycling, images.length]);
 
@@ -110,7 +116,11 @@ export function HeroGallery({ images }: { images: readonly ImageRef[] }) {
               /* No exit fade. The next image lands on top of this one, so
                  fading this one out would expose the base layer through it —
                  a flash of the wrong picture between two right ones. */
-              transition={{ duration: DURATION.slow * 2.5, ease: EASE }}
+              /* 0.9s inside a 3s cycle, so the picture is STILL for 70% of the
+                 time. It was 1.25s, which at the old seven-second interval was
+                 a slow dissolve and at three seconds would have meant the hero
+                 was in motion nearly half the time a customer looked at it. */
+              transition={{ duration: DURATION.slow * 1.8, ease: EASE }}
             >
               <ProductImage
                 image={above}

@@ -75,11 +75,24 @@ export type Merchandising = {
   images: { id: string; alt: string }[];
 };
 
+/*
+ * STAINLESS STEEL, confirmed by the owner — it said "brass".
+ *
+ * The shoot is what raised it: the earrings sit on cards printed STAINLESS
+ * STEEL while the catalogue claimed plated brass. Both cannot be true, and a
+ * customer with a nickel allergy is the one who finds out.
+ *
+ * "Nickel-free" is dropped rather than carried over. Stainless steel usually
+ * CONTAINS nickel — 304 and 316 both do — and it is the alloying that makes it
+ * rarely a problem, not its absence. Saying nickel-free about steel is the
+ * kind of claim that is fine until the one person it is wrong for buys
+ * something.
+ */
 const CHAIN_MATERIAL =
-  "Rhodium or gold-plated brass, nickel-free. Not gold — priced to wear, not to keep in a box.";
+  "Gold or silver finish on stainless steel. Not solid gold — priced to wear, not to keep in a box.";
 
 const GOLD_PLATE =
-  "Gold-plated brass, nickel-free. Not gold — priced to wear, not to keep in a box.";
+  "Gold finish on stainless steel. Not solid gold — priced to wear, not to keep in a box.";
 
 export const MERCHANDISING: Record<string, Merchandising> = {
   "WC-001": {

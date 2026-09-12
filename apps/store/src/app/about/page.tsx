@@ -66,9 +66,9 @@ export default function AboutPage() {
           We started with waist chains because they are the piece people ask
           about most and find hardest to buy well. Bracelets, rings, earrings
           and pendants follow the same rule, and arrive as we photograph them.
-          Everything we sell is non-gold by design: plated rather than solid,
-          which is what lets us price a piece at a few hundred taka instead of
-          a few thousand.
+          Everything we sell is non-gold by design: a gold or silver finish on
+          stainless steel, which is what lets us price a piece at a few hundred
+          taka instead of a few thousand.
         </p>
       </ProseSection>
 

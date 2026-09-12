@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Stagger, StaggerItem } from "@/components/motion/reveal";
 import { Button } from "@/components/ui/button";
 import { Container } from "@/components/ui/layout";
-import { editorial } from "@/config/site";
+import { categoryCovers, editorial } from "@/config/site";
 import { HeroGallery } from "@/components/home/hero-gallery";
 
 /*
@@ -27,11 +27,28 @@ import { HeroGallery } from "@/components/home/hero-gallery";
  * and the copy passes through it as children, so the headline is in the HTML.
  */
 /*
- * The order matters: `worn` is first because it is the only one with a person
- * in it and it is the LCP image, so it is the one a customer sees before
- * anything has had time to move.
+ * Six frames: the three editorial shots, then three of the category covers.
+ *
+ * `worn` is first because it is the only one with a person in it and it is the
+ * LCP image — the one a customer sees before anything has had time to move.
+ *
+ * Then they ALTERNATE, editorial and category rather than three of each in a
+ * block. Three studio shots in a row followed by three flat-lays reads as two
+ * slideshows stitched together; alternating keeps every change a change of
+ * kind as well as of picture.
+ *
+ * NO EARRINGS COVER. It is eleven pairs on cards, which is a catalogue page —
+ * useful on a category tile where the job is "here is the range", and wrong in
+ * a hero where the job is to want one thing.
  */
-const heroImages = [editorial.worn, editorial.glass, editorial.shore] as const;
+const heroImages = [
+  editorial.worn,
+  categoryCovers["waist-chains"]!,
+  editorial.glass,
+  categoryCovers.bracelets!,
+  editorial.shore,
+  categoryCovers["finger-rings"]!,
+] as const;
 
 export function Hero() {
   return (
