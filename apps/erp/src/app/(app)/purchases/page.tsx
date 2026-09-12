@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { date, money } from "@/lib/format";
 import { Card, Empty, LinkButton, Table, Td } from "@/components/ui";
 import { one } from "@/lib/types";
+import { PostButton } from "./post-button";
 
 export const dynamic = "force-dynamic";
 
@@ -12,8 +13,15 @@ type PurchaseRow = {
   import_cost: number;
   other_cost: number;
   note: string | null;
+  /* False until post_purchase has run. A draft has moved NO stock — see the
+     badge below, and postPurchase() in actions.ts. */
+  posted: boolean;
   suppliers: { name: string } | { name: string }[] | null;
-  purchase_items: { qty: number; unit_cost: number; unit_landed_cost: number }[];
+  purchase_items: {
+    qty: number;
+    unit_cost: number;
+    unit_landed_cost: number;
+  }[];
 };
 
 export default async function PurchasesPage() {
@@ -22,7 +30,7 @@ export default async function PurchasesPage() {
   const { data, error } = await supabase
     .from("purchases")
     .select(
-      "id, purchase_date, freight_cost, import_cost, other_cost, note, suppliers(name), purchase_items(qty, unit_cost, unit_landed_cost)",
+      "id, purchase_date, freight_cost, import_cost, other_cost, note, posted, suppliers(name), purchase_items(qty, unit_cost, unit_landed_cost)",
     )
     .order("purchase_date", { ascending: false })
     .order("created_at", { ascending: false })
@@ -45,7 +53,16 @@ export default async function PurchasesPage() {
           </Empty>
         ) : (
           <Table
-            head={["Date", "Supplier", "Lines", "Units", "Goods", "Extras", "Total landed"]}
+            head={[
+              "Date",
+              "Supplier",
+              "Lines",
+              "Units",
+              "Goods",
+              "Extras",
+              "Total landed",
+              "",
+            ]}
           >
             {purchases.map((p) => {
               const goods = p.purchase_items.reduce(
@@ -53,18 +70,48 @@ export default async function PurchasesPage() {
                 0,
               );
               const extras =
-                Number(p.freight_cost) + Number(p.import_cost) + Number(p.other_cost);
-              const units = p.purchase_items.reduce((s, i) => s + Number(i.qty), 0);
+                Number(p.freight_cost) +
+                Number(p.import_cost) +
+                Number(p.other_cost);
+              const units = p.purchase_items.reduce(
+                (s, i) => s + Number(i.qty),
+                0,
+              );
 
               return (
-                <tr key={p.id}>
-                  <Td className="whitespace-nowrap">{date(p.purchase_date)}</Td>
-                  <Td className="font-medium">{one(p.suppliers)?.name ?? "—"}</Td>
+                <tr
+                  key={p.id}
+                  className={p.posted ? "" : "bg-amber-50 dark:bg-amber-950/30"}
+                >
+                  <Td className="whitespace-nowrap">
+                    {date(p.purchase_date)}
+                    {/*
+                     * An unposted purchase used to look exactly like a posted
+                     * one in this table — same date, same units, same total —
+                     * while having moved no stock at all, because the ledger is
+                     * written BY post_purchase. A row that reports 24 units and
+                     * contributes zero is the most misleading thing this page
+                     * could show, so it says so.
+                     */}
+                    {!p.posted && (
+                      <span className="mt-1 block text-xs font-medium text-amber-700 dark:text-amber-400">
+                        Draft — not in stock
+                      </span>
+                    )}
+                  </Td>
+                  <Td className="font-medium">
+                    {one(p.suppliers)?.name ?? "—"}
+                  </Td>
                   <Td className="tabular-nums">{p.purchase_items.length}</Td>
                   <Td className="tabular-nums">{units}</Td>
                   <Td className="tabular-nums">{money(goods)}</Td>
-                  <Td className="tabular-nums text-neutral-500">{money(extras)}</Td>
-                  <Td className="tabular-nums font-medium">{money(goods + extras)}</Td>
+                  <Td className="tabular-nums text-neutral-500">
+                    {money(extras)}
+                  </Td>
+                  <Td className="tabular-nums font-medium">
+                    {money(goods + extras)}
+                  </Td>
+                  <Td>{!p.posted && <PostButton id={p.id} units={units} />}</Td>
                 </tr>
               );
             })}

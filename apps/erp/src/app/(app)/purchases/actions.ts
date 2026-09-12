@@ -5,7 +5,11 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/admin";
 
-export type PurchaseLine = { product_id: string; qty: number; unit_cost: number };
+export type PurchaseLine = {
+  product_id: string;
+  qty: number;
+  unit_cost: number;
+};
 
 export type PurchaseInput = {
   supplier_id: string | null;
@@ -17,7 +21,9 @@ export type PurchaseInput = {
   lines: PurchaseLine[];
 };
 
-export async function createPurchase(input: PurchaseInput): Promise<string | null> {
+export async function createPurchase(
+  input: PurchaseInput,
+): Promise<string | null> {
   /* A Server Action is a public POST endpoint; the page gate does not
      protect it. See requireAdmin(). */
   await requireAdmin();
@@ -31,7 +37,9 @@ export async function createPurchase(input: PurchaseInput): Promise<string | nul
   // permanently pulling that product's weighted average down. Free stock is
   // real, but it has to be stated rather than left blank.
   const priced = input.lines.filter((l) => l.product_id && l.qty > 0);
-  const blank = priced.find((l) => !Number.isFinite(l.unit_cost) || l.unit_cost <= 0);
+  const blank = priced.find(
+    (l) => !Number.isFinite(l.unit_cost) || l.unit_cost <= 0,
+  );
   if (blank && priced.some((l) => l.unit_cost > 0)) {
     return "One line has no unit cost. Enter what you paid, or 0 if it really was free.";
   }
@@ -60,7 +68,8 @@ export async function createPurchase(input: PurchaseInput): Promise<string | nul
     .select("id")
     .single();
 
-  if (purchaseError || !purchase) return purchaseError?.message ?? "Could not save.";
+  if (purchaseError || !purchase)
+    return purchaseError?.message ?? "Could not save.";
 
   const { error: itemsError } = await supabase
     .from("purchase_items")
@@ -85,4 +94,35 @@ export async function createPurchase(input: PurchaseInput): Promise<string | nul
   revalidatePath("/products");
   revalidatePath("/");
   redirect("/purchases");
+}
+
+/**
+ * Post a purchase that was saved but never posted.
+ *
+ * createPurchase() above saves and posts in one go, and deletes the header if
+ * the posting fails — so in normal use a draft never survives. One can still
+ * exist: a purchase written straight into the database (seeding opening stock,
+ * a migration, an import) cannot call post_purchase, because that function
+ * requires an ERP ADMIN and the service-role key is not one. It is a guard
+ * doing its job, and this is the matching door rather than a way around it —
+ * posting still happens under the signed-in owner's session.
+ *
+ * UNTIL IT IS POSTED THE STOCK DOES NOT EXIST. `posted` is not a label on a
+ * purchase that already counted; the ledger is written BY post_purchase, so a
+ * draft has moved nothing and is worth nothing.
+ */
+export async function postPurchase(id: string): Promise<string | null> {
+  /* A Server Action is a public POST endpoint; the page gate does not
+     protect it. See requireAdmin(). */
+  await requireAdmin();
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("post_purchase", { p_purchase_id: id });
+  if (error) return error.message;
+
+  revalidatePath("/purchases");
+  revalidatePath("/products");
+  revalidatePath("/stock");
+  revalidatePath("/");
+  return null;
 }
