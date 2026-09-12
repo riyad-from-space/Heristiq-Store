@@ -1,5 +1,6 @@
 import { Banknote, Truck, MapPin, RefreshCw } from "lucide-react";
 import { Container } from "@/components/ui/layout";
+import { courier } from "@/config/site";
 
 /*
  * The trust row, directly under the hero.
@@ -18,7 +19,7 @@ const points = [
   {
     icon: Truck,
     title: "2–4 day delivery",
-    body: "Inside Dhaka usually next day. Pathao, Steadfast or RedX.",
+    body: `Inside Dhaka usually next day, by ${courier.label}.`,
   },
   {
     icon: MapPin,

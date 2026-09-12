@@ -91,6 +91,48 @@ export const socialTiles: readonly string[] = [];
  */
 export const erpUrl = process.env.NEXT_PUBLIC_ERP_URL || "/admin";
 
+/**
+ * The courier the shop actually ships with, as customers should read it.
+ *
+ * ONE PLACE, because this name appears on the home page, the product page and
+ * the shipping page, and three hardcoded copies is three chances to be out of
+ * date. They already were: all three said "Pathao, Steadfast or RedX" while
+ * only Pathao had credentials, so the site named two couriers it could not
+ * actually hand a parcel to.
+ *
+ * Steadfast and RedX are NOT removed — Steadfast is fully implemented and RedX
+ * is stubbed, both still wired into lib/courier. Adding one back is setting its
+ * credentials, pointing COURIER_DEFAULT at it, and changing this label; no
+ * component has to be touched.
+ *
+ * Not derived from COURIER_DEFAULT: that is a server-only env var and this file
+ * is imported by client components. A shop changes courier roughly never, and a
+ * literal that a human edits beats a build-time inline nobody can see.
+ */
+export const courier = {
+  label: "Pathao",
+} as const;
+
+/**
+ * The payment methods the footer advertises.
+ *
+ * A CLAIM, not the mechanism. What a customer can actually choose at checkout
+ * is decided by storefront_settings.payment: bKash and Nagad each appear only
+ * once the owner has put a number in, because a wallet with nowhere to send
+ * the money is a dead end. Cash on delivery is always offered.
+ *
+ * So this list exists to be MARKETING that matches reality, and it is a
+ * literal rather than a read of those settings because the footer sits in the
+ * root layout — making it async would pull a database read into every
+ * prerendered page and turn /about and /policies dynamic for the sake of three
+ * chips.
+ *
+ * IF YOU ENABLE NAGAD, add it back here. Nothing is removed to support it:
+ * `manual_nagad` is a live payment method end to end, and putting a number in
+ * ERP Settings is all it takes to offer it.
+ */
+export const paymentMethods = ["Cash", "bKash"] as const;
+
 export const nav = [
   { href: "/shop", label: "Shop" },
   { href: "/shop?finish=gold", label: "Gold" },

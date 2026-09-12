@@ -6,7 +6,7 @@ import {
   WhatsAppIcon,
 } from "@/components/ui/brand-icons";
 import { Container } from "@/components/ui/layout";
-import { erpUrl, footerNav, site } from "@/config/site";
+import { erpUrl, footerNav, paymentMethods, site } from "@/config/site";
 import { displayPhone, whatsappNumber } from "@/lib/phone";
 
 /*
@@ -19,7 +19,8 @@ import { displayPhone, whatsappNumber } from "@/lib/phone";
  * an ask rather than as furniture.
  *
  * The socials are circles with a hairline that fill rose on hover, and the
- * bottom row carries the "pay on delivery" chips — Cash, bKash, Nagad. Those
+ * bottom row carries the "pay on delivery" chips, from `paymentMethods`
+ * in config/site.ts — the shop takes Cash and bKash today. Those
  * chips are the last trust signal on the page, and for a cash-on-delivery
  * shop they are worth more than a row of card logos would be.
  */
@@ -51,9 +52,7 @@ export function SiteFooter() {
               {site.name}
               <span className="text-rose">.</span>
             </p>
-            <p className="text-copy-sm mt-4 max-w-[34ch]">
-              {site.description}
-            </p>
+            <p className="text-copy-sm mt-4 max-w-[34ch]">{site.description}</p>
 
             <div className="mt-5 flex gap-2.5">
               {socials.map(({ href, label, Icon }) => (
@@ -107,7 +106,7 @@ export function SiteFooter() {
 
           <div className="flex flex-wrap items-center gap-2">
             <span>Pay on delivery</span>
-            {["Cash", "bKash", "Nagad"].map((method) => (
+            {paymentMethods.map((method) => (
               <span
                 key={method}
                 className="bg-on-inverted/10 text-on-inverted rounded-[6px] px-2.5 py-1 text-[0.72rem] font-semibold"

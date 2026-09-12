@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { courier } from "@/config/site";
 import { ProsePage, ProseSection, LastUpdated } from "@/components/site/prose";
 import { business } from "@/config/business";
 import { COURIERS } from "@/lib/orders/types";
@@ -31,28 +32,38 @@ export default async function ShippingPage() {
     <ProsePage
       eyebrow="Shipping & returns"
       title="Getting it to you"
-      lede="We ship anywhere in Bangladesh, cash on delivery, by whichever courier covers your area fastest."
+      lede={`We ship anywhere in Bangladesh by ${courier.label}, cash on delivery.`}
     >
       <ProseSection title="Delivery fees and times">
         <div className="not-prose overflow-x-auto">
           <table className="w-full min-w-[22rem] text-left text-sm">
             <thead>
               <tr className="border-line text-eyebrow text-stone-soft border-b uppercase">
-                <th scope="col" className="py-2 pr-4 font-medium">Where</th>
-                <th scope="col" className="py-2 pr-4 font-medium">Time</th>
-                <th scope="col" className="py-2 font-medium">Fee</th>
+                <th scope="col" className="py-2 pr-4 font-medium">
+                  Where
+                </th>
+                <th scope="col" className="py-2 pr-4 font-medium">
+                  Time
+                </th>
+                <th scope="col" className="py-2 font-medium">
+                  Fee
+                </th>
               </tr>
             </thead>
             <tbody className="tnum">
               <tr className="border-line border-b">
-                <th scope="row" className="py-3 pr-4 font-medium">Inside Dhaka</th>
+                <th scope="row" className="py-3 pr-4 font-medium">
+                  Inside Dhaka
+                </th>
                 <td className="text-stone py-3 pr-4">
                   {dayRange(terms.insideDays.min, terms.insideDays.max)}
                 </td>
                 <td className="py-3">{taka(terms.insideDhakaFee)}</td>
               </tr>
               <tr>
-                <th scope="row" className="py-3 pr-4 font-medium">Outside Dhaka</th>
+                <th scope="row" className="py-3 pr-4 font-medium">
+                  Outside Dhaka
+                </th>
                 <td className="text-stone py-3 pr-4">
                   {dayRange(terms.outsideDays.min, terms.outsideDays.max)}
                 </td>
@@ -90,16 +101,16 @@ export default async function ShippingPage() {
             charged and nothing is reserved until you confirm.
           </li>
           <li>
-            <strong>Confirm your number.</strong> We text a code to your
-            mobile. It is how we make sure the parcel and the tracking link
-            reach the right person.
+            <strong>Confirm your number.</strong> We text a code to your mobile.
+            It is how we make sure the parcel and the tracking link reach the
+            right person.
           </li>
           <li>
             <strong>Pay the courier.</strong> Cash, at your door, when it
             arrives. Nothing in advance for anything we have in stock.
           </li>
         </ol>
-        
+
         <p>
           <strong>Cash on delivery.</strong> You pay the courier in cash when
           the parcel reaches you. Nothing is charged when you place the order.
@@ -144,9 +155,9 @@ export default async function ShippingPage() {
           Body jewellery that has been worn, unless it is faulty. This is a
           hygiene rule, not a commercial one, and it is the same reason
           pierced-jewellery counters everywhere have it. So we would rather you
-          asked us about length before ordering than sent something back after
-          — the <Link href="/size-guide">size guide</Link> is there for that,
-          and we will happily tell you which length to take if you send us your
+          asked us about length before ordering than sent something back after —
+          the <Link href="/size-guide">size guide</Link> is there for that, and
+          we will happily tell you which length to take if you send us your
           measurement.
         </p>
         <p>

@@ -13,8 +13,13 @@ import { CategoryView } from "@/components/shop/category-view";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Price } from "@/components/ui/price";
 import { Badge } from "@/components/ui/badge";
-import { Container, Eyebrow, Section, SectionHeading } from "@/components/ui/layout";
-import { finishes, motifs, site } from "@/config/site";
+import {
+  Container,
+  Eyebrow,
+  Section,
+  SectionHeading,
+} from "@/components/ui/layout";
+import { courier, finishes, motifs, site } from "@/config/site";
 import { erp } from "@/lib/erp";
 import { parseQuery } from "@/lib/erp/query";
 import { availabilityLabel } from "@/lib/erp/types";
@@ -155,7 +160,10 @@ export default async function ShopSlugPage({
   const all = await client.getProducts({ sort: "featured" });
   const related = all
     .filter((p) => p.id !== product.id)
-    .sort((a, b) => Number(b.motif === product.motif) - Number(a.motif === product.motif))
+    .sort(
+      (a, b) =>
+        Number(b.motif === product.motif) - Number(a.motif === product.motif),
+    )
     .slice(0, 3);
 
   return (
@@ -202,7 +210,9 @@ export default async function ShopSlugPage({
               {product.availability.state !== "in_stock" && (
                 <Badge
                   tone={
-                    product.availability.state === "low_stock" ? "fact" : "action"
+                    product.availability.state === "low_stock"
+                      ? "fact"
+                      : "action"
                   }
                 >
                   {availabilityLabel(product.availability)}
@@ -303,10 +313,10 @@ export default async function ShopSlugPage({
 
               <Panel value="returns" title="Delivery & returns">
                 <p className="leading-relaxed">
-                  We ship by Pathao, Steadfast or RedX with cash on delivery. If
-                  a piece arrives damaged or is not what you ordered, message us
-                  within 3 days with a photo and we replace it — we cover the
-                  courier both ways.
+                  We ship by {courier.label} with cash on delivery. If a piece
+                  arrives damaged or is not what you ordered, message us within
+                  3 days with a photo and we replace it — we cover the courier
+                  both ways.
                 </p>
                 <p className="text-stone mt-4 leading-relaxed">
                   For hygiene reasons we cannot take back body jewellery that
