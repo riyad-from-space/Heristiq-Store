@@ -5,6 +5,8 @@ import { CategoryTiles } from "@/components/home/category-tiles";
 import { Collections } from "@/components/home/collections";
 import { StoryBand } from "@/components/home/story-band";
 import { NewsletterSection } from "@/components/home/newsletter-section";
+import { Reviews } from "@/components/home/reviews";
+import { ScrollReveal } from "@/components/motion/reveal";
 import { InstagramFeed } from "@/components/home/instagram-feed";
 import { erp } from "@/lib/erp";
 import type { ProductCard } from "@/lib/erp/types";
@@ -94,27 +96,54 @@ export default async function HomePage() {
 
   return (
     <>
+      {/*
+       * The hero is NOT wrapped. It animates on load already, and it is above
+       * the fold — a scroll reveal on something the reader has not scrolled to
+       * is a delay pretending to be an effect.
+       *
+       * Everything below arrives as it comes into view. Deliberately not
+       * every band: TrustStrip, InstagramFeed and NewsletterSection are the
+       * page's footer furniture, and animating those is what makes a site feel
+       * like it is performing rather than working.
+       */}
       <Hero />
       {/* Structure before mood: a first-time visitor needs to know WHAT is
           sold before being asked which feeling they are shopping for. */}
-      <CategoryTiles categories={categories} products={products} />
-      <Collections products={products} />
-      <ProductGrid
-        products={fresh}
-        eyebrow="The collection"
-        title="New this week"
-        lede="Fresh off the bench — small batches, restocked when they sell out."
-        linkLabel="See everything new"
-        feature
-        priority
-      />
-      <StoryBand />
-      <ProductGrid
-        products={edit}
-        title="The edit"
-        lede="The pieces we keep restocking — and the ones you keep asking for."
-        linkLabel="Shop everything"
-      />
+      <ScrollReveal>
+        <CategoryTiles categories={categories} products={products} />
+      </ScrollReveal>
+      <ScrollReveal>
+        <Collections products={products} />
+      </ScrollReveal>
+      <ScrollReveal>
+        <ProductGrid
+          products={fresh}
+          eyebrow="The collection"
+          title="New this week"
+          /* Not "fresh off the bench" — a bench is where a maker works, and
+             this shop does not make these. */
+          lede="Just landed — small batches, restocked when they sell out."
+          linkLabel="See everything new"
+          feature
+          priority
+        />
+      </ScrollReveal>
+      <ScrollReveal>
+        <StoryBand />
+      </ScrollReveal>
+      <ScrollReveal>
+        <ProductGrid
+          products={edit}
+          title="The edit"
+          lede="The pieces we keep restocking — and the ones you keep asking for."
+          linkLabel="Shop everything"
+        />
+      </ScrollReveal>
+      {/* Reviews sit UNDER the edit, where someone who has just scrolled two
+          grids of product is deciding whether to trust the shop. */}
+      <ScrollReveal>
+        <Reviews products={products} />
+      </ScrollReveal>
       <TrustStrip />
       <InstagramFeed />
       <NewsletterSection />

@@ -94,7 +94,17 @@ export function SiteFooter() {
         <div className="border-on-inverted/15 text-copy-xs text-on-inverted/60 mt-11 flex flex-col gap-4 border-t pt-6 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-5">
             <span>
-              © {new Date().getFullYear()} {site.name}. Handmade in Bangladesh.
+              {/*
+                * NO ORIGIN CLAIM. This read "Handmade in Bangladesh", on every
+                * page of the site, and it is not true — the pieces are not
+                * made here and are not handmade. Where they ARE made has not
+                * been established, so nothing replaces it: inventing a country
+                * would be the same mistake pointing somewhere else.
+                *
+                * What is left is what can be stood behind — who sells it, and
+                * where it ships.
+                */}
+              © {new Date().getFullYear()} {site.name}. Ships across Bangladesh.
             </span>
             <a
               href={`tel:+880${site.contact.phone.slice(1)}`}

@@ -212,6 +212,15 @@ export const nav = [
   { href: "/shop", label: "Shop" },
   { href: "/shop?finish=gold", label: "Gold" },
   { href: "/shop?finish=silver", label: "Silver" },
+  /*
+   * An ANCHOR on the home page, not a page of its own.
+   *
+   * "/#reviews" rather than "#reviews": a bare fragment means "this page", so
+   * from /shop or a product page it would scroll to an id that is not there
+   * and appear to do nothing. With the leading slash it goes home first and
+   * lands on the section from anywhere on the site.
+   */
+  { href: "/#reviews", label: "Reviews" },
   { href: "/about", label: "Our story" },
 ] as const;
 

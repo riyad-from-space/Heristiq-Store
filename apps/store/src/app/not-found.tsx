@@ -19,7 +19,7 @@ export default function NotFound() {
       </SectionHeading>
       <p className="text-stone mx-auto mt-4 max-w-sm text-copy-sm">
         The link may be old, or the piece may have sold out and been retired.
-        The collection is small — everything we make is one tap away.
+        The collection is small — everything we sell is one tap away.
       </p>
 
       <div className="mt-10 flex flex-col justify-center gap-3 sm:flex-row">

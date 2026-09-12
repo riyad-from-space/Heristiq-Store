@@ -55,7 +55,14 @@ export function StoryBand() {
         </div>
 
         <div>
-          <Eyebrow onDark>Made in Bangladesh, made by hand</Eyebrow>
+          {/*
+           * WAS "Made in Bangladesh, made by hand". Neither half is true: the
+           * pieces are not made here and are not handmade. Where they are made
+           * has not been established, so this says nothing about it — the
+           * section's actual subject is the FINISH, which is checkable, and
+           * the heading beneath already makes that argument.
+           */}
+          <Eyebrow onDark>Plated, and honest about it</Eyebrow>
 
           <SectionHeading size="l" className="text-on-inverted mt-4">
             Nothing is gold, and nothing{" "}
@@ -63,10 +70,14 @@ export function StoryBand() {
           </SectionHeading>
 
           <p className="text-copy-lg text-on-inverted/80 mt-5 max-w-[48ch]">
-            Heristiq started with one idea: body jewellery that is not kept in a
-            box for a wedding. Rhodium and gold-plated brass, nickel-free,
-            finished by hand in small batches — priced to wear on a Tuesday,
-            and made to be worn again on Wednesday.
+            {/* "finished by hand in small batches" removed — it described a
+                workshop this business does not have. What remains is the
+                promise the shop can actually keep: the finish, the price, and
+                that nothing is sold as gold. */}
+            Heristiq started with one idea: jewellery that is not kept in a box
+            for a wedding. Gold and silver finishes, plated rather than solid,
+            and never sold as anything else — priced to wear on a Tuesday, and
+            to be worn again on Wednesday.
           </p>
 
           <Button asChild variant="ghostLight" size="lg" className="mt-7">

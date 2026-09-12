@@ -21,10 +21,46 @@ import type { ProductCard } from "@/lib/erp/types";
  * is the guard that lets the owner add a mood before tagging anything to it.
  */
 export function Collections({ products }: { products: ProductCard[] }) {
+  /*
+   * Each tile shows a piece from a DIFFERENT category, where one exists.
+   *
+   * The cover used to be `products[0]` — the first piece in that mood — and
+   * every mood's first piece was a waist chain, because that is what sorts
+   * first. So the row that exists to say "there are four ways to wear this"
+   * showed the same kind of thing four times, on a shop that sells five
+   * categories. A customer could reasonably conclude we only sell waist
+   * chains, which is the exact impression the category work was meant to end.
+   *
+   * Greedy rather than clever: walk the moods in order and take the first
+   * piece whose category has not been used yet, falling back to the first
+   * piece when every category is already spoken for. With two categories
+   * stocked it alternates; as earrings and rings arrive it spreads further on
+   * its own, with nothing to maintain.
+   */
+  const used = new Set<string>();
   const tiles = (Object.keys(collections) as CollectionKey[])
     .map((key) => {
       const inMood = products.filter((p) => p.collections.includes(key));
-      return { key, ...collections[key], products: inMood };
+
+      /*
+       * Take a category not used yet — and when they have ALL been used,
+       * start the round again rather than giving up.
+       *
+       * Without the reset this exhausted after two tiles and the remaining
+       * moods fell back to whatever sorted first, which is a waist chain: the
+       * row came out three waist chains and one bracelet. Cycling alternates
+       * instead, so with two categories stocked it reads 2 and 2, and it
+       * spreads further on its own as earrings and rings arrive.
+       */
+      let cover = inMood.find((p) => p.category && !used.has(p.category.slug));
+      if (!cover) {
+        used.clear();
+        cover = inMood.find((p) => p.category && !used.has(p.category.slug));
+      }
+      cover ??= inMood[0];
+      if (cover?.category) used.add(cover.category.slug);
+
+      return { key, ...collections[key], products: inMood, cover };
     })
     .filter((tile) => tile.products.length > 0);
 
@@ -54,7 +90,7 @@ export function Collections({ products }: { products: ProductCard[] }) {
               className="group rounded-card focus-visible:outline-rose relative block aspect-[3/3.7] overflow-hidden focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
             >
               <ProductImage
-                image={tile.products[0]?.images[0]}
+                image={tile.cover?.images[0]}
                 sizes="(min-width: 1024px) 23vw, 46vw"
                 crop="portrait"
                 maxWidth={828}

@@ -86,7 +86,7 @@ export const MERCHANDISING: Record<string, Merchandising> = {
     slug: "oval-link-waist-chain-silver",
     tagline: "Alternating oval links, silver finish.",
     description:
-      "Large and small ovals alternate the whole way round, so the chain catches light at two different rhythms as you move. The plainest piece we make, and the one that goes with everything.",
+      "Large and small ovals alternate the whole way round, so the chain catches light at two different rhythms as you move. The plainest piece we sell, and the one that goes with everything.",
     finish: "silver",
     motif: "oval",
     collections: ["everyday", "layered"],

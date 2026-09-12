@@ -114,3 +114,58 @@ export function StaggerItem({
 }
 
 
+
+/**
+ * A section that arrives as it scrolls into view.
+ *
+ * WHY THIS EXISTS NOW, having been deliberately removed before. The note at
+ * the top of this file is still right: fade-up on EVERY section reads as
+ * generic, and a page where nothing is ever simply present feels slow. So
+ * this is not applied everywhere — it goes on the bands that introduce a new
+ * idea, and never on the hero (already animated on load) or on anything above
+ * the fold.
+ *
+ * Three things keep it from being the generic version:
+ *
+ *  - `once: true`. A section that re-animates every time it scrolls past is
+ *    the thing that makes a page feel like a slideshow.
+ *  - `amount: 0.15` with a negative bottom margin, so it fires just BEFORE
+ *    the section is properly in view. Waiting until 50% is visible means the
+ *    reader watches it animate; firing early means it is simply there by the
+ *    time they arrive, which is the difference between motion and delay.
+ *  - It moves 14px, the same REVEAL_Y as the hero. Anything further reads as
+ *    a slide rather than a settle.
+ *
+ * `data-reveal` is not decoration: it is what the CSS in globals.css and the
+ * <noscript> block in the root layout key off, so this content is forced
+ * visible at FIRST PAINT for reduced-motion and JS-off readers. Without it,
+ * motion's server-rendered `opacity: 0` would hide the section permanently
+ * for both. See the long note at the top of this file.
+ */
+export function ScrollReveal({
+  children,
+  className,
+  delay = 0,
+}: {
+  children: ReactNode;
+  className?: string;
+  /** Seconds. For a second element that should follow the first. */
+  delay?: number;
+}) {
+  const reduced = useReducedMotion();
+  if (reduced) return <div className={className}>{children}</div>;
+
+  return (
+    <motion.div
+      data-reveal
+      className={className}
+      variants={revealVariants}
+      initial="hidden"
+      whileInView="shown"
+      viewport={{ once: true, amount: 0.15, margin: "0px 0px -12% 0px" }}
+      transition={{ delay }}
+    >
+      {children}
+    </motion.div>
+  );
+}

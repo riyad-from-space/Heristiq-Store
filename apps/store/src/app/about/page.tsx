@@ -33,12 +33,15 @@ export const revalidate = 3600;
 export const metadata: Metadata = {
   title: "Our story",
   description:
-    "Heristiq makes modern, non-gold body jewellery in Bangladesh — waist chains, bracelets, rings, earrings and pendants in gold and silver finishes, made for everyday wear.",
+    /* NOT "makes ... in Bangladesh". This is the sentence Google prints under
+       the result, so a manufacturing claim here is the one that travels
+       furthest. Heristiq sells these pieces; it does not make them. */
+    "Heristiq — waist chains, bracelets, rings, earrings and pendants in gold and silver finishes, chosen for everyday wear. Cash on delivery across Bangladesh.",
   alternates: { canonical: "/about" },
   openGraph: {
     title: `Our story — ${site.name}`,
     description:
-      "Modern body jewellery in Bangladesh, made for everyday wear rather than for a safe.",
+      "Modern jewellery for everyday wear rather than for a safe. Delivered across Bangladesh.",
     url: "/about",
   },
 };
@@ -48,9 +51,9 @@ export default function AboutPage() {
     <ProsePage
       eyebrow="Our story"
       title="Jewellery you actually wear"
-      lede={`${business.name} makes body jewellery for everyday wear — not the kind that lives in a box and comes out twice a year.`}
+      lede={`${business.name} sells jewellery for everyday wear — not the kind that lives in a box and comes out twice a year.`}
     >
-      <ProseSection title="Why we make what we make">
+      <ProseSection title="Why we sell what we sell">
         <p>
           Body jewellery in Bangladesh has long meant one of two things: heavy
           gold kept for weddings, or something bought in a hurry that turns your
@@ -63,9 +66,9 @@ export default function AboutPage() {
           We started with waist chains because they are the piece people ask
           about most and find hardest to buy well. Bracelets, rings, earrings
           and pendants follow the same rule, and arrive as we photograph them.
-          Everything we make is non-gold by design: gold-plated and
-          silver-plated brass, which is what lets us price a piece at a few
-          hundred taka instead of a few thousand.
+          Everything we sell is non-gold by design: plated rather than solid,
+          which is what lets us price a piece at a few hundred taka instead of
+          a few thousand.
         </p>
       </ProseSection>
 

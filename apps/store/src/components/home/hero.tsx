@@ -2,8 +2,8 @@ import Link from "next/link";
 import { Stagger, StaggerItem } from "@/components/motion/reveal";
 import { Button } from "@/components/ui/button";
 import { Container } from "@/components/ui/layout";
-import { ProductImage } from "@/components/ui/product-image";
 import { editorial } from "@/config/site";
+import { HeroGallery } from "@/components/home/hero-gallery";
 
 /*
  * The home hero.
@@ -26,6 +26,13 @@ import { editorial } from "@/config/site";
  * The section stays a Server Component. Only the stagger wrapper is client,
  * and the copy passes through it as children, so the headline is in the HTML.
  */
+/*
+ * The order matters: `worn` is first because it is the only one with a person
+ * in it and it is the LCP image, so it is the one a customer sees before
+ * anything has had time to move.
+ */
+const heroImages = [editorial.worn, editorial.glass, editorial.shore] as const;
+
 export function Hero() {
   return (
     <section className="py-section-lg">
@@ -109,59 +116,27 @@ export function Hero() {
          * Nothing here may clip, so the aspect-ratio wells live on the
          * ProductImages and never on this wrapper.
          */}
-        <div className="order-first grid gap-3 lg:order-none lg:grid-cols-[1.55fr_1fr] lg:items-end">
-          <div className="relative">
-            <ProductImage
-              image={editorial.worn}
-              sizes="(min-width: 1024px) 34vw, 100vw"
-              /*
-               * PORTRAIT, not wide. The subject is a vertical arm in a
-               * vertical frame; a 16:9 crop threw most of the stack away and
-               * kept a band of wall.
-               */
-              crop="portrait"
-              priority
-              maxWidth={1080}
-              className="rounded-media"
-            />
+        {/*
+         * The media column, back to ONE frame.
+         *
+         * The side-by-side pair that briefly lived here split the width
+         * between two pictures and made both small — and the second one was
+         * decoration, so it was spending the most valuable space on the page
+         * on something nobody came for. The frame is the size it was in the
+         * approved design; what changed is that the featured photographs now
+         * take turns in it. See hero-gallery.tsx for why it is a stack rather
+         * than a crossfade, and why it moves every seven seconds.
+         *
+         * `order-first lg:order-none` is the phone-first stack — the shop is
+         * found on Instagram, so the first thing on screen should be the
+         * jewellery, not a headline about it.
+         */}
+        <div className="relative order-first lg:order-none">
+          <HeroGallery images={heroImages} />
 
-            <span className="text-ink rounded-pill bg-blush/90 absolute top-3.5 left-3.5 z-2 px-2.5 py-1 text-[0.72rem] font-semibold">
-              Autumn 2026
-            </span>
-          </div>
-
-          {/*
-           * The second photograph, BESIDE the first rather than on top of it.
-           *
-           * It started as an overlapping card, which is the usual editorial
-           * move and was wrong for this pair: the subject of the main
-           * photograph — five bangles on a wrist — sits low and left in the
-           * frame, exactly where an overlapping card lands. It covered the
-           * one thing the picture is of.
-           *
-           * Side by side with `items-end`, the shorter frame aligns to the
-           * bottom and the height difference does the work the overlap was
-           * supposed to do. Nothing is hidden, and nothing can clip or force a
-           * sideways scroll.
-           *
-           * Deliberately a different KIND of picture: the first is a piece
-           * being worn, this is the pieces themselves, close and textured. Two
-           * shots of the same kind would read as a gallery that lost its
-           * arrows.
-           *
-           * Desktop only. At 390px the main photograph is already
-           * edge-to-edge, and splitting that width in two would make both
-           * unreadable.
-           */}
-          <div aria-hidden className="hidden lg:block">
-            <ProductImage
-              image={editorial.shore}
-              sizes="22vw"
-              crop="portrait"
-              maxWidth={828}
-              className="rounded-media aspect-[4/4.6]"
-            />
-          </div>
+          <span className="text-ink rounded-pill bg-blush/90 absolute top-3.5 left-3.5 z-2 px-2.5 py-1 text-[0.72rem] font-semibold">
+            Autumn 2026
+          </span>
         </div>
       </Container>
     </section>

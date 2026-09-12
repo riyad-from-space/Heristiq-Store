@@ -86,6 +86,21 @@ export function ProductCardTile({
             image={hero}
             sizes={sizes}
             priority={priority}
+            /*
+             * A FEATURE CARD IS LANDSCAPE, so ask Cloudinary for a landscape
+             * frame.
+             *
+             * This defaulted to the portrait 4:5 crop and then let CSS squeeze
+             * it into a 16:11 box, which threw away nearly half the height a
+             * second time — on the largest card on the home page. The piece
+             * came out cut off and unreadable while the ordinary cards beside
+             * it, cropped once, looked fine.
+             *
+             * Cropping once, to the shape it will actually be shown at, lets
+             * g_auto keep the jewellery in frame instead of centring it in a
+             * frame that is about to be cut.
+             */
+            crop={feature ? "wide" : "portrait"}
             maxWidth={feature ? 1080 : 828}
             placeholderLabel={product.sku}
             className={cn(
@@ -98,6 +113,7 @@ export function ProductCardTile({
             <ProductImage
               image={second}
               sizes={sizes}
+              crop={feature ? "wide" : "portrait"}
               maxWidth={feature ? 1080 : 828}
               className="duration-calm absolute inset-0 h-full opacity-0 transition-opacity group-hover:opacity-100"
             />
@@ -169,28 +185,28 @@ export function ProductCardTile({
        */}
       <div className="flex items-baseline justify-between gap-3 pt-3">
         <div className="min-w-0">
-        <h3 className="text-[0.98rem] leading-snug font-semibold">
-          {/* The stretched link. Everything in the card except quick-add is
+          <h3 className="text-[0.98rem] leading-snug font-semibold">
+            {/* The stretched link. Everything in the card except quick-add is
               inside its hit area, and the accessible name is the piece. */}
-          <Link
-            href={`/shop/${product.slug}`}
-            className="decoration-line-strong underline-offset-4 before:absolute before:inset-0 before:z-10 focus:outline-none group-hover:underline"
-          >
-            {product.name}
-          </Link>
-        </h3>
-        {finish && (
-          <span className="text-copy-xs text-stone mt-0.5 flex items-center gap-1.5">
-            <span
-              aria-hidden
-              /* The finish swatch is a literal product colour and stays out
+            <Link
+              href={`/shop/${product.slug}`}
+              className="decoration-line-strong underline-offset-4 before:absolute before:inset-0 before:z-10 focus:outline-none group-hover:underline"
+            >
+              {product.name}
+            </Link>
+          </h3>
+          {finish && (
+            <span className="text-copy-xs text-stone mt-0.5 flex items-center gap-1.5">
+              <span
+                aria-hidden
+                /* The finish swatch is a literal product colour and stays out
                  of the palette — gold is gold whatever the page looks like. */
-              className="border-line-strong inline-block size-2.5 shrink-0 rounded-full border"
-              style={{ background: finish.swatch }}
-            />
-            {finish.label}
-          </span>
-        )}
+                className="border-line-strong inline-block size-2.5 shrink-0 rounded-full border"
+                style={{ background: finish.swatch }}
+              />
+              {finish.label}
+            </span>
+          )}
         </div>
         {/* The price is its own column so a long name wraps beside it rather
             than pushing it onto a second line — the two-column phone grid is
