@@ -48,14 +48,53 @@ export async function setOrderStatus(formData: FormData): Promise<void> {
   if (!id || !allowed.includes(status)) return;
 
   const supabase = await createClient();
-  await supabase.from("storefront_orders").update({ status }).eq("id", id);
+
+  /*
+   * Read the current status first, so setting the one it already has does
+   * nothing at all.
+   *
+   * HQ-01006's audit trail carries "cancelled" TEN TIMES inside seven
+   * seconds, plus a "confirmed" and a "placed". Whatever the owner was doing,
+   * the record of it is now unreadable — and the trail is the only answer
+   * there will ever be to a customer asking when their order was cancelled.
+   */
+  const { data: current, error: readError } = await supabase
+    .from("storefront_orders")
+    .select("status")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (readError || !current) return;
+  if (current.status === status) {
+    /* Already there. Not an error — the button simply had nothing to do. */
+    revalidatePath(`/orders/${id}`);
+    return;
+  }
+
+  /*
+   * The error was DISCARDED here. If the update failed — a policy, a
+   * constraint, a dropped connection — the event below was still written, so
+   * the audit trail recorded a change that never happened and the screen
+   * showed the old status with nothing to explain it. A log that can be wrong
+   * about the thing it exists to record is worse than no log.
+   */
+  const { error: writeError } = await supabase
+    .from("storefront_orders")
+    .update({ status })
+    .eq("id", id);
+
+  if (writeError) {
+    revalidatePath(`/orders/${id}`);
+    return;
+  }
 
   /* The audit trail is the only record of who changed what, and the customer
-     may ask. Same table the courier webhooks write to. */
+     may ask. Same table the courier webhooks write to. Written only after the
+     status actually moved. */
   await supabase.from("storefront_order_events").insert({
     order_id: id,
     kind: "status_changed",
-    detail: { to: status, source: "erp" },
+    detail: { to: status, from: current.status, source: "erp" },
   });
 
   revalidatePath("/orders");
