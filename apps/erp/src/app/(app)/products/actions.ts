@@ -37,14 +37,19 @@ export async function createProduct(_prev: string | null, fd: FormData) {
   const name = text(fd, "name");
   if (!sku || !name) return "SKU and name are required.";
 
-  const { error } = await supabase.from("products").insert({
-    sku,
-    name,
-    category_id: text(fd, "category_id"),
-    supplier_id: text(fd, "supplier_id"),
-    selling_price: money(fd, "selling_price"),
-    reorder_level: count(fd, "reorder_level", 3),
-  });
+  const { data, error } = await supabase
+    .from("products")
+    .insert({
+      sku,
+      name,
+      category_id: text(fd, "category_id"),
+      supplier_id: text(fd, "supplier_id"),
+      selling_price: money(fd, "selling_price"),
+      reorder_level: count(fd, "reorder_level", 3),
+    })
+    /* The new row's id, so we can go straight to its page. */
+    .select("id")
+    .single();
 
   if (error) {
     return error.code === "23505"
@@ -53,7 +58,31 @@ export async function createProduct(_prev: string | null, fd: FormData) {
   }
 
   revalidatePath("/products");
-  return null;
+
+  /*
+   * Straight to the new product's page, which is where the Photographs card
+   * lives.
+   *
+   * This used to reset the form and leave you on the list, so adding a piece
+   * and photographing it were two unrelated errands: create it here, then find
+   * it again in a table of every product, then click a small grey "Edit" link
+   * in the last column. The owner's own words for that were "I am unable to
+   * see where to upload image from ERP" — the upload box was never hidden, it
+   * was three steps away from the only moment anyone thinks about it.
+   *
+   * A product and its photographs are one job. This makes them one flow.
+   *
+   * The cost is that adding several products in a row now needs a tap back to
+   * the list. That is the right trade: a piece with no photograph does not
+   * sell, so the path that ends in "upload a photograph" should be the default
+   * one, and adding a batch of products without photographing any of them
+   * should be the deliberate exception.
+   *
+   * redirect() throws, so nothing below it runs — and the form's
+   * `resetOnSuccess` never fires, which no longer matters because the form is
+   * gone. Same pattern updateProduct already uses with this same component.
+   */
+  redirect(`/products/${data.id}`);
 }
 
 export async function updateProduct(_prev: string | null, fd: FormData) {

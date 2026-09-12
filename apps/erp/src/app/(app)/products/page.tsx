@@ -93,7 +93,27 @@ export default async function ProductsPage() {
             {products.map((p) => (
               <tr key={p.id} className={p.is_active ? "" : "opacity-50"}>
                 <Td className="font-medium">
-                  {p.name}
+                  {/*
+                   * The name is the way in, not just the "Edit" link in the
+                   * last column.
+                   *
+                   * That link is small, grey, and on a phone it sits past nine
+                   * numeric columns of horizontal scrolling — so in practice
+                   * the product page was unreachable without knowing it was
+                   * there. That page is now where photographs are uploaded,
+                   * which makes it the most visited page in the ERP rather
+                   * than a rarely-used edit form.
+                   *
+                   * The first column is where a reader's eye already is, and
+                   * tapping a row's name to open it is what every table on
+                   * every other site does.
+                   */}
+                  <Link
+                    href={`/products/${p.id}`}
+                    className="underline-offset-2 hover:underline"
+                  >
+                    {p.name}
+                  </Link>
                   {p.category && (
                     <span className="ml-2 text-xs text-neutral-500">
                       {p.category}
