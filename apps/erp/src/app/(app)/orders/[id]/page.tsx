@@ -23,11 +23,20 @@ import { PushToCourierButton } from "./order-actions";
  */
 export const dynamic = "force-dynamic";
 
-const COURIERS = [
-  { key: "pathao", label: "Pathao" },
-  { key: "steadfast", label: "Steadfast" },
-  { key: "redx", label: "RedX" },
-];
+/*
+ * Couriers this shop can actually hand a parcel to.
+ *
+ * Steadfast and RedX are implemented and still registered in the storefront's
+ * lib/courier — they are omitted here because neither has credentials, and a
+ * push to an unconfigured courier fails at the API call. Offering the choice
+ * only makes it possible to pick the one that will not work.
+ *
+ * Adding one back is a line here plus its credentials. Deliberately NOT
+ * imported from the storefront: the two apps must not import each other (an
+ * ESLint rule enforces it both ways), so the storefront's own list in
+ * config/site.ts `courier.choices` is the matching edit.
+ */
+const COURIERS = [{ key: "pathao", label: "Pathao" }];
 
 /* What can follow what. Keeps the owner from having to think about it. */
 const NEXT_STATUS: Record<string, { to: string; label: string }[]> = {

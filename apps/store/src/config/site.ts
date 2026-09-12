@@ -111,6 +111,22 @@ export const erpUrl = process.env.NEXT_PUBLIC_ERP_URL || "/admin";
  */
 export const courier = {
   label: "Pathao",
+  /**
+   * Which couriers a customer may choose between at checkout.
+   *
+   * ONE ENTRY MEANS NO CHOICE, and the checkout hides the picker entirely —
+   * a radio group with a single option asks a question that has one answer.
+   *
+   * This is not cosmetic. Checkout offered Pathao, Steadfast and RedX while
+   * only Pathao had credentials, and the choice is STORED: dispatch.ts resolves
+   * `options.courier ?? order.courierPreference`, so a customer picking
+   * Steadfast created an order that could not be pushed to anyone. The failure
+   * would surface days later, in the ERP, on someone else's parcel.
+   *
+   * Adding a courier back is adding its key here and setting its credentials.
+   * Keys must match COURIERS in lib/orders/types.ts.
+   */
+  choices: ["pathao"],
 } as const;
 
 /**

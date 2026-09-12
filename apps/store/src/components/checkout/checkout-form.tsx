@@ -19,6 +19,7 @@ import { isInsideDhaka } from "@/lib/bd-geo";
 import { deliveryFeeFor, type DeliveryTerms } from "@/lib/delivery";
 import { hasUnpricedLine } from "@/lib/cart/types";
 import { COURIERS, type CourierKey } from "@/lib/orders/types";
+import { courier } from "@/config/site";
 import type { PaymentSetting } from "@/lib/settings";
 import { CHECKOUT_LIMITS } from "@/lib/orders/schema";
 import type { LineProblem } from "@/lib/orders/place";
@@ -134,10 +135,10 @@ export function CheckoutForm({
   if (cart.lines.length === 0) {
     return (
       <div className="border-line border border-dashed px-6 py-16 text-center">
-        <p className="font-display text-display-s">There is nothing to check out</p>
-        <p className="text-stone mt-2 text-sm">
-          Your cart is empty.
+        <p className="font-display text-display-s">
+          There is nothing to check out
         </p>
+        <p className="text-stone mt-2 text-sm">Your cart is empty.</p>
         <Button asChild size="lg" className="mt-8">
           <Link href="/shop">Shop waist chains</Link>
         </Button>
@@ -151,7 +152,9 @@ export function CheckoutForm({
     return (
       <div className="border-warn/40 bg-white border px-6 py-10 text-center">
         <AlertTriangle size={22} className="text-warn mx-auto" />
-        <p className="font-display mt-4 text-display-s">One piece is not priced yet</p>
+        <p className="font-display mt-4 text-display-s">
+          One piece is not priced yet
+        </p>
         <p className="text-stone mx-auto mt-2 max-w-sm text-copy-sm">
           We cannot take payment for something without a price. Remove it from
           your cart and we will confirm the price over WhatsApp.
@@ -268,35 +271,51 @@ export function CheckoutForm({
           errors={errors}
         />
 
-        <section aria-labelledby="courier-heading">
-          <h2 id="courier-heading" className="font-display text-display-s">
-            Courier
-          </h2>
-          <p className="text-stone mt-2 text-sm">
-            No preference is usually fastest — we send it with whoever is
-            covering your area that day.
-          </p>
-          <div className="mt-5 space-y-2">
-            <RadioCard
-              name="courier"
-              value=""
-              checked={form.courier === ""}
-              onSelect={() => patch({ courier: "" })}
-              label="Whoever gets there first"
-              description="Recommended"
-            />
-            {Object.entries(COURIERS).map(([key, label]) => (
+        {/*
+         * The courier picker, shown ONLY when there is more than one to pick.
+         *
+         * With a single courier the question has one answer, and asking it was
+         * actively harmful: this listed Pathao, Steadfast and RedX while only
+         * Pathao had credentials, and the answer is STORED on the order.
+         * dispatch.ts resolves `options.courier ?? order.courierPreference`, so
+         * a customer choosing Steadfast created an order nobody could ship —
+         * discovered days later, by the owner, holding a packed parcel.
+         *
+         * Hidden, `form.courier` stays "" — no preference — which the server
+         * resolves to COURIER_DEFAULT. Exactly what "Whoever gets there first"
+         * did, minus the illusion of a choice.
+         */}
+        {courier.choices.length > 1 && (
+          <section aria-labelledby="courier-heading">
+            <h2 id="courier-heading" className="font-display text-display-s">
+              Courier
+            </h2>
+            <p className="text-stone mt-2 text-sm">
+              No preference is usually fastest — we send it with whoever is
+              covering your area that day.
+            </p>
+            <div className="mt-5 space-y-2">
               <RadioCard
-                key={key}
                 name="courier"
-                value={key}
-                checked={form.courier === key}
-                onSelect={() => patch({ courier: key as CourierKey })}
-                label={label}
+                value=""
+                checked={form.courier === ""}
+                onSelect={() => patch({ courier: "" })}
+                label="Whoever gets there first"
+                description="Recommended"
               />
-            ))}
-          </div>
-        </section>
+              {courier.choices.map((key) => (
+                <RadioCard
+                  key={key}
+                  name="courier"
+                  value={key}
+                  checked={form.courier === key}
+                  onSelect={() => patch({ courier: key as CourierKey })}
+                  label={COURIERS[key as CourierKey]}
+                />
+              ))}
+            </div>
+          </section>
+        )}
 
         <section aria-labelledby="payment-heading">
           <h2 id="payment-heading" className="font-display text-display-s">
