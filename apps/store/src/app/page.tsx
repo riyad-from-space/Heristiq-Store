@@ -7,6 +7,7 @@ import { StoryBand } from "@/components/home/story-band";
 import { NewsletterSection } from "@/components/home/newsletter-section";
 import { InstagramFeed } from "@/components/home/instagram-feed";
 import { erp } from "@/lib/erp";
+import type { ProductCard } from "@/lib/erp/types";
 import { site } from "@/config/site";
 import { jsonLd } from "@/lib/json-ld";
 
@@ -21,6 +22,51 @@ import { jsonLd } from "@/lib/json-ld";
  */
 export const revalidate = 300;
 
+/*
+ * Take `count` products, spreading across categories before going deep in any
+ * one of them.
+ *
+ * Within a category the flagged-featured come first, so the owner's judgement
+ * still decides WHICH waist chain appears — it just no longer decides that
+ * all three are waist chains. Falls back to plain order when nothing is
+ * flagged, because a merchandising oversight should not blank half the home
+ * page.
+ */
+function oneEachCategory(
+  products: ProductCard[],
+  count: number,
+): ProductCard[] {
+  const byCategory = new Map<string, ProductCard[]>();
+  for (const product of products) {
+    const key = product.category?.slug ?? "";
+    const list = byCategory.get(key);
+    if (list) list.push(product);
+    else byCategory.set(key, [product]);
+  }
+
+  for (const list of byCategory.values()) {
+    list.sort((a, b) => Number(b.featured) - Number(a.featured));
+  }
+
+  /* Round robin: one from each category, then a second from each, until full.
+     `products` is already in the order getProducts returned, so categories are
+     visited in the order the shop itself lists them. */
+  const picked: ProductCard[] = [];
+  const lists = [...byCategory.values()];
+  for (let depth = 0; picked.length < count; depth++) {
+    let anyAtThisDepth = false;
+    for (const list of lists) {
+      const product = list[depth];
+      if (!product) continue;
+      picked.push(product);
+      anyAtThisDepth = true;
+      if (picked.length === count) break;
+    }
+    if (!anyAtThisDepth) break;
+  }
+  return picked;
+}
+
 export default async function HomePage() {
   const client = erp();
   const [products, categories] = await Promise.all([
@@ -31,15 +77,18 @@ export default async function HomePage() {
    * The two grids split the catalogue rather than sharing it, so no piece
    * appears twice on one page.
    *
-   * "New this week" takes the first three flagged featured, because the
-   * mockup's feature card spans two columns and 2 + 1 + 1 fills a
-   * four-column row with three products. "The edit" takes everything else.
+   * "New this week" takes three, ONE PER CATEGORY where it can. It used to
+   * take the first three flagged `featured`, and every flagged piece is a
+   * waist chain — so the row that exists to show what the shop sells showed
+   * one category, on a site that sells five. Whoever ticks that box in the
+   * ERP is thinking "this piece is good", not "this piece represents its
+   * category", and the home page should not depend on them meaning the
+   * second thing.
    *
-   * If nothing is flagged, the first three stand in — a merchandising
-   * oversight should not blank half the home page.
+   * Three because the mockup's feature card spans two columns, so 2 + 1 + 1
+   * fills a four-column row. "The edit" takes everything else.
    */
-  const flagged = products.filter((p) => p.featured);
-  const fresh = (flagged.length > 0 ? flagged : products).slice(0, 3);
+  const fresh = oneEachCategory(products, 3);
   const freshIds = new Set(fresh.map((p) => p.id));
   const edit = products.filter((p) => !freshIds.has(p.id));
 

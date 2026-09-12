@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ProductImage } from "@/components/ui/product-image";
 import { Container, Section, SectionHeader } from "@/components/ui/layout";
+import { categoryCovers } from "@/config/site";
 import type { Category, ProductCard } from "@/lib/erp/types";
 
 /*
@@ -43,7 +44,19 @@ export function CategoryTiles({
 
   const tiles = categories.map((category) => ({
     ...category,
-    cover: products.find((p) => p.category?.slug === category.slug)?.images[0],
+    /*
+     * The category's own cover, then the first product in it, then the
+     * designed placeholder.
+     *
+     * Borrowing a product photograph was the old behaviour and it has two
+     * faults: the tile changes whenever the catalogue re-sorts, and it shows
+     * ONE piece as though it were the whole category. A cover is shot for the
+     * job — a spread, in its own setting. The fallback stays so a category
+     * added tomorrow still has a tile tonight.
+     */
+    cover:
+      categoryCovers[category.slug] ??
+      products.find((p) => p.category?.slug === category.slug)?.images[0],
     count: products.filter((p) => p.category?.slug === category.slug).length,
   }));
 

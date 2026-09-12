@@ -3,6 +3,7 @@ import { Stagger, StaggerItem } from "@/components/motion/reveal";
 import { Button } from "@/components/ui/button";
 import { Container } from "@/components/ui/layout";
 import { ProductImage } from "@/components/ui/product-image";
+import { editorial } from "@/config/site";
 
 /*
  * The home hero.
@@ -36,7 +37,7 @@ export function Hero() {
         <Stagger delay={0.05}>
           <StaggerItem>
             <span className="bg-rose-soft text-rose-deep rounded-pill inline-block px-3.5 py-1.5 text-[0.8rem] font-semibold">
-              The autumn edit is here
+              New in — eight gold-finish bracelets
             </span>
           </StaggerItem>
 
@@ -53,7 +54,11 @@ export function Hero() {
            */}
           <StaggerItem rise className="mt-5">
             <h1 className="font-display text-display-xl font-medium">
-              Body jewellery, made to{" "}
+              {/* "Body jewellery" was true when waist chains were the only
+                  thing sold. The shop now lists bracelets, rings, earrings and
+                  pendants, none of which is body jewellery — the same
+                  narrowing that had /shop headed "Waist chains". */}
+              Jewellery made to{" "}
               {/* The one italic word, at weight 400 against the headline's
                   500 — straight from the mockup, and the whole reason the
                   display face carries an italic axis. */}
@@ -63,8 +68,9 @@ export function Hero() {
 
           <StaggerItem className="mt-5">
             <p className="text-copy-lg text-stone max-w-[46ch]">
-              Contemporary body jewellery for every mood. Handmade in
-              Bangladesh, styled for the everyday and the occasion.
+              Waist chains, bracelets, rings and earrings in gold and silver
+              finishes — priced to wear on an ordinary Tuesday, not to keep in a
+              box for a wedding.
             </p>
           </StaggerItem>
 
@@ -81,53 +87,79 @@ export function Hero() {
         </Stagger>
 
         {/*
-         * The media block, with the small overlapping swatch.
+         * The media block: one editorial photograph, with a second overlapping
+         * it on desktop.
          *
-         * `order-first lg:order-none` is the phone-first stack. The swatch
-         * hangs off two edges, so nothing here may clip — the aspect-ratio
-         * well lives on the ProductImage, not on this wrapper.
+         * `order-first lg:order-none` is the phone-first stack — the shop is
+         * found on Instagram, so the first thing on screen should be the
+         * jewellery, not a headline about it.
+         *
+         * WHAT CHANGED AND WHY. This was a product shot on denim plus a 130px
+         * square swatch. Both are honest, and neither makes anyone want
+         * anything: flat-lays state what a piece IS. The primary photograph is
+         * now the only one in the set with a person in it, because a wrist
+         * wearing five bangles answers the question a flat-lay leaves open —
+         * what does this look like on me.
+         *
+         * The second photograph is a real image at a real size rather than a
+         * thumbnail, so the pair reads as an editorial spread. It is desktop
+         * only: on a phone the primary is already edge-to-edge and anything
+         * hanging off its corner either clips or forces a sideways scroll.
+         *
+         * Nothing here may clip, so the aspect-ratio wells live on the
+         * ProductImages and never on this wrapper.
          */}
-        <div className="relative order-first lg:order-none">
-          <ProductImage
-            image={{ id: "hero/home", alt: "Heristiq jewellery, autumn 2026" }}
-            sizes="(min-width: 1024px) 52vw, 100vw"
-            crop="wide"
-            priority
-            maxWidth={1440}
-            className="rounded-media lg:aspect-4/5"
-          />
+        <div className="order-first grid gap-3 lg:order-none lg:grid-cols-[1.55fr_1fr] lg:items-end">
+          <div className="relative">
+            <ProductImage
+              image={editorial.worn}
+              sizes="(min-width: 1024px) 34vw, 100vw"
+              /*
+               * PORTRAIT, not wide. The subject is a vertical arm in a
+               * vertical frame; a 16:9 crop threw most of the stack away and
+               * kept a band of wall.
+               */
+              crop="portrait"
+              priority
+              maxWidth={1080}
+              className="rounded-media"
+            />
 
-          <span className="text-ink rounded-pill bg-blush/90 absolute top-3.5 left-3.5 px-2.5 py-1 text-[0.72rem] font-semibold">
-            Autumn 2026
-          </span>
+            <span className="text-ink rounded-pill bg-blush/90 absolute top-3.5 left-3.5 z-2 px-2.5 py-1 text-[0.72rem] font-semibold">
+              Autumn 2026
+            </span>
+          </div>
 
           {/*
-           * The overlapping swatch. Hidden below lg: on a phone the media is
-           * already edge-to-edge and a block hanging off its corner would
-           * either clip or force a horizontal scrollbar.
+           * The second photograph, BESIDE the first rather than on top of it.
            *
-           * It carried `image={undefined}` — the designed gradient placeholder
-           * — which was right while the whole site was placeholders and wrong
-           * the moment real photography landed beside it: one pink gradient
-           * against a real photograph reads as a picture that failed to load,
-           * not as decoration.
+           * It started as an overlapping card, which is the usual editorial
+           * move and was wrong for this pair: the subject of the main
+           * photograph — five bangles on a wrist — sits low and left in the
+           * frame, exactly where an overlapping card lands. It covered the
+           * one thing the picture is of.
            *
-           * A SILVER piece deliberately, because the hero image is gold. The
-           * swatch's job is to hint that the range has more than one finish,
-           * and it cannot do that showing the same metal as the photograph it
-           * overlaps. Still aria-hidden: it is decoration, and a screen
-           * reader announcing a second product here would imply the hero is
-           * about two pieces.
+           * Side by side with `items-end`, the shorter frame aligns to the
+           * bottom and the height difference does the work the overlap was
+           * supposed to do. Nothing is hidden, and nothing can clip or force a
+           * sideways scroll.
+           *
+           * Deliberately a different KIND of picture: the first is a piece
+           * being worn, this is the pieces themselves, close and textured. Two
+           * shots of the same kind would read as a gallery that lost its
+           * arrows.
+           *
+           * Desktop only. At 390px the main photograph is already
+           * edge-to-edge, and splitting that width in two would make both
+           * unreadable.
            */}
-          <div
-            aria-hidden
-            className="border-blush rounded-card absolute -bottom-5 -left-5 hidden w-[130px] overflow-hidden border-6 shadow-[0_20px_40px_-24px_rgba(42,33,38,.55)] lg:block"
-          >
+          <div aria-hidden className="hidden lg:block">
             <ProductImage
-              image={{ id: "wc-005/front", alt: "" }}
-              sizes="130px"
-              crop="square"
-              maxWidth={320}
+              image={editorial.shore}
+              sizes="22vw"
+              crop="portrait"
+              maxWidth={828}
+              className="rounded-media aspect-[4/4.6]"
             />
           </div>
         </div>

@@ -92,6 +92,65 @@ export const socialTiles: readonly string[] = [];
 export const erpUrl = process.env.NEXT_PUBLIC_ERP_URL || "/admin";
 
 /**
+ * The editorial photographs — the ones with a person, a setting, a mood, as
+ * opposed to a product on a plain ground.
+ *
+ * Kept apart from product photography on purpose. A product shot has to show
+ * the piece honestly; these have to make someone want it, and they are placed
+ * by hand rather than pulled from whichever SKU happens to sort first.
+ *
+ * Named for what is IN them, not where they sit, so moving one between
+ * sections does not leave a lie behind — `featured/hero` would be wrong the
+ * moment it moved.
+ */
+export const editorial = {
+  /** The only one with a person in it, which is why it carries the hero. */
+  worn: {
+    id: "featured/worn",
+    alt: "A stack of gold-finish bangles worn along a wrist",
+  },
+  glass: {
+    id: "featured/glass",
+    alt: "A gold-finish waist chain draped over a wine glass in evening light",
+  },
+  shore: {
+    id: "featured/shore",
+    alt: "Gold-finish starfish and shell waist chains against dark denim",
+  },
+} as const;
+
+/**
+ * A cover photograph per category, keyed by slug.
+ *
+ * Categories used to borrow the first product photograph that happened to sort
+ * into them, which made the tile change whenever the catalogue did and showed
+ * one piece as if it were the whole category. These are shot for the job: a
+ * spread of the category, in its own setting.
+ *
+ * A slug with no entry falls back to that old behaviour and then to the
+ * designed placeholder, so adding a category never leaves a hole — and adding
+ * its cover later is one line here.
+ */
+export const categoryCovers: Record<string, { id: string; alt: string }> = {
+  "waist-chains": {
+    id: "category/waist-chains",
+    alt: "Four gold-finish waist chains laid over dark denim",
+  },
+  bracelets: {
+    id: "category/bracelets",
+    alt: "Gold-finish bracelets in a red velvet case on white satin",
+  },
+  earrings: {
+    id: "category/earrings",
+    alt: "Eleven pairs of gold-finish earrings on pale satin",
+  },
+  "finger-rings": {
+    id: "category/finger-rings",
+    alt: "Gold-finish rings in a brown leather travel case",
+  },
+};
+
+/**
  * The courier the shop actually ships with, as customers should read it.
  *
  * ONE PLACE, because this name appears on the home page, the product page and

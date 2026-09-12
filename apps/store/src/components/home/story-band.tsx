@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Container, Eyebrow, Section, SectionHeading } from "@/components/ui/layout";
 import { ProductImage } from "@/components/ui/product-image";
+import { editorial } from "@/config/site";
 
 /*
  * The story band — the one dark, deliberate break in the page.
@@ -30,15 +31,26 @@ export function StoryBand() {
     <Section tone="inverted" as="div" className="overflow-hidden">
       <Container className="grid items-center gap-8 lg:grid-cols-2 lg:gap-16">
         <div className="order-first">
+          {/*
+           * The editorial shot, not the old product-on-denim one.
+           *
+           * The words beside it argue that these pieces are for an ordinary
+           * evening rather than a locked box, and a flat-lay on a bed cannot
+           * carry that. A chain poured over a wine glass in lamplight is the
+           * evening — it makes the claim the paragraph then explains.
+           *
+           * story/celestial is not orphaned; it still opens /about, where a
+           * close product study is exactly right.
+           */}
           <ProductImage
-            image={{
-              id: "story/celestial",
-              alt: "A Heristiq piece, finished by hand",
-            }}
+            image={editorial.glass}
             sizes="(min-width: 1024px) 46vw, 100vw"
-            crop="wide"
+            /* 4:5 rather than the old 5:4 letterbox: the subject is a tall
+               glass with the chain falling past its stem, and a landscape crop
+               cut the fall off at the tabletop. */
+            crop="portrait"
             maxWidth={1080}
-            className="rounded-media aspect-[5/4]"
+            className="rounded-media"
           />
         </div>
 
