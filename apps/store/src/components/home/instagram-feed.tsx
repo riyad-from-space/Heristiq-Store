@@ -39,7 +39,7 @@ export function InstagramFeed() {
         <SectionHeader
           eyebrow="Instagram"
           title="As worn by you"
-          lede={`Tag @${site.name.toLowerCase()} to be featured.`}
+          lede={`Tag @${site.instagramHandle} to be featured.`}
           action={
             <a
               href={site.social.instagram}
@@ -47,7 +47,7 @@ export function InstagramFeed() {
               rel="noopener noreferrer"
               className="text-rose-deep decoration-rose-soft hover:decoration-rose-deep duration-quick inline-flex items-center gap-2 border-b-[1.5px] border-transparent pb-0.5 font-semibold transition-colors"
             >
-              <InstagramIcon size={15} /> Follow @{site.name.toLowerCase()}
+              <InstagramIcon size={15} /> Follow @{site.instagramHandle}
             </a>
           }
         />

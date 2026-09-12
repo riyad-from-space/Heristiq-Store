@@ -18,12 +18,35 @@ export const site = {
     "Waist chains, bracelets, rings, earrings and pendants in gold and silver finishes, made for everyday wear. Cash on delivery across Bangladesh.",
   url: "https://heristiq.com",
   locale: "en_BD",
-  /* Placeholders until the real accounts are confirmed. */
+  /*
+   * The real accounts, confirmed by the owner.
+   *
+   * These are not just links in the footer: page.tsx feeds them to the
+   * Organization schema as `sameAs`, which is how Google ties this site to
+   * those profiles. A near-miss handle there is worse than no handle — it
+   * claims a brand identity that belongs to someone else — so the strings are
+   * exactly the canonical profile URLs, trailing slash and all.
+   */
   social: {
-    instagram: "https://instagram.com/heristiq",
-    tiktok: "https://tiktok.com/@heristiq",
-    facebook: "https://facebook.com/heristiq",
+    instagram: "https://www.instagram.com/heristiq_/",
+    tiktok: "https://www.tiktok.com/@heristiq",
+    facebook: "https://www.facebook.com/heristiqonlineshop",
   },
+  /*
+   * The Instagram @handle as a customer must TYPE it to tag the shop.
+   *
+   * Deliberately outside `social`, because page.tsx emits
+   * `sameAs: Object.values(site.social)` into the Organization schema — a bare
+   * handle in that array would be an invalid profile URL.
+   *
+   * It is also not derived from `site.name`, which is what it used to be. The
+   * brand is "Heristiq" but the account is "heristiq_", and the three
+   * platforms do not agree with each other either (tiktok is @heristiq,
+   * facebook is heristiqonlineshop). The rendered copy said "Tag @heristiq"
+   * while linking to heristiq_ — sending customers to tag an account that is
+   * not this shop.
+   */
+  instagramHandle: "heristiq_",
   contact: {
     /* The number customers message. Also the WhatsApp/Messenger target. */
     phone: "01712345678",
