@@ -100,6 +100,13 @@ export type ProductStockRow = {
   reserved: number;
   /** on_hand minus reserved — what is still free to promise. */
   available: number;
+  /**
+   * Photographs, ordered, from product_images (migration 1009).
+   *
+   * Optional because a database without 1009 has no such column, and the
+   * products list must not go blank over a missing thumbnail.
+   */
+  images?: { id: string; alt: string }[] | null;
 };
 
 export type SaleProfitRow = {
