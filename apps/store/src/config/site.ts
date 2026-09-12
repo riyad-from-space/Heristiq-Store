@@ -48,8 +48,10 @@ export const site = {
    */
   instagramHandle: "heristiq_",
   contact: {
-    /* The number customers message. Also the WhatsApp/Messenger target. */
-    phone: "01712345678",
+    /* The number customers message. Also the WhatsApp/Messenger target.
+       NOT the same as PATHAO_SENDER_PHONE, which is the number Pathao's
+       pickup rider calls — that one is the owner's, this one is the shop's. */
+    phone: "01345208555",
     email: "hello@heristiq.com",
     hours: "10am – 8pm, Saturday to Thursday",
   },

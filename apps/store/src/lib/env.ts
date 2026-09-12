@@ -1,5 +1,7 @@
 import "server-only";
 
+import { site } from "@/config/site";
+
 /*
  * Server-side configuration.
  *
@@ -256,7 +258,12 @@ export const pathaoEnv = {
     return read("PATHAO_SENDER_NAME") ?? "Heristiq";
   },
   get senderPhone() {
-    return read("PATHAO_SENDER_PHONE") ?? "01712345678";
+    /* Falls back to the number ON THE SITE, which is what the comment above
+       has always promised — it was a hardcoded 01712345678, a placeholder that
+       belongs to nobody. Pathao requires a sender phone on every order and
+       gives it to the pickup rider, so the fallback firing used to mean a
+       rider calling a stranger about a parcel they have never heard of. */
+    return read("PATHAO_SENDER_PHONE") ?? site.contact.phone;
   },
   /**
    * Declared parcel weight in kg. Pathao prices on it and their minimum is
