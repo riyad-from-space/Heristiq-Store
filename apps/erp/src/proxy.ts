@@ -27,9 +27,16 @@ export function proxy(request: NextRequest) {
     `script-src 'self' 'nonce-${nonce}'${isDev ? " 'unsafe-eval'" : ""}`,
     /* See the storefront's proxy: a nonce cannot cover a style attribute. */
     "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' data: blob:",
+    /* res.cloudinary.com is the product photographs, shown as thumbnails on
+       the product page. blob: is the local preview of a file the owner has
+       picked but not yet uploaded. */
+    "img-src 'self' data: blob: https://res.cloudinary.com",
     "font-src 'self'",
-    "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
+    /* api.cloudinary.com is the upload endpoint. The browser POSTs the
+       photograph THERE rather than here — see lib/cloudinary.ts — so without
+       this the upload fails, and it fails the way CSP always does: silently,
+       with nothing in the network tab but a blocked request. */
+    "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.cloudinary.com",
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",

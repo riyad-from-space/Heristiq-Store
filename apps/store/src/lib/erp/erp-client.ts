@@ -41,7 +41,7 @@ import { slugify } from "@/lib/utils";
    TYPE level to work out the row shape, and `"a" + "b"` widens to `string`,
    at which point every read below infers GenericStringError[] instead. */
 const CATALOGUE_COLUMNS =
-  "id, sku, name, selling_price, is_active, on_hand, reserved, available, category, category_slug";
+  "id, sku, name, selling_price, is_active, on_hand, reserved, available, category, category_slug, images";
 
 type CatalogueRow = {
   id: string;
@@ -57,6 +57,14 @@ type CatalogueRow = {
      row — it still appears in the shop, just not under any category. */
   category: string | null;
   category_slug: string | null;
+  /*
+   * Photographs the owner uploaded in the ERP, already ordered by the view
+   * (product_images.position). `[]` when they have not uploaded any — the view
+   * coalesces, so this is never null in practice, but the type allows it
+   * because a pre-1009 database has no such column at all and PostgREST would
+   * return undefined rather than fail.
+   */
+  images?: { id: string; alt: string }[] | null;
 };
 
 /**
@@ -100,7 +108,21 @@ function toProduct(row: CatalogueRow): Product {
     finish: m.finish,
     motif: m.motif,
     collections: m.collections,
-    images: m.images,
+    /*
+     * The database wins, the code fills in.
+     *
+     * A product with photographs uploaded in the ERP shows those; one without
+     * shows whatever merchandising.ts lists for its SKU, which is what every
+     * product showed before migration 1009. So applying that migration changes
+     * nothing a customer sees until someone actually uploads something, and
+     * the first upload for a piece replaces its hard-coded list wholesale
+     * rather than appending to it — otherwise a reshoot would show the old
+     * photograph and the new one side by side.
+     *
+     * Same rule as settings.ts: owner-editable data overrides the built-in
+     * default, and the default is still there when there is nothing to read.
+     */
+    images: row.images?.length ? row.images : m.images,
     /*
      * `available`, not `on_hand`. A unit claimed by an open pre-order is still
      * physically in the drawer, so the ERP leaves on_hand alone — but it is

@@ -37,6 +37,13 @@ export type Merchandising = {
   /**
    * Cloudinary public IDs, first is the hero. Empty renders the placeholder.
    *
+   * NOW A FALLBACK, not the source of truth. Since migration 1009 the owner
+   * uploads photographs on the product page in the ERP, and those are stored
+   * in `product_images` — if a product has any rows there, they replace this
+   * list wholesale. This is what a product shows until someone uploads
+   * something for it, which is why the ids below are still correct and still
+   * checked by `npm run images:check`.
+   *
    * ONLY LIST PHOTOGRAPHS THAT HAVE ACTUALLY BEEN UPLOADED. An id here that
    * is not in Cloudinary is not a placeholder — the placeholder only appears
    * when the list is empty. A missing id produces a real request that 404s,
