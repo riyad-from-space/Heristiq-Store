@@ -3,7 +3,7 @@
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useEffect, useState } from "react";
 import { ProductImage } from "@/components/ui/product-image";
-import { DURATION, EASE } from "@/lib/motion";
+import { EASE } from "@/lib/motion";
 import type { ProductImage as ImageRef } from "@/lib/erp/types";
 
 /*
@@ -111,16 +111,43 @@ export function HeroGallery({ images }: { images: readonly ImageRef[] }) {
                  AnimatePresence needs to animate it in. */
               key={frame.current}
               className="absolute inset-0"
-              initial={{ opacity: 0, scale: 1.04 }}
+              initial={{ opacity: 0, scale: 1.05 }}
               animate={{ opacity: 1, scale: 1 }}
               /* No exit fade. The next image lands on top of this one, so
                  fading this one out would expose the base layer through it —
                  a flash of the wrong picture between two right ones. */
-              /* 0.9s inside a 3s cycle, so the picture is STILL for 70% of the
-                 time. It was 1.25s, which at the old seven-second interval was
-                 a slow dissolve and at three seconds would have meant the hero
-                 was in motion nearly half the time a customer looked at it. */
-              transition={{ duration: DURATION.slow * 1.8, ease: EASE }}
+              transition={{
+                /*
+                 * OPACITY AND SCALE ARE TIMED SEPARATELY, and that is most of
+                 * why this now reads as smooth.
+                 *
+                 * Both used the site's EASE — cubic-bezier(.2,.7,.2,1), a hard
+                 * decelerate. That curve is right for a thing arriving at a
+                 * destination: it covers most of the distance immediately and
+                 * eases into place. Applied to a FADE it puts most of the
+                 * opacity change in the first third, so the picture appears to
+                 * snap in and then linger, which is the "not smooth" the owner
+                 * was pointing at. It was never really about the duration.
+                 *
+                 * A dissolve wants an even curve. This one is close to
+                 * symmetric — gentle in, gentle out, nothing dumped at either
+                 * end — so the change is spread across the whole 1.3s and no
+                 * part of it draws attention to itself.
+                 */
+                opacity: { duration: 1.3, ease: [0.37, 0, 0.25, 1] },
+                /*
+                 * The scale runs LONGER than the fade and keeps the site's
+                 * decelerate curve. By the time the image is fully opaque it
+                 * is still settling the last fraction of a percent, which is
+                 * below the threshold of noticing and is exactly what makes it
+                 * feel like a photograph coming to rest rather than a slide
+                 * being swapped.
+                 *
+                 * 2.2s inside a 3s cycle, so it finishes before the next frame
+                 * begins — an unfinished transform would compound.
+                 */
+                scale: { duration: 2.2, ease: EASE },
+              }}
             >
               <ProductImage
                 image={above}
