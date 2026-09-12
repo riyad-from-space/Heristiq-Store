@@ -76,24 +76,32 @@ export function Photographs({
       );
     }
 
-    const ticket = await requestUpload(productId);
+    const ticket = await requestUpload(productId, {
+      fileName: file.name,
+      mimeType: file.type,
+    });
     if (!ticket.ok) throw new Error(ticket.error);
 
     /*
-     * Exactly the four signed fields plus the file. NOT a field more: every
-     * parameter except file, cloud_name, resource_type and api_key has to be
-     * covered by the signature, so adding one here — a folder, a tag, a
-     * quality — turns every upload into "Invalid Signature".
+     * Exactly the fields the server signed, and not one more: every parameter
+     * except file, cloud_name, resource_type and api_key has to be covered by
+     * the signature, so adding a folder, a tag or a quality here turns every
+     * upload into "Invalid Signature" — and omitting one the server DID sign
+     * fails the same way.
      *
-     * No transformation of any kind. Cloudinary stores the bytes it is given,
-     * and the storefront derives every rendition from that master later. This
-     * is the copy every future size comes from, so it is kept whole.
+     * The only ingest transformation this app ever asks for is `format: jpg`,
+     * and only for HEIC, which Cloudinary cannot reliably resize. Everything
+     * else is stored exactly as given, so the master stays the best copy that
+     * exists and the storefront derives every rendition from it.
      */
     const form = new FormData();
     form.set("file", file);
     form.set("api_key", ticket.ticket.apiKey);
     form.set("public_id", ticket.ticket.publicId);
     form.set("timestamp", String(ticket.ticket.timestamp));
+    /* Present only when the server signed it — every signed parameter must be
+       sent, and an unsigned one is rejected just as hard. */
+    if (ticket.ticket.transcode) form.set("format", "jpg");
     form.set("signature", ticket.ticket.signature);
 
     const response = await fetch(
@@ -103,7 +111,9 @@ export function Photographs({
     const body = await response.json().catch(() => ({}));
 
     if (!response.ok) {
-      throw new Error(body?.error?.message ?? `Upload failed (${response.status}).`);
+      throw new Error(
+        body?.error?.message ?? `Upload failed (${response.status}).`,
+      );
     }
 
     const saved = await attachImage({
@@ -174,8 +184,10 @@ export function Photographs({
           className="block w-full text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-neutral-900 file:px-3 file:py-2 file:text-sm file:font-medium file:text-white hover:file:bg-neutral-700 disabled:opacity-50 dark:file:bg-neutral-100 dark:file:text-neutral-900"
         />
         <p className="mt-1 text-xs text-neutral-500">
-          Straight from your phone is fine — HEIC included. The original is
-          stored untouched and the shop makes its own sizes from it.
+          Straight from your phone is fine. HEIC is converted to JPEG on the way
+          in, because Cloudinary cannot reliably resize an iPhone HEIC;
+          everything else is stored exactly as given. The shop makes its own
+          sizes from whatever is stored.
         </p>
       </div>
 

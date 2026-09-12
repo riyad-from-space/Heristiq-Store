@@ -31,6 +31,10 @@ export type UploadTicket = {
   publicId: string;
   /** The same ID with the folder stripped — what goes in the database. */
   storedId: string;
+  /** True when Cloudinary is being asked to store a JPEG instead of the
+   *  uploaded bytes. The browser must then send `format` too, because every
+   *  signed parameter has to be present in the request. */
+  transcode: boolean;
 };
 
 function env(name: string) {
@@ -48,8 +52,8 @@ function env(name: string) {
 export function cloudinaryConfigured() {
   return Boolean(
     process.env.CLOUDINARY_CLOUD_NAME &&
-      process.env.CLOUDINARY_API_KEY &&
-      process.env.CLOUDINARY_API_SECRET,
+    process.env.CLOUDINARY_API_KEY &&
+    process.env.CLOUDINARY_API_SECRET,
   );
 }
 
@@ -67,7 +71,8 @@ export function cloudinaryConfigured() {
  * `invalidate: true` to work around exactly that.
  */
 function freshId(sku: string) {
-  const safeSku = sku.replace(/[^A-Za-z0-9._-]+/g, "-").slice(0, 40) || "product";
+  const safeSku =
+    sku.replace(/[^A-Za-z0-9._-]+/g, "-").slice(0, 40) || "product";
   const stamp = Date.now().toString(36);
   const random = crypto.randomUUID().slice(0, 8);
   return `${PRODUCTS_PREFIX}/${safeSku}/${stamp}${random}`;
@@ -82,7 +87,35 @@ function freshId(sku: string) {
  * the master must stay the best copy that exists — re-encoding on the way in
  * would be a permanent tax on every rendition of that photograph, forever.
  */
-export async function createUploadTicket(sku: string): Promise<UploadTicket> {
+/**
+ * HEIC/HEIF must not be stored as-is.
+ *
+ * Cloudinary ACCEPTS an iPhone HEIC and reports its dimensions correctly, so
+ * the upload looks like a success. Its transformer then fails on a subset of
+ * renditions with "Cannot read grid descriptor" — HEIC stores the picture as a
+ * grid of tiles, and the decoder cannot always read it. Measured on one real
+ * photograph: 16 of 21 renditions worked from a HEIC master, 21 of 21 from a
+ * JPEG one.
+ *
+ * That failure is a 400 which CACHES at the CDN, so it is not a glitch that
+ * clears — a customer gets a broken image at that size permanently, and only
+ * at some sizes, so it looks fine on the phone you tested and broken on
+ * someone else's.
+ *
+ * The old CLI upload script transcoded with `sips` before uploading and framed
+ * it as being about local readability. This is the real reason.
+ */
+function needsTranscode(fileName: string, mimeType?: string) {
+  return (
+    /\.hei[cf]$/i.test(fileName.trim()) ||
+    /^image\/hei[cf]/i.test(mimeType ?? "")
+  );
+}
+
+export async function createUploadTicket(
+  sku: string,
+  source?: { fileName?: string; mimeType?: string },
+): Promise<UploadTicket> {
   const cloudName = env("CLOUDINARY_CLOUD_NAME");
   const apiKey = env("CLOUDINARY_API_KEY");
   const apiSecret = env("CLOUDINARY_API_SECRET");
@@ -92,7 +125,15 @@ export async function createUploadTicket(sku: string): Promise<UploadTicket> {
   const publicId = `${folder}/${storedId}`;
   const timestamp = Math.floor(Date.now() / 1000);
 
-  const signed = { public_id: publicId, timestamp };
+  /*
+   * `format` is signed like everything else. It is the ONLY transformation
+   * this app asks for on ingest, and only for HEIC: every other format is
+   * stored exactly as given, so the master stays the best copy that exists and
+   * the storefront derives every rendition from it.
+   */
+  const transcode = needsTranscode(source?.fileName ?? "", source?.mimeType);
+  const signed: Record<string, string | number> = { public_id: publicId, timestamp };
+  if (transcode) signed.format = "jpg";
 
   return {
     cloudName,
@@ -101,6 +142,7 @@ export async function createUploadTicket(sku: string): Promise<UploadTicket> {
     signature: await signParams(signed, apiSecret),
     publicId,
     storedId,
+    transcode,
   };
 }
 
@@ -136,7 +178,8 @@ export async function destroyImage(storedId: string) {
   const signature = await signParams(signed, apiSecret);
 
   const body = new FormData();
-  for (const [key, value] of Object.entries(signed)) body.set(key, String(value));
+  for (const [key, value] of Object.entries(signed))
+    body.set(key, String(value));
   body.set("api_key", apiKey);
   body.set("signature", signature);
 

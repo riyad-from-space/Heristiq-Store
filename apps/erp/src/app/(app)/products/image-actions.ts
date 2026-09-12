@@ -32,6 +32,10 @@ const OUR_ID = /^products\/[A-Za-z0-9._-]{1,40}\/[a-z0-9]{4,40}$/;
  */
 export async function requestUpload(
   productId: string,
+  /* The file's name and type, so the SERVER decides whether to transcode.
+     Deciding here rather than in the browser means the rule cannot be skipped
+     by a stale client, and the signature always matches what is sent. */
+  source?: { fileName?: string; mimeType?: string },
 ): Promise<{ ok: true; ticket: UploadTicket } | { ok: false; error: string }> {
   await requireAdmin();
 
@@ -46,7 +50,7 @@ export async function requestUpload(
   if (!data) return { ok: false, error: "That product no longer exists." };
 
   try {
-    return { ok: true, ticket: await createUploadTicket(data.sku) };
+    return { ok: true, ticket: await createUploadTicket(data.sku, source) };
   } catch (cause) {
     /* Missing credentials land here. Say so plainly — this is the one failure
        the owner can actually fix, and "Invalid Signature" would not help. */

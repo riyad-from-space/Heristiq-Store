@@ -15,7 +15,8 @@
     "prebuild": "node scripts/image-manifest.mjs",
     "images": "node scripts/image-manifest.mjs",
     "images:check": "node scripts/images-check.mjs",
-    "images:upload": "node scripts/cloudinary-upload.mjs ../../cloudinary_images"
+    "images:upload": "node scripts/cloudinary-upload.mjs ../../cloudinary_images",
+    "images:renditions": "node scripts/renditions-check.mjs"
   },
   "dependencies": {
     "@heristiq/shared": "*",
