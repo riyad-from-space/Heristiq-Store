@@ -3,8 +3,13 @@
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button, Field, Input, Select, Textarea } from "@/components/ui";
+import { ProductPicker } from "@/components/product-picker";
 import { money } from "@/lib/format";
-import { SALES_CHANNELS, type SalesChannel, type SaleStatus } from "@/lib/types";
+import {
+  SALES_CHANNELS,
+  type SalesChannel,
+  type SaleStatus,
+} from "@/lib/types";
 import { createSale, updateSale, type SaleInput } from "../actions";
 
 export type SellableProduct = {
@@ -16,7 +21,12 @@ export type SellableProduct = {
   on_hand: number;
 };
 
-type Line = { key: number; product_id: string; qty: string; unit_price: string };
+type Line = {
+  key: number;
+  product_id: string;
+  qty: string;
+  unit_price: string;
+};
 
 /** Existing sale being edited. Absent when recording a new one. */
 export type SaleEditValues = {
@@ -35,7 +45,12 @@ export type SaleEditValues = {
 };
 
 let nextKey = 1;
-const blankLine = (): Line => ({ key: nextKey++, product_id: "", qty: "1", unit_price: "" });
+const blankLine = (): Line => ({
+  key: nextKey++,
+  product_id: "",
+  qty: "1",
+  unit_price: "",
+});
 
 export function SaleForm({
   products,
@@ -167,7 +182,9 @@ export function SaleForm({
           <Input
             type="date"
             value={header.sale_date}
-            onChange={(e) => setHeader({ ...header, sale_date: e.target.value })}
+            onChange={(e) =>
+              setHeader({ ...header, sale_date: e.target.value })
+            }
           />
         </Field>
         <Field label="Channel">
@@ -202,14 +219,18 @@ export function SaleForm({
         <Field label="Customer name">
           <Input
             value={header.customer_name}
-            onChange={(e) => setHeader({ ...header, customer_name: e.target.value })}
+            onChange={(e) =>
+              setHeader({ ...header, customer_name: e.target.value })
+            }
           />
         </Field>
         <Field label="Phone">
           <Input
             inputMode="tel"
             value={header.customer_phone}
-            onChange={(e) => setHeader({ ...header, customer_phone: e.target.value })}
+            onChange={(e) =>
+              setHeader({ ...header, customer_phone: e.target.value })
+            }
           />
         </Field>
         <Field label="Address">
@@ -230,50 +251,61 @@ export function SaleForm({
           return (
             <div
               key={line.key}
-              className="grid grid-cols-1 gap-2 rounded-lg border border-neutral-200 p-3 sm:grid-cols-[1fr_5rem_7rem_auto] sm:items-end dark:border-neutral-800"
+              /* Stacked, not one wide row. The product field is two selects
+                 now — category, then product — and squeezing those plus qty,
+                 price and Remove into a single row left every control too
+                 narrow to read a product name in. */
+              className="space-y-2 rounded-lg border border-neutral-200 p-3 dark:border-neutral-800"
             >
-              <Field label="Product">
-                <Select
-                  value={line.product_id}
-                  onChange={(e) => update(line.key, { product_id: e.target.value })}
-                >
-                  <option value="">— choose —</option>
-                  {products.map((op) => (
-                    <option key={op.id} value={op.id}>
-                      {op.name} ({op.sku}) · {op.on_hand} in stock
-                    </option>
-                  ))}
-                </Select>
-              </Field>
-              <Field label="Qty">
-                <Input
-                  type="number" min="1" step="1" inputMode="numeric"
-                  value={line.qty}
-                  onChange={(e) => update(line.key, { qty: e.target.value })}
-                />
-              </Field>
-              <Field label="Unit price">
-                <Input
-                  type="number" min="0" step="0.01" inputMode="decimal"
-                  value={line.unit_price}
-                  onChange={(e) => update(line.key, { unit_price: e.target.value })}
-                />
-              </Field>
-              <div className="flex items-center gap-3 pb-2 sm:pb-0">
-                {p && qty > p.on_hand && (
-                  <span className="text-xs font-medium text-amber-600 dark:text-amber-400">
-                    only {p.on_hand} in stock
-                  </span>
-                )}
-                {lines.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => setLines((ls) => ls.filter((l) => l.key !== line.key))}
-                    className="text-sm text-red-600 hover:underline"
-                  >
-                    Remove
-                  </button>
-                )}
+              <ProductPicker
+                products={products}
+                value={line.product_id}
+                onChange={(id) => update(line.key, { product_id: id })}
+                describe={(p) =>
+                  `${(p as (typeof products)[number]).on_hand} in stock`
+                }
+              />
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-[5rem_7rem_1fr] sm:items-end">
+                <Field label="Qty">
+                  <Input
+                    type="number"
+                    min="1"
+                    step="1"
+                    inputMode="numeric"
+                    value={line.qty}
+                    onChange={(e) => update(line.key, { qty: e.target.value })}
+                  />
+                </Field>
+                <Field label="Unit price">
+                  <Input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    inputMode="decimal"
+                    value={line.unit_price}
+                    onChange={(e) =>
+                      update(line.key, { unit_price: e.target.value })
+                    }
+                  />
+                </Field>
+                <div className="col-span-2 flex items-center gap-3 sm:col-span-1 sm:justify-end sm:pb-2">
+                  {p && qty > p.on_hand && (
+                    <span className="text-xs font-medium text-amber-600 dark:text-amber-400">
+                      only {p.on_hand} in stock
+                    </span>
+                  )}
+                  {lines.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setLines((ls) => ls.filter((l) => l.key !== line.key))
+                      }
+                      className="text-sm text-red-600 hover:underline"
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           );
@@ -290,23 +322,38 @@ export function SaleForm({
       <div className="grid gap-3 sm:grid-cols-3">
         <Field label="Discount">
           <Input
-            type="number" min="0" step="0.01" inputMode="decimal"
+            type="number"
+            min="0"
+            step="0.01"
+            inputMode="decimal"
             value={charges.discount}
-            onChange={(e) => setCharges({ ...charges, discount: e.target.value })}
+            onChange={(e) =>
+              setCharges({ ...charges, discount: e.target.value })
+            }
           />
         </Field>
         <Field label="Delivery charged to customer">
           <Input
-            type="number" min="0" step="0.01" inputMode="decimal"
+            type="number"
+            min="0"
+            step="0.01"
+            inputMode="decimal"
             value={charges.delivery_charge}
-            onChange={(e) => setCharges({ ...charges, delivery_charge: e.target.value })}
+            onChange={(e) =>
+              setCharges({ ...charges, delivery_charge: e.target.value })
+            }
           />
         </Field>
         <Field label="Delivery paid to courier">
           <Input
-            type="number" min="0" step="0.01" inputMode="decimal"
+            type="number"
+            min="0"
+            step="0.01"
+            inputMode="decimal"
             value={charges.delivery_cost}
-            onChange={(e) => setCharges({ ...charges, delivery_cost: e.target.value })}
+            onChange={(e) =>
+              setCharges({ ...charges, delivery_cost: e.target.value })
+            }
           />
         </Field>
       </div>
@@ -335,7 +382,9 @@ export function SaleForm({
           <span>Gross profit</span>
           <span
             className={`tabular-nums ${
-              totals.profit < 0 ? "text-red-600 dark:text-red-400" : "text-emerald-600 dark:text-emerald-400"
+              totals.profit < 0
+                ? "text-red-600 dark:text-red-400"
+                : "text-emerald-600 dark:text-emerald-400"
             }`}
           >
             {money(totals.profit)}

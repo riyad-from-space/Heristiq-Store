@@ -9,7 +9,11 @@ export default async function NewPurchasePage() {
   const supabase = await createClient();
 
   const [productsRes, suppliersRes] = await Promise.all([
-    supabase.from("products").select("id, name, sku").eq("is_active", true).order("name"),
+    supabase
+      .from("v_product_stock")
+      .select("id, name, sku, category")
+      .eq("is_active", true)
+      .order("name"),
     supabase.from("suppliers").select("id, name").order("name"),
   ]);
 

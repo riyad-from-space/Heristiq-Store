@@ -10,7 +10,7 @@ export default async function NewSalePage() {
 
   const { data } = await supabase
     .from("v_product_stock")
-    .select("id, name, sku, selling_price, avg_cost, on_hand")
+    .select("id, name, sku, selling_price, avg_cost, on_hand, category")
     .eq("is_active", true)
     .order("name");
 

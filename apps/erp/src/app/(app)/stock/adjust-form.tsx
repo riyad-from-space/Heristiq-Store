@@ -1,7 +1,8 @@
 "use client";
 
-import { useActionState, useRef } from "react";
+import { useActionState, useRef, useState } from "react";
 import { Button, Field, Input, Select } from "@/components/ui";
+import { ProductPicker } from "@/components/product-picker";
 import { adjustStock } from "./actions";
 
 export function AdjustForm({
@@ -13,11 +14,18 @@ export function AdjustForm({
   }[];
 }) {
   const formRef = useRef<HTMLFormElement>(null);
+  const [productId, setProductId] = useState("");
 
   const [error, action, pending] = useActionState(
     async (prev: string | null, fd: FormData) => {
       const result = await adjustStock(prev, fd);
-      if (!result) formRef.current?.reset();
+      if (!result) {
+        formRef.current?.reset();
+        /* reset() does not touch React state, and the hidden input is state —
+           without this the next adjustment starts with the last product still
+           selected and the form silently ready to move it again. */
+        setProductId("");
+      }
       return result;
     },
     null,
@@ -25,17 +33,21 @@ export function AdjustForm({
 
   return (
     <form ref={formRef} action={action} className="space-y-3">
-      <Field label="Product">
-        <Select name="product_id" required defaultValue="">
-          <option value="">— choose —</option>
-          {products.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.name} ({p.sku}) · {p.on_hand} on shelf
-              {p.reserved > 0 ? `, ${p.available} free` : ""}
-            </option>
-          ))}
-        </Select>
-      </Field>
+      {/*
+       * The picker is controlled, but this form posts through a plain action —
+       * so the chosen id rides along in a hidden input. `required` on it is
+       * what still stops an empty submit, exactly as it did on the old select.
+       */}
+      <input type="hidden" name="product_id" value={productId} required />
+      <ProductPicker
+        products={products}
+        value={productId}
+        onChange={setProductId}
+        describe={(p) => {
+          const row = p as (typeof products)[number];
+          return `${row.on_hand} on shelf${row.reserved > 0 ? `, ${row.available} free` : ""}`;
+        }}
+      />
 
       <div className="grid gap-3 sm:grid-cols-3">
         <Field label="Direction">

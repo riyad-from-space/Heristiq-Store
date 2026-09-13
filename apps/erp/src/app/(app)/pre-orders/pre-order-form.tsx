@@ -3,6 +3,7 @@
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button, Field, Input, Select, Textarea } from "@/components/ui";
+import { ProductPicker } from "@/components/product-picker";
 import { money } from "@/lib/format";
 import { isValidPhone } from "@/lib/phone";
 import { PRE_ORDER_STATUSES, type PreOrderStatus } from "@/lib/types";
@@ -92,7 +93,10 @@ export function PreOrderForm({
     setForm((f) => ({ ...f, [key]: value }));
   }
 
-  const byId = useMemo(() => new Map(products.map((p) => [p.id, p])), [products]);
+  const byId = useMemo(
+    () => new Map(products.map((p) => [p.id, p])),
+    [products],
+  );
 
   function update(key: number, patch: Partial<Line>) {
     setLines((ls) =>
@@ -123,7 +127,13 @@ export function PreOrderForm({
       paid,
       due: Math.max(0, total - paid),
       payment:
-        total === 0 ? "no price yet" : paid >= total ? "paid" : paid > 0 ? "partial" : "unpaid",
+        total === 0
+          ? "no price yet"
+          : paid >= total
+            ? "paid"
+            : paid > 0
+              ? "partial"
+              : "unpaid",
     };
   }, [lines, form.amount_paid]);
 
@@ -152,8 +162,11 @@ export function PreOrderForm({
 
   function submit() {
     setTouched({
-      customer_name: true, customer_phone: true, lines: true,
-      amount_paid: true, expected_date: true,
+      customer_name: true,
+      customer_phone: true,
+      lines: true,
+      amount_paid: true,
+      expected_date: true,
     });
     if (firstError) {
       setError(firstError);
@@ -190,8 +203,12 @@ export function PreOrderForm({
         setLines([blankLine()]);
         setForm((f) => ({
           ...f,
-          customer_name: "", customer_phone: "", customer_address: "",
-          amount_paid: "0", expected_date: "", note: "",
+          customer_name: "",
+          customer_phone: "",
+          customer_address: "",
+          amount_paid: "0",
+          expected_date: "",
+          note: "",
         }));
         setTouched({});
         router.refresh();
@@ -203,7 +220,10 @@ export function PreOrderForm({
     <div className="space-y-5">
       {/* ---------------- customer ---------------- */}
       <div className="grid gap-3 sm:grid-cols-3">
-        <Field label="Customer name *" hint={show("customer_name") ?? undefined}>
+        <Field
+          label="Customer name *"
+          hint={show("customer_name") ?? undefined}
+        >
           <Input
             value={form.customer_name}
             onChange={(e) => set("customer_name", e.target.value)}
@@ -212,7 +232,10 @@ export function PreOrderForm({
             aria-invalid={!!show("customer_name")}
           />
         </Field>
-        <Field label="Contact number *" hint={show("customer_phone") ?? "e.g. 01712345678"}>
+        <Field
+          label="Contact number *"
+          hint={show("customer_phone") ?? "e.g. 01712345678"}
+        >
           <Input
             value={form.customer_phone}
             onChange={(e) => set("customer_phone", e.target.value)}
@@ -253,49 +276,64 @@ export function PreOrderForm({
               className="grid gap-2 rounded-lg border border-neutral-200 p-2 sm:grid-cols-[1fr_5rem_7rem_auto] sm:items-start dark:border-neutral-800"
             >
               <div className="space-y-1">
-                <Select
+                <ProductPicker
+                  products={products}
                   value={line.product_id}
-                  onChange={(e) => update(line.key, { product_id: e.target.value })}
-                >
-                  <option value="">— not in the catalogue —</option>
-                  {products.map((op) => (
-                    <option key={op.id} value={op.id}>
-                      {op.name} ({op.sku}) · {op.available} free
-                    </option>
-                  ))}
-                </Select>
+                  onChange={(id) => update(line.key, { product_id: id })}
+                  /* A pre-order for something not stocked is a real answer
+                     here, not an unfinished one — so it sits among the
+                     categories rather than hiding inside the product list. */
+                  noneOption="— not in the catalogue —"
+                  describe={(p) =>
+                    `${(p as (typeof products)[number]).available} free`
+                  }
+                />
                 {!line.product_id && (
                   <Input
                     value={line.item_note}
-                    onChange={(e) => update(line.key, { item_note: e.target.value })}
+                    onChange={(e) =>
+                      update(line.key, { item_note: e.target.value })
+                    }
                     placeholder="Describe the item, e.g. gold anklet, custom size"
                   />
                 )}
                 {short && (
                   <p className="text-xs text-amber-600 dark:text-amber-400">
-                    Only {p!.available} free — you can still take the order, this is
-                    just a heads-up.
+                    Only {p!.available} free — you can still take the order,
+                    this is just a heads-up.
                   </p>
                 )}
               </div>
 
               <Input
-                type="number" min="1" step="1" inputMode="numeric"
+                type="number"
+                min="1"
+                step="1"
+                inputMode="numeric"
                 value={line.qty}
                 onChange={(e) => update(line.key, { qty: e.target.value })}
                 aria-label="Quantity"
               />
               <Input
-                type="number" min="0" step="1" inputMode="decimal"
+                type="number"
+                min="0"
+                step="1"
+                inputMode="decimal"
                 value={line.unit_price}
-                onChange={(e) => update(line.key, { unit_price: e.target.value })}
+                onChange={(e) =>
+                  update(line.key, { unit_price: e.target.value })
+                }
                 placeholder="Price each"
                 aria-label="Unit price"
               />
 
               <button
                 onClick={() =>
-                  setLines((ls) => (ls.length === 1 ? [blankLine()] : ls.filter((l) => l.key !== line.key)))
+                  setLines((ls) =>
+                    ls.length === 1
+                      ? [blankLine()]
+                      : ls.filter((l) => l.key !== line.key),
+                  )
                 }
                 className="justify-self-start px-2 py-2 text-xs text-neutral-500 hover:text-red-600 sm:justify-self-auto"
                 aria-label="Remove item"
@@ -306,16 +344,25 @@ export function PreOrderForm({
           );
         })}
 
-        <Button tone="ghost" onClick={() => setLines((ls) => [...ls, blankLine()])}>
+        <Button
+          tone="ghost"
+          onClick={() => setLines((ls) => [...ls, blankLine()])}
+        >
           + Add another item
         </Button>
       </div>
 
       {/* ---------------- money and dates ---------------- */}
       <div className="grid gap-3 sm:grid-cols-4">
-        <Field label="Advance paid (BDT)" hint={show("amount_paid") ?? "For the whole order"}>
+        <Field
+          label="Advance paid (BDT)"
+          hint={show("amount_paid") ?? "For the whole order"}
+        >
           <Input
-            type="number" min="0" step="1" inputMode="decimal"
+            type="number"
+            min="0"
+            step="1"
+            inputMode="decimal"
             value={form.amount_paid}
             onChange={(e) => set("amount_paid", e.target.value)}
             onBlur={() => setTouched((t) => ({ ...t, amount_paid: true }))}
@@ -328,7 +375,9 @@ export function PreOrderForm({
             onChange={(e) => set("status", e.target.value as PreOrderStatus)}
           >
             {PRE_ORDER_STATUSES.filter((s) => s !== "fulfilled").map((s) => (
-              <option key={s} value={s} className="capitalize">{s}</option>
+              <option key={s} value={s} className="capitalize">
+                {s}
+              </option>
             ))}
           </Select>
         </Field>
@@ -339,7 +388,10 @@ export function PreOrderForm({
             onChange={(e) => set("order_date", e.target.value)}
           />
         </Field>
-        <Field label="Expected delivery" hint={show("expected_date") ?? undefined}>
+        <Field
+          label="Expected delivery"
+          hint={show("expected_date") ?? undefined}
+        >
           <Input
             type="date"
             value={form.expected_date}

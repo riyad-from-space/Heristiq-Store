@@ -45,7 +45,7 @@ export default async function PreOrdersPage({ searchParams }: PageProps<"/pre-or
     query,
     supabase
       .from("v_product_stock")
-      .select("id, name, sku, selling_price, available")
+      .select("id, name, sku, selling_price, available, category")
       .eq("is_active", true)
       .order("name"),
     supabase.from("v_pre_order_items").select("*"),

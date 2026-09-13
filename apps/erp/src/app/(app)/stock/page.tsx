@@ -35,7 +35,7 @@ export default async function StockPage() {
       .limit(150),
     supabase
       .from("v_product_stock")
-      .select("id, name, sku, on_hand, reserved, available")
+      .select("id, name, sku, on_hand, reserved, available, category")
       .eq("is_active", true)
       .order("name"),
   ]);

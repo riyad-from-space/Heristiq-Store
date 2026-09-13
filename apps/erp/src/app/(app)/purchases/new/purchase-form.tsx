@@ -3,10 +3,24 @@
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button, Field, Input, Select, Textarea } from "@/components/ui";
+import { ProductPicker } from "@/components/product-picker";
 import { money } from "@/lib/format";
 import { createPurchase, type PurchaseInput } from "../actions";
 
-type Option = { id: string; name: string; sku?: string };
+/* sku and category are not optional any more: the page reads v_product_stock,
+   which returns both, and the picker needs the category to group by. */
+/*
+ * Two shapes, not one. `Option` used to serve both props, which was fine while
+ * each only needed an id and a name — and became wrong the moment products
+ * grew a sku and a category the picker needs and a supplier has neither.
+ */
+type ProductOption = {
+  id: string;
+  name: string;
+  sku: string;
+  category: string | null;
+};
+type SupplierOption = { id: string; name: string };
 type Line = { key: number; product_id: string; qty: string; unit_cost: string };
 
 let nextKey = 1;
@@ -22,15 +36,19 @@ export function PurchaseForm({
   suppliers,
   today,
 }: {
-  products: Option[];
-  suppliers: Option[];
+  products: ProductOption[];
+  suppliers: SupplierOption[];
   today: string;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [lines, setLines] = useState<Line[]>([blankLine()]);
-  const [extras, setExtras] = useState({ freight: "0", importCost: "0", other: "0" });
+  const [extras, setExtras] = useState({
+    freight: "0",
+    importCost: "0",
+    other: "0",
+  });
   const [header, setHeader] = useState({
     supplier_id: "",
     purchase_date: today,
@@ -95,7 +113,9 @@ export function PurchaseForm({
         <Field label="Supplier">
           <Select
             value={header.supplier_id}
-            onChange={(e) => setHeader({ ...header, supplier_id: e.target.value })}
+            onChange={(e) =>
+              setHeader({ ...header, supplier_id: e.target.value })
+            }
           >
             <option value="">— none —</option>
             {suppliers.map((s) => (
@@ -109,7 +129,9 @@ export function PurchaseForm({
           <Input
             type="date"
             value={header.purchase_date}
-            onChange={(e) => setHeader({ ...header, purchase_date: e.target.value })}
+            onChange={(e) =>
+              setHeader({ ...header, purchase_date: e.target.value })
+            }
           />
         </Field>
       </div>
@@ -119,58 +141,55 @@ export function PurchaseForm({
         {lines.map((line) => (
           <div
             key={line.key}
-            className="grid grid-cols-1 gap-2 rounded-lg border border-neutral-200 p-3 sm:grid-cols-[1fr_5rem_7rem_auto] sm:items-end dark:border-neutral-800"
+            /* Stacked: the product field is two selects now. */
+            className="space-y-2 rounded-lg border border-neutral-200 p-3 dark:border-neutral-800"
           >
-            <Field label="Product">
-              <Select
-                value={line.product_id}
-                onChange={(e) => update(line.key, { product_id: e.target.value })}
-              >
-                <option value="">— choose —</option>
-                {products.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name} ({p.sku})
-                  </option>
-                ))}
-              </Select>
-            </Field>
-            <Field label="Qty">
-              <Input
-                type="number"
-                min="1"
-                step="1"
-                inputMode="numeric"
-                value={line.qty}
-                onChange={(e) => update(line.key, { qty: e.target.value })}
-              />
-            </Field>
-            <Field label="Unit cost">
-              <Input
-                type="number"
-                min="0"
-                step="0.01"
-                inputMode="decimal"
-                value={line.unit_cost}
-                onChange={(e) => update(line.key, { unit_cost: e.target.value })}
-              />
-            </Field>
-            <div className="flex items-center gap-3 pb-2 sm:pb-0">
-              <span className="text-xs text-neutral-500">
-                {totals.landed.has(line.key)
-                  ? `landed ${money(totals.landed.get(line.key), true)}/unit`
-                  : ""}
-              </span>
-              {lines.length > 1 && (
-                <button
-                  type="button"
-                  onClick={() =>
-                    setLines((ls) => ls.filter((l) => l.key !== line.key))
+            <ProductPicker
+              products={products}
+              value={line.product_id}
+              onChange={(id) => update(line.key, { product_id: id })}
+            />
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-[5rem_7rem_1fr] sm:items-end">
+              <Field label="Qty">
+                <Input
+                  type="number"
+                  min="1"
+                  step="1"
+                  inputMode="numeric"
+                  value={line.qty}
+                  onChange={(e) => update(line.key, { qty: e.target.value })}
+                />
+              </Field>
+              <Field label="Unit cost">
+                <Input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  inputMode="decimal"
+                  value={line.unit_cost}
+                  onChange={(e) =>
+                    update(line.key, { unit_cost: e.target.value })
                   }
-                  className="text-sm text-red-600 hover:underline"
-                >
-                  Remove
-                </button>
-              )}
+                />
+              </Field>
+              <div className="flex items-center gap-3 pb-2 sm:pb-0">
+                <span className="text-xs text-neutral-500">
+                  {totals.landed.has(line.key)
+                    ? `landed ${money(totals.landed.get(line.key), true)}/unit`
+                    : ""}
+                </span>
+                {lines.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setLines((ls) => ls.filter((l) => l.key !== line.key))
+                    }
+                    className="text-sm text-red-600 hover:underline"
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         ))}
@@ -193,21 +212,34 @@ export function PurchaseForm({
         <div className="grid gap-3 sm:grid-cols-3">
           <Field label="Freight / courier">
             <Input
-              type="number" min="0" step="0.01" inputMode="decimal"
+              type="number"
+              min="0"
+              step="0.01"
+              inputMode="decimal"
               value={extras.freight}
-              onChange={(e) => setExtras({ ...extras, freight: e.target.value })}
+              onChange={(e) =>
+                setExtras({ ...extras, freight: e.target.value })
+              }
             />
           </Field>
           <Field label="Import / customs">
             <Input
-              type="number" min="0" step="0.01" inputMode="decimal"
+              type="number"
+              min="0"
+              step="0.01"
+              inputMode="decimal"
               value={extras.importCost}
-              onChange={(e) => setExtras({ ...extras, importCost: e.target.value })}
+              onChange={(e) =>
+                setExtras({ ...extras, importCost: e.target.value })
+              }
             />
           </Field>
           <Field label="Other">
             <Input
-              type="number" min="0" step="0.01" inputMode="decimal"
+              type="number"
+              min="0"
+              step="0.01"
+              inputMode="decimal"
               value={extras.other}
               onChange={(e) => setExtras({ ...extras, other: e.target.value })}
             />
