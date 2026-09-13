@@ -90,9 +90,9 @@ export default function TermsPage() {
 
       <ProseSection title="Payment">
         <p>
-          Cash on delivery: you pay the courier in cash on receipt. Where a
-          pre-order advance or a small deposit is agreed, it is paid by bKash or
-          Nagad and deducted from what you pay at the door.
+          Cash on delivery: you pay the courier in cash on receipt. We do not
+          take card or mobile-wallet payment through this website, and we will
+          never ask you to send money to place an order here.
         </p>
       </ProseSection>
 

@@ -89,8 +89,13 @@ export async function BuyBox({ product, url }: { product: Product; url: string }
           <div>
             <dt className="font-medium">Cash on delivery</dt>
             <dd className="text-stone mt-1 leading-relaxed">
+              {/* Both branches say cash, because the checkout takes cash and
+                  nothing else. This promised a bKash advance on every
+                  sold-out piece while the only method on offer was COD —
+                  a customer reaching checkout would have found no way to pay
+                  the advance they had just been told about. */}
               {preOrder
-                ? "Advance by bKash or Nagad, balance in cash to the courier."
+                ? "Nothing now. You pay the courier in cash when it arrives."
                 : "Pay the courier in cash when it reaches you. No advance."}
             </dd>
           </div>

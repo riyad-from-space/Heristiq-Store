@@ -202,11 +202,17 @@ export const courier = {
  * prerendered page and turn /about and /policies dynamic for the sake of three
  * chips.
  *
- * IF YOU ENABLE NAGAD, add it back here. Nothing is removed to support it:
- * `manual_nagad` is a live payment method end to end, and putting a number in
- * ERP Settings is all it takes to offer it.
+ * CASH ONLY, at the owner's decision. bKash and Nagad are still implemented
+ * end to end — the checkout offers a wallet the moment a number is saved in
+ * ERP Settings, and the advance flow, the pending-verification state and the
+ * ERP's verify/reject buttons are all live code. Nothing was deleted to get
+ * here; this list is the shop-window claim, and the shop window should not
+ * advertise a method the checkout will not offer.
+ *
+ * TO ADD ONE BACK: save its number in ERP Settings, then add its label here.
+ * Both, in that order — a label without a number advertises a dead end.
  */
-export const paymentMethods = ["Cash", "bKash"] as const;
+export const paymentMethods = ["Cash"] as const;
 
 export const nav = [
   { href: "/shop", label: "Shop" },
