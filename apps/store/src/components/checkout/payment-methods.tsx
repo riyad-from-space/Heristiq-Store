@@ -45,8 +45,16 @@ export function PaymentMethods({
   errors: Record<string, string>;
 }) {
   const wallets = [
-    { key: "manual_bkash" as const, label: "bKash", number: settings.bkashNumber },
-    { key: "manual_nagad" as const, label: "Nagad", number: settings.nagadNumber },
+    {
+      key: "manual_bkash" as const,
+      label: "bKash",
+      number: settings.bkashNumber,
+    },
+    {
+      key: "manual_nagad" as const,
+      label: "Nagad",
+      number: settings.nagadNumber,
+    },
   ].filter((wallet) => wallet.number !== "");
 
   const deposit =
@@ -88,8 +96,29 @@ export function PaymentMethods({
       {chosen && (
         <div className="border-line bg-white mt-3 border p-4">
           <ol className="text-stone space-y-2 text-copy-sm">
+            {/*
+             * "Payment" or "Send Money" — the wrong one strands the customer.
+             *
+             * bKash treats the two as different products: a personal number
+             * receives through Send Money, a merchant number through Payment,
+             * and sending money to a merchant number either fails outright or
+             * charges the customer a fee that should not be theirs. This said
+             * "Send Money" for every shop, which is right for one kind of
+             * account and wrong for the other.
+             *
+             * Nagad is left on Send Money: only bKash is configured here, and
+             * inventing the merchant wording for a wallet nobody has set up
+             * would be guessing at a second flow to fix the first.
+             */}
             <li>
-              1. Open your {chosen.label} app and <strong className="text-ink">Send Money</strong> to{" "}
+              1. Open your {chosen.label} app and{" "}
+              <strong className="text-ink">
+                {chosen.key === "manual_bkash" &&
+                settings.bkashAccountType === "merchant"
+                  ? "choose Payment"
+                  : "Send Money"}
+              </strong>{" "}
+              to{" "}
               <strong className="text-ink tnum whitespace-nowrap">
                 {displayPhone(chosen.number)}
               </strong>

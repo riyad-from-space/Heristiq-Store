@@ -25,9 +25,24 @@ export type PaymentSetting = {
   /** A small advance on COD, to reduce fake orders. */
   codDepositEnabled: boolean;
   codDepositAmount: number;
-  /** Merchant numbers the customer sends money to. Empty = that method is off. */
+  /** The numbers the customer pays. Empty = that method is off. */
   bkashNumber: string;
   nagadNumber: string;
+  /**
+   * Which kind of bKash account that number is, because the customer has to
+   * tap a DIFFERENT thing depending on the answer.
+   *
+   * A personal number receives through Send Money. A merchant number receives
+   * through Payment — and Send Money to a merchant number either fails or
+   * charges the customer a fee it should not. The checkout used to say "Send
+   * Money" unconditionally, which is wrong for half of all shops and was wrong
+   * for this one.
+   *
+   * "merchant" is NOT the default. A wrong instruction here strands a customer
+   * mid-payment, so the safe default is the one that matches the old
+   * behaviour, and the owner picks the truth in ERP Settings.
+   */
+  bkashAccountType: "personal" | "merchant";
 };
 
 type Row = { key: string; value: Record<string, unknown> };
@@ -123,6 +138,8 @@ export async function paymentSettings(): Promise<PaymentSetting> {
     codDepositAmount: int(row.cod_deposit_amount, 100),
     bkashNumber: bkash,
     nagadNumber: nagad,
+    bkashAccountType:
+      row.bkash_account_type === "merchant" ? "merchant" : "personal",
   };
 }
 

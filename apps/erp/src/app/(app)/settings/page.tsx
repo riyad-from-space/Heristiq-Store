@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { adminState } from "@/lib/admin";
-import { Card, Field, Input } from "@/components/ui";
+import { Card, Field, Input, Select } from "@/components/ui";
 import { saveDelivery, savePromo, savePayment } from "./actions";
 import { addAdmin, removeAdmin } from "../admin-actions";
 
@@ -92,16 +92,36 @@ export default async function SettingsPage() {
             </Field>
             <div className="grid grid-cols-4 gap-2">
               <Field label="In min">
-                <Input name="inside_days_min" type="number" min="0" defaultValue={n(delivery.inside_days_min, 1)} />
+                <Input
+                  name="inside_days_min"
+                  type="number"
+                  min="0"
+                  defaultValue={n(delivery.inside_days_min, 1)}
+                />
               </Field>
               <Field label="In max">
-                <Input name="inside_days_max" type="number" min="0" defaultValue={n(delivery.inside_days_max, 2)} />
+                <Input
+                  name="inside_days_max"
+                  type="number"
+                  min="0"
+                  defaultValue={n(delivery.inside_days_max, 2)}
+                />
               </Field>
               <Field label="Out min">
-                <Input name="outside_days_min" type="number" min="0" defaultValue={n(delivery.outside_days_min, 2)} />
+                <Input
+                  name="outside_days_min"
+                  type="number"
+                  min="0"
+                  defaultValue={n(delivery.outside_days_min, 2)}
+                />
               </Field>
               <Field label="Out max">
-                <Input name="outside_days_max" type="number" min="0" defaultValue={n(delivery.outside_days_max, 4)} />
+                <Input
+                  name="outside_days_max"
+                  type="number"
+                  min="0"
+                  defaultValue={n(delivery.outside_days_max, 4)}
+                />
               </Field>
             </div>
             <Save />
@@ -157,6 +177,22 @@ export default async function SettingsPage() {
                   defaultValue={String(payment.bkash_number ?? "")}
                   placeholder="01XXXXXXXXX"
                 />
+              </Field>
+              <Field
+                label="bKash account type"
+                hint="Merchant numbers take Payment; personal numbers take Send Money. Checkout tells the customer whichever this says, so the wrong one leaves them stuck in the app."
+              >
+                <Select
+                  name="bkash_account_type"
+                  defaultValue={
+                    payment.bkash_account_type === "merchant"
+                      ? "merchant"
+                      : "personal"
+                  }
+                >
+                  <option value="personal">Personal — Send Money</option>
+                  <option value="merchant">Merchant — Payment</option>
+                </Select>
               </Field>
               <Field label="Nagad number">
                 <Input

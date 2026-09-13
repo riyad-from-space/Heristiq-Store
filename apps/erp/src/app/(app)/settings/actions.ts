@@ -79,6 +79,12 @@ export async function savePayment(formData: FormData): Promise<void> {
         cod_deposit_enabled: formData.get("cod_deposit_enabled") === "on",
         cod_deposit_amount: num(formData, "cod_deposit_amount", 100),
         bkash_number: String(formData.get("bkash_number") ?? "").trim(),
+        /* Decides whether checkout tells the customer to choose Payment or
+           Send Money. Wrong value, stranded customer — see PaymentSetting. */
+        bkash_account_type:
+          formData.get("bkash_account_type") === "merchant"
+            ? "merchant"
+            : "personal",
         nagad_number: String(formData.get("nagad_number") ?? "").trim(),
       },
       updated_at: new Date().toISOString(),
